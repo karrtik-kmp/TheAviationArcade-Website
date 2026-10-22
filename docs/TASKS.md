@@ -23,7 +23,7 @@ player account linking, purchases and game-backend publishing remain outside thi
 | D1/R2 workflow and demo seed | Frontend lead | Implemented | Versioned operations, private media, server permission checks, idempotency and explicit nonpublishable demo data |
 | Browser verification | Frontend lead | Complete | Eight Chrome workflows pass, plus concurrent retry/photo-retention and light-theme/360px layout checks; evidence in docs/evidence |
 | Locked production build | Frontend lead | Complete | Fresh locked install, TypeScript and seven rule tests pass; final build and production browser smoke pass |
-| Source checkpoint / private publication | Frontend lead | In progress | Preserve owner-only audience; do not point the real product domain to the prototype |
+| Source checkpoint / private publication | Frontend lead | Complete | Source committed and private deployment succeeded; owner-only audience retained |
 | Further mobile loading optimization | Frontend lead | Follow-up | Lighthouse performance 82; throttled-mobile LCP 4.1s remains above the 2.5s target |
 
 ## Resume contract
@@ -35,7 +35,14 @@ Local `.dev.vars`, database state, runtime caches, dependencies and publication 
 Staff settings are configured as hosted secrets and are not source-controlled.
 
 The current source of truth for successful browser checks is the saved JSON, not an earlier
-partial run. Record the final build, source commit and deployment outcome here before handoff.
+partial run. The published implementation is commit `ddd569f56076f4ecf39372bc97b6d99ef68e9aab`.
+Deployment `appgdep_6ada0d235e1c81919f72b7a40515f32f` succeeded on 2026-10-22:
+[private website](https://airplane-games-community-prototype.givingstar7.chatgpt.site),
+[admin](https://airplane-games-community-prototype.givingstar7.chatgpt.site/admin) and
+[photographer portal](https://airplane-games-community-prototype.givingstar7.chatgpt.site/contribute).
+The hosted site uses owner sign-in; local development provides the no-password demo editor.
+The real product domain was not changed. Later documentation-only commits do not change this
+deployed implementation checkpoint.
 
 Quality follow-up: production Lighthouse found a Vinext beta prefetch error, so public navigation
 uses native anchors. The brand fonts now have WOFF2 derivatives and critical-face preloads, and

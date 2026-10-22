@@ -4,6 +4,11 @@ The sole source directory is `H:/Work/TheAviationArcade/website`. This standalon
 the branded homepage, seven-game catalog, community photographer portal, Aircraft Identifier editor,
 Plane of the Day scheduler and staff review workflow. It is a private product prototype.
 
+Private review: [website](https://airplane-games-community-prototype.givingstar7.chatgpt.site),
+[admin](https://airplane-games-community-prototype.givingstar7.chatgpt.site/admin),
+[photographer portal](https://airplane-games-community-prototype.givingstar7.chatgpt.site/contribute).
+The owner-only deployment succeeded on 2026-10-22. The task board records the deployed source commit.
+
 ## Run locally
 
 Use Node.js 24 (minimum 22.13). For a fresh checkout, install the locked dependencies, create the
