@@ -31,7 +31,8 @@ folder there. Read README.md and actual Git status when resuming.
 | Core browser/API regression                      | Complete                         | Eight workflows, concurrent retry, photo retention and narrow/light layouts pass                                |
 | Locked production build                          | Complete                         | Final integrated source builds successfully                                                                     |
 | README and repo guidelines                       | Updated                          | Two-terminal setup, demo seeding, local routes, Windows fallback, auth/data boundaries                          |
-| Organized source commits and private publication | In progress                      | Preserve existing history and Site audience; record final checkpoint below                                      |
+| Organized source commits and private publication | Complete                         | Focused implementation, verification and documentation commits; successful private deployment recorded below    |
+| GitHub synchronization                           | Awaiting approval                | Local commits are complete; push to the configured GitHub remote awaits explicit authorization                  |
 | Live Google sign-in / real email delivery        | Human check pending              | Do not equate emulator behavior with live provider completion                                                   |
 | Shared app/web principal and Callsign linking    | Open integration                 | Apply original shared-account ruling; resolve applicable ADR-0006 policies and game contract                    |
 | Production staff capabilities/MFA                | Open                             | Binary verified-email allowlist is not the complete capability matrix                                           |
@@ -53,9 +54,16 @@ artifacts; do not discard unrelated work. Make focused commits without rewriting
 
 ## Publication checkpoint
 
-The previous runtime checkpoint was `ddd569f56076f4ecf39372bc97b6d99ef68e9aab`, deployed as
-`appgdep_6ada0d235e1c81919f72b7a40515f32f`. The Firebase integration is being prepared as the
-next checkpoint; until its deployment receipt is recorded, do not call it hosted verification.
+The Firebase runtime checkpoint is `22d6e332df8e22afd9e074f0ed4bce1f4d6f7b77`.
+Deployment `appgdep_6ada24c613d88191a1105d4f8e9df4f0` succeeded on 2026-10-22,
+using environment revision 2. This supersedes runtime `ddd569f` and its earlier
+deployment. Later documentation-only commits do not change the deployed implementation.
+
+The source changes are organized as:
+
+- `7d848c9` — Firebase email/Google account flows, staff/contributor controls and local setup tooling.
+- `82f4551` — JWT/account tests, distinct-user browser verification and current workflow evidence.
+- `22d6e33` — README startup instructions, Firebase guide, account/security scope and repo guidelines.
 
 The same [private website](https://airplane-games-community-prototype.givingstar7.chatgpt.site),
 [admin](https://airplane-games-community-prototype.givingstar7.chatgpt.site/admin) and
