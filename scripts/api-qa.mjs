@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile, writeFile } from "node:fs/promises";
+import { signInDemoEditor } from "./seed-auth-emulator.mjs";
 const { chromium } = await import(
   process.env.PLAYWRIGHT_MODULE || "playwright"
 );
@@ -10,8 +11,13 @@ const context = await browser.newContext({
   colorScheme: "light",
 });
 try {
-  await context.request.get(origin + "/signin-with-chatgpt?return_to=/admin");
-  const list = await context.request.get(origin + "/api/submissions");
+  const loginPage = await context.newPage();
+  await signInDemoEditor(loginPage, origin);
+  await context.request.post(origin + "/api/admin/demo", {
+    headers: { Origin: origin },
+    data: {},
+  });
+  const list = await context.request.get(origin + "/api/admin/submissions");
   assert.equal(list.status(), 200);
   const body = await list.json();
   const sample = body.submissions.find(
@@ -60,7 +66,7 @@ try {
   assert.equal(badZone.status(), 422);
   assert.match((await badZone.json()).error, /timezone/i);
   const page = await context.newPage();
-  await page.goto(origin + "/admin", { waitUntil: "networkidle" });
+  await page.goto(origin + "/admin", { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Good to have you back." }).waitFor();
   await page.screenshot({
     path: "docs/evidence/admin-overview-light.png",
@@ -73,7 +79,7 @@ try {
     false,
   );
   await page.setViewportSize({ width: 360, height: 800 });
-  await page.goto(origin + "/contribute", { waitUntil: "networkidle" });
+  await page.goto(origin + "/contribute", { waitUntil: "domcontentloaded" });
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth > innerWidth,

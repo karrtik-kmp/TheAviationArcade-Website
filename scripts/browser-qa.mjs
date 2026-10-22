@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
+import { signInDemoEditor } from "./seed-auth-emulator.mjs";
 const { chromium } = await import(
   process.env.PLAYWRIGHT_MODULE || "playwright"
 );
@@ -31,10 +32,11 @@ let createdId, featureId;
 const proposalTitle = "Local QA photograph " + Date.now();
 try {
   await check("Homepage desktop and theme switch", async () => {
-    await page.goto(origin, { waitUntil: "networkidle", timeout: 90000 });
+    await page.goto(origin, { waitUntil: "domcontentloaded", timeout: 90000 });
     await page
       .getByRole("heading", { name: "Think you know airplanes?" })
       .waitFor();
+    await page.getByRole("link", { name: "Sign in", exact: true }).waitFor();
     assert.equal(
       await page.evaluate(
         () => document.documentElement.scrollWidth > innerWidth,
@@ -57,7 +59,8 @@ try {
   await check(
     "Seven-game catalog, category filters, search and detail",
     async () => {
-      await page.goto(origin + "/games", { waitUntil: "networkidle" });
+      await page.goto(origin + "/games", { waitUntil: "domcontentloaded" });
+      await page.getByRole("link", { name: "Sign in", exact: true }).waitFor();
       assert.equal(await page.locator(".game-card").count(), 7);
       await page.getByRole("button", { name: "Matching", exact: true }).click();
       assert.equal(await page.locator(".game-card").count(), 2);
@@ -84,7 +87,8 @@ try {
   );
   await check("Mobile navigation and layout", async () => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(origin, { waitUntil: "networkidle" });
+    await page.goto(origin, { waitUntil: "domcontentloaded" });
+    await page.getByRole("link", { name: "Sign in", exact: true }).waitFor();
     assert.equal(
       await page.evaluate(
         () => document.documentElement.scrollWidth > innerWidth,
@@ -115,10 +119,7 @@ try {
     "Anonymous API is denied and local demo staff can sign in",
     async () => {
       assert.equal((await api("/api/admin/submissions")).status, 401);
-      await page.goto(origin + "/admin", { waitUntil: "networkidle" });
-      await page
-        .getByRole("link", { name: "Try demo editor", exact: true })
-        .click();
+      await signInDemoEditor(page, origin);
       await page
         .getByRole("heading", { name: "Good to have you back." })
         .waitFor({ timeout: 60000 });
@@ -151,7 +152,7 @@ try {
     "Photographer form uploads a proposal with private metadata",
     async () => {
       await page.goto(origin + "/contribute?game=aircraft-identifier", {
-        waitUntil: "networkidle",
+        waitUntil: "domcontentloaded",
       });
       await page
         .locator("#field-photo")
@@ -203,7 +204,7 @@ try {
   await check(
     "Review requires checks, supports changes, revision, and approval",
     async () => {
-      await page.goto(origin + "/admin", { waitUntil: "networkidle" });
+      await page.goto(origin + "/admin", { waitUntil: "domcontentloaded" });
       await page
         .getByRole("heading", { name: "Good to have you back." })
         .waitFor();
@@ -221,9 +222,17 @@ try {
       await page
         .locator(".review-form textarea")
         .fill("Please add a more precise location for this local test.");
-      await page
-        .getByRole("button", { name: "Request changes", exact: true })
-        .click();
+      const [changeResponse] = await Promise.all([
+        page.waitForResponse(
+          (response) =>
+            response.url() === `${origin}/api/admin/submissions/${createdId}` &&
+            response.request().method() === "PATCH",
+        ),
+        page
+          .getByRole("button", { name: "Request changes", exact: true })
+          .click(),
+      ]);
+      assert.equal(changeResponse.status(), 200, await changeResponse.text());
       let owned = (await api("/api/submissions")).body.submissions.find(
         (s) => s.id === createdId,
       );
@@ -243,7 +252,7 @@ try {
         },
       );
       assert.equal(revision.status(), 200, await revision.text());
-      await page.reload({ waitUntil: "networkidle" });
+      await page.reload({ waitUntil: "domcontentloaded" });
       await page
         .getByRole("heading", { name: "Good to have you back." })
         .waitFor();
@@ -358,7 +367,7 @@ try {
     "Mobile admin fits viewport and has a usable review list",
     async () => {
       await page.setViewportSize({ width: 390, height: 844 });
-      await page.goto(origin + "/admin", { waitUntil: "networkidle" });
+      await page.goto(origin + "/admin", { waitUntil: "domcontentloaded" });
       await page
         .getByRole("heading", { name: "Good to have you back." })
         .waitFor();
