@@ -50,6 +50,11 @@ Contributors can offer photographs for private review and propose the channels w
 
 ## Prototype boundaries
 
+Authentication is currently provided by the host. It is not a complete Airplane Games account
+experience. The [account flow review](docs/AUTH_FLOW_REVIEW.md) records missing account/sign-out
+controls, photographer onboarding, future player name tags and shared-identity decisions. Earlier
+local demo tests do not verify the full hosted login or multi-user account journey.
+
 There is no real player account linking, payment, game backend integration, production rights claim, or public launch. A community contribution is a proposal for private review; it does not by itself grant a final publication license. See [docs/PROTOTYPE_SCOPE.md](docs/PROTOTYPE_SCOPE.md) and [docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md).
 
 ## Data, assets and maintenance

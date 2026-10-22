@@ -6,6 +6,15 @@ The site is a private product prototype for three surfaces: an Airplane Games ho
 
 The API stores contributor proposals and editorial records in D1, and photos in R2. Contributors authenticate through the host-provided ChatGPT sign-in in a hosted preview; the portable local profile provides a mock sign-in so the flow can be demonstrated offline. Staff access is an email allowlist configured by the host as the `STAFF_EMAILS` secret. Locally, set `STAFF_EMAILS=seedy@sites.test` in ignored `.dev.vars` to use the mock account.
 
+## Account flow status
+
+The 2026-10-22 review confirmed that hosting sign-in and API access controls do not complete the
+product account journey. Visible account controls/sign-out, photographer onboarding/session states,
+community player name tags and shared app/web identity remain unfinished. The user's clarification
+makes these tracked follow-up requirements; the shared-account requirement already existed in the
+original docs. See [AUTH_FLOW_REVIEW.md](AUTH_FLOW_REVIEW.md) and the task board. Player-linking
+exclusion below describes the current implementation, not removal of that product requirement.
+
 ## Review and publication flow
 
 A contributor submits a photograph, factual details, contact information, a rights basis and evidence, a factual source, and the channels for which the photo may be considered. Consent is specifically for private editorial review. It does not grant a final publication license.

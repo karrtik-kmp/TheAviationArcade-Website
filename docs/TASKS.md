@@ -12,11 +12,17 @@ authorized predefined Luna subagent tasks, demo login/content and fetching onlin
 The project preserves existing fonts, logo and semantic brand colors. Browser gameplay and real
 player account linking, purchases and game-backend publishing remain outside this prototype.
 
+Account review correction (2026-10-22): the user called out admin/photographer login journeys and
+upcoming community/player name tags. Shared app/web identity remains required; its prototype
+exclusion did not cancel that product requirement. See [AUTH_FLOW_REVIEW.md](AUTH_FLOW_REVIEW.md)
+for the audit, test limits and ordered corrective jobs. Use Luna for scoped tasks and 6.1 Sol at
+low/medium for complex planning, as requested by the user.
+
 | Job | Owner | State | Evidence / next action |
 |---|---|---|---|
 | Existing-brand asset preparation | Asset worker | Complete | Self-hosted fonts, optimized real previews, generated decorative community illustration; provenance recorded |
-| Photographer portal | Luna worker | Complete, integrated | All categories, private upload, metadata, rights offers, own proposals and revisions |
-| Admin workspace | Luna worker | Complete, integrated | Official Fluent components, staff gate, queue, five checks, drafts, scheduling and activity |
+| Photographer portal | Luna worker | Submission flow integrated; account UX open | Private upload, metadata and revisions exist; complete onboarding/session journey remains |
+| Admin workspace | Luna worker | Editorial flow integrated; account UX open | Staff gate and editorial controls exist; account menu/sign-out and full staff identity requirements remain |
 | Rule tests / source review | Luna worker | Complete | Seven focused tests pass; source review recorded in SECURITY_REVIEW.md |
 | Homepage, catalog and public pages | Frontend lead | Complete, integrated | Responsive composition, seven routes, search/filter, theme and availability states |
 | Online reference snapshot | Frontend lead | Complete | Fifteen OurAirports records, original public-domain license, source checksum and repeatable fetch script |
@@ -25,10 +31,16 @@ player account linking, purchases and game-backend publishing remain outside thi
 | Locked production build | Frontend lead | Complete | Fresh locked install, TypeScript and seven rule tests pass; final build and production browser smoke pass |
 | Source checkpoint / private publication | Frontend lead | Complete | Source committed and private deployment succeeded; owner-only audience retained |
 | Further mobile loading optimization | Frontend lead | Follow-up | Lighthouse performance 82; throttled-mobile LCP 4.1s remains above the 2.5s target |
+| Account requirements / implementation audit | Luna audits + 6.1 Sol medium review | Complete | AUTH_FLOW_REVIEW.md reconciles requirements, controls and missing flows |
+| Shared account controls and photographer session journey | Frontend lead + scoped Luna tasks | Reopened / next | Visible account state/sign-out, return destinations, expiry and denial states using host auth |
+| Community profile and player name-tag specification | Frontend lead + 6.1 Sol review | Open | Define relationship to game Callsign, uniqueness, privacy, roles and moderation |
+| Hosted and multi-user account verification | Frontend lead | Open | Existing demo tests do not prove hosted login/out or distinct-user isolation |
+| Shared app/web identity integration | Account/backend owners | Open decisions | ADR-0006 is Proposed; resolve topology/policies and amend the game contract |
+| Production staff capabilities and verified MFA | Frontend lead + account owners | Open | The email allowlist does not implement the role matrix or prove enforced MFA |
 
 ## Resume contract
 
-Read README.md, PROTOTYPE_SCOPE.md, ASSET_PROVENANCE.md and actual Git status before resuming.
+Read README.md, PROTOTYPE_SCOPE.md, AUTH_FLOW_REVIEW.md, ASSET_PROVENANCE.md and actual Git status before resuming.
 Run TypeScript, rule tests and the recorded browser workflow against the current source. Browser
 QA uses the existing bundled Playwright package when the built-in browser sandbox is unavailable.
 Local `.dev.vars`, database state, runtime caches, dependencies and publication archives are ignored.
