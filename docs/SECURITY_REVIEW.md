@@ -2,12 +2,19 @@
 
 ## Review boundary
 
-This is a source review of the prototype API in `app/api/[...path]/route.ts`, validation helpers in `lib/rules.ts`, and request helpers in `lib/server.ts`. It is not a penetration test, a deployed configuration audit, or a claim that the product is ready for public launch. No live D1/R2 service or hosted identity configuration was exercised for this review.
+Updated 2026-10-22. This reviews the content API, Firebase token/session boundary,
+validation helpers and account UI guards. Local browser checks use D1/R2 emulation
+and Firebase Auth emulation. Cloud provisioning confirms Auth provider configuration;
+it does not prove live user sign-in. This is not a penetration test or a claim of
+public-launch readiness.
 
 ## Controls present in the reviewed code
 
 - User-owned submission listing and editing are scoped to the authenticated stable user ID. Other users cannot fetch a private submission photo; unauthorized lookups return 404.
-- Admin routes require the host ChatGPT identity and a matching address from the `STAFF_EMAILS` allowlist. Configure this only as a hosted secret; the local `.dev.vars` setting is for the loopback mock account.
+- Product routes use verified Firebase identity, independently of hosting headers. Admin routes require a verified email matching the server-only `STAFF_EMAILS` allowlist. Local demo users authenticate through the loopback emulator; no unsigned token is accepted by a production build.
+- Tokens require the configured project/issuer/audience, a valid fixed-Google-JWKS signature, current expiry and supported password/Google provider claims. Session cookies are HttpOnly, SameSite and expiry-bounded; production adds Secure and `__Host-`. Auth exchange/logout require the same Origin. Configuration and account responses use private/no-store caching.
+- Ownership is namespaced by Firebase project and UID. Legacy host-owned data is not transferred by matching email. Public account snapshots expose a display name, verification status, staff flag and noncredential session fingerprint, not email or tokens.
+- Account generations discard stale responses, server fences reject changed-account writes, and captured draft versions preserve optimistic concurrency. Session exchanges/logout are serialized, with cross-tab Web Locks where supported. The fallback only serializes within a tab.
 - Write routes require a matching request origin. Submission edits include a version check, and new submissions require an idempotency key. Review and editorial updates also use version-checked database updates; audit inserts are tied to the successful mutation.
 - Approval requires all five explicit review checks, rights evidence, an https factual source, and a non-generated image origin. Publishing rechecks approval and channel permissions. POTD additionally requires website/gallery permission.
 - Public photo responses are limited to published/scheduled featured content whose source remains approved. Responses set `nosniff`, private/no-store caching for image bytes, and a restrictive content security policy. Editorial fields rendered through React receive normal text escaping.
@@ -22,7 +29,13 @@ This is a source review of the prototype API in `app/api/[...path]/route.ts`, va
 
 ## Not established by this review
 
-The code review cannot verify production allowlist values, host access policy, D1/R2 backup or retention settings, rate limits at the edge, logging access, dependency provenance, or any production licensing process. The local mock sign-in is intentionally only for portable development and is not proof of hosted identity security. A contributor's consent is for private editorial review and does not establish the final rights needed to publish a photo.
+The review does not prove live Google consent, email delivery, MFA, granular staff
+roles, edge rate limits, backups, logging access or final licensing. Signed JWTs
+are checked on requests, but an already-issued token is not immediately invalidated
+by Firebase user disable/revocation; its accepted lifetime is at most one hour.
+Immediate revocation enforcement remains separate work. The owner-private hosting
+audience is preserved. Contributor review consent does not establish final rights
+to publish a photo.
 
 ## Integration fixes and verified behavior
 

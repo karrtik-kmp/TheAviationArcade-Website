@@ -1,30 +1,42 @@
 # Prototype scope
 
-## What this prototype contains
+This private prototype contains an Airplane Games homepage, a seven-game catalog
+and photo collection, photographer proposals, and editorial tools for Aircraft
+Identifier and Plane of the Day. Existing branding is retained. Browser gameplay
+and app-store release claims are outside this slice.
 
-The site is a private product prototype for three surfaces: an Airplane Games homepage, a seven-game catalog and photo collection, and an admin/editorial review area. Its purpose is to demonstrate the proposed web experience and a private community-submission workflow. It is not a production or publicly launched website.
+## Accounts
 
-The API stores contributor proposals and editorial records in D1, and photos in R2. Contributors authenticate through the host-provided ChatGPT sign-in in a hosted preview; the portable local profile provides a mock sign-in so the flow can be demonstrated offline. Staff access is an email allowlist configured by the host as the `STAFF_EMAILS` secret. Locally, set `STAFF_EMAILS=seedy@sites.test` in ignored `.dev.vars` to use the mock account.
+Firebase email/password and Google are the product sign-in methods. Registration,
+password reset, email verification, account controls and logout are implemented.
+The outer private Site access gate is separate. Staff requires a verified email
+and the server-only `STAFF_EMAILS` allowlist. Local development uses a loopback
+Firebase Auth emulator and clearly labeled demo users; those credentials have no
+production meaning.
 
-## Account flow status
+Callsign is the agreed community player name tag. The website does not yet link
+to the game principal or claim Callsigns. This remains a required future integration,
+not a removed requirement. See [account review](AUTH_FLOW_REVIEW.md).
 
-The 2026-10-22 review confirmed that hosting sign-in and API access controls do not complete the
-product account journey. Visible account controls/sign-out, photographer onboarding/session states,
-community player name tags and shared app/web identity remain unfinished. The user's clarification
-makes these tracked follow-up requirements; the shared-account requirement already existed in the
-original docs. See [AUTH_FLOW_REVIEW.md](AUTH_FLOW_REVIEW.md) and the task board. Player-linking
-exclusion below describes the current implementation, not removal of that product requirement.
+## Review and publication
 
-## Review and publication flow
+Proposals contain photographs, factual details, private contact information,
+photographer credit, a rights basis and evidence, a factual source, and proposed
+usage channels. Consent authorizes private editorial review; it is not a final
+publication license. D1 stores proposals/editorial records; R2 stores private photos.
 
-A contributor submits a photograph, factual details, contact information, a rights basis and evidence, a factual source, and the channels for which the photo may be considered. Consent is specifically for private editorial review. It does not grant a final publication license.
+Approval requires five explicit checks: subject identity, image quality, credit,
+rights evidence and category. An approved source can become a separate editorial
+draft. Publication rechecks source approval and usage offers. Aircraft Identifier
+requires games use; Plane of the Day requires both Plane of the Day and
+website/gallery offers. Approval alone does not publish. Demo samples cannot publish.
 
-An editor must record all five checks before approving a submission: subject identity, image quality, credit, rights evidence, and category. An approved submission can then be made into a separate editorial draft. Publication checks the source approval and proposed-use permissions again. An Aircraft Identifier record requires a games-use offer. A Plane of the Day record requires both Plane of the Day and website/gallery offers. Approval is not publication; the editor must separately save an editorial record as published (or scheduled for Plane of the Day).
+## Remaining boundaries
 
-## Explicit exclusions
+This is not a public launch. Real game-account linkage, progress migration, game
+content delivery, payments, capability roles/MFA, final publishing rights and a
+retention/deletion workflow remain separate work. Public uploads need the hardening
+recorded in [security review](SECURITY_REVIEW.md).
 
-This prototype does not link to player accounts, charge money, connect to the game backend, or establish a production rights claim. There is no real game-content delivery integration. A submitted proposal is only available for private review and is not a grant of a final license to publish or distribute the photograph. The experience has not been launched as a public website.
-
-## Local preview
-
-Use Node.js 24 and the repository's existing dependencies. Run `npm run dev` for the development server, `npm run build` for the build, and `node --test tests/*.test.mjs` for the focused rules tests. If the Windows npm launcher is broken, run `node "C:/Program Files/nodejs/node_modules/npm/bin/npm-cli.js" run dev` or `... run build`. For the portable mock sign-in, open `/signin-with-chatgpt?return_to=/` and use `seedy@sites.test`. Do not commit `.dev.vars` or use mock sign-in for a hosted preview.
+Use [README.md](../README.md) for the sole supported source directory, two-terminal
+local startup, demo users, verification commands and development guidelines.

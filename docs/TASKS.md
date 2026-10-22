@@ -1,67 +1,67 @@
 # Website prototype task board
 
-Source directory: `H:/Work/TheAviationArcade/website`. This is the sole website/admin repository.
-The temporary scaffold under the Unity project was removed after the user's directory correction.
-The Unity project is a read-only source of existing branding and preview assets for this work.
+Sole website/admin repository: `H:/Work/TheAviationArcade/website`.
+Unity is a read-only reference for approved branding/content. Do not create a website
+folder there. Read README.md and actual Git status when resuming.
 
-## Accepted scope
+## Accepted scope and decisions
 
-The user approved the homepage, seven-game catalog and Aircraft Identifier / Plane of the Day
-admin prototype, then brought community photo proposals into this slice. A further instruction
-authorized predefined Luna subagent tasks, demo login/content and fetching online assets or data.
-The project preserves existing fonts, logo and semantic brand colors. Browser gameplay and real
-player account linking, purchases and game-backend publishing remain outside this prototype.
+- Homepage, seven-game catalog, photographer photo proposals, and admin for Aircraft
+  Identifier and Plane of the Day, preserving the existing branding.
+- Product authentication: Firebase email/password and Google only. The private host
+  access gate is separate and must not grant product permissions.
+- Callsign is the existing community player name tag. Game-account linkage and an
+  authoritative Callsign claim service remain future work; do not create another registry.
+- Luna handles scoped implementation; 6.1 Sol low/medium handles complex planning/review.
+- Demo content/credentials remain local and nonpublishable. Browser gameplay,
+  commerce and game-backend content delivery are outside this slice.
 
-Account review correction (2026-10-22): the user called out admin/photographer login journeys and
-upcoming community/player name tags. Shared app/web identity remains required; its prototype
-exclusion did not cancel that product requirement. See [AUTH_FLOW_REVIEW.md](AUTH_FLOW_REVIEW.md)
-for the audit, test limits and ordered corrective jobs. Use Luna for scoped tasks and 6.1 Sol at
-low/medium for complex planning, as requested by the user.
+## Jobs
 
-| Job | Owner | State | Evidence / next action |
-|---|---|---|---|
-| Existing-brand asset preparation | Asset worker | Complete | Self-hosted fonts, optimized real previews, generated decorative community illustration; provenance recorded |
-| Photographer portal | Luna worker | Submission flow integrated; account UX open | Private upload, metadata and revisions exist; complete onboarding/session journey remains |
-| Admin workspace | Luna worker | Editorial flow integrated; account UX open | Staff gate and editorial controls exist; account menu/sign-out and full staff identity requirements remain |
-| Rule tests / source review | Luna worker | Complete | Seven focused tests pass; source review recorded in SECURITY_REVIEW.md |
-| Homepage, catalog and public pages | Frontend lead | Complete, integrated | Responsive composition, seven routes, search/filter, theme and availability states |
-| Online reference snapshot | Frontend lead | Complete | Fifteen OurAirports records, original public-domain license, source checksum and repeatable fetch script |
-| D1/R2 workflow and demo seed | Frontend lead | Implemented | Versioned operations, private media, server permission checks, idempotency and explicit nonpublishable demo data |
-| Browser verification | Frontend lead | Complete | Eight Chrome workflows pass, plus concurrent retry/photo-retention and light-theme/360px layout checks; evidence in docs/evidence |
-| Locked production build | Frontend lead | Complete | Fresh locked install, TypeScript and seven rule tests pass; final build and production browser smoke pass |
-| Source checkpoint / private publication | Frontend lead | Complete | Source committed and private deployment succeeded; owner-only audience retained |
-| Further mobile loading optimization | Frontend lead | Follow-up | Lighthouse performance 82; throttled-mobile LCP 4.1s remains above the 2.5s target |
-| Account requirements / implementation audit | Luna audits + 6.1 Sol medium review | Complete | AUTH_FLOW_REVIEW.md reconciles requirements, controls and missing flows |
-| Shared account controls and photographer session journey | Frontend lead + scoped Luna tasks | Reopened / next | Visible account state/sign-out, return destinations, expiry and denial states using host auth |
-| Community profile and player name-tag specification | Frontend lead + 6.1 Sol review | Open | Define relationship to game Callsign, uniqueness, privacy, roles and moderation |
-| Hosted and multi-user account verification | Frontend lead | Open | Existing demo tests do not prove hosted login/out or distinct-user isolation |
-| Shared app/web identity integration | Account/backend owners | Open decisions | ADR-0006 is Proposed; resolve topology/policies and amend the game contract |
-| Production staff capabilities and verified MFA | Frontend lead + account owners | Open | The email allowlist does not implement the role matrix or prove enforced MFA |
+| Job                                              | State                            | Evidence / next action                                                                                          |
+| ------------------------------------------------ | -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Existing brand, homepage and seven-game catalog  | Complete                         | Original logo/fonts, optimized preview assets, responsive layouts, search/filter/theme                          |
+| Photographer proposals                           | Complete for private prototype   | Metadata, rights evidence, proposed channels, private uploads, own list and revisions                           |
+| Editorial review and content prototypes          | Complete for private prototype   | Five-check approval, versioned records, audit, separate publish/schedule action and usage checks                |
+| Firebase project and providers                   | Complete                         | `airplane-games-auth-20261022`; email/password + Google configured; runtime bindings configured                 |
+| Registration, sign-in, reset and verification    | Implemented and locally verified | Firebase browser/emulator suite; live Google consent and email delivery remain a human check                    |
+| Account controls and logout                      | Implemented and locally verified | Desktop/mobile menu, account page, safe return path, session-change/denial states                               |
+| Admin and photographer isolation                 | Implemented and locally verified | Verified staff allowlist, project/UID ownership, distinct-user list/photo/revision tests, stale-write rejection |
+| Focused rules and auth tests                     | Complete                         | 20 unit tests pass; TypeScript passes                                                                           |
+| Core browser/API regression                      | Complete                         | Eight workflows, concurrent retry, photo retention and narrow/light layouts pass                                |
+| Locked production build                          | Complete                         | Final integrated source builds successfully                                                                     |
+| README and repo guidelines                       | Updated                          | Two-terminal setup, demo seeding, local routes, Windows fallback, auth/data boundaries                          |
+| Organized source commits and private publication | In progress                      | Preserve existing history and Site audience; record final checkpoint below                                      |
+| Live Google sign-in / real email delivery        | Human check pending              | Do not equate emulator behavior with live provider completion                                                   |
+| Shared app/web principal and Callsign linking    | Open integration                 | Apply original shared-account ruling; resolve applicable ADR-0006 policies and game contract                    |
+| Production staff capabilities/MFA                | Open                             | Binary verified-email allowlist is not the complete capability matrix                                           |
+| Public-launch media and privacy hardening        | Open                             | Full decode/re-encode, abuse controls, approved rights and retention/deletion workflow                          |
+| Mobile loading optimization                      | Follow-up                        | Historical pre-Firebase Lighthouse: performance 82, accessibility 100, best practices 100, LCP 4.1s             |
 
-## Resume contract
+## Verification contract
 
-Read README.md, PROTOTYPE_SCOPE.md, AUTH_FLOW_REVIEW.md, ASSET_PROVENANCE.md and actual Git status before resuming.
-Run TypeScript, rule tests and the recorded browser workflow against the current source. Browser
-QA uses the existing bundled Playwright package when the built-in browser sandbox is unavailable.
-Local `.dev.vars`, database state, runtime caches, dependencies and publication archives are ignored.
-Staff settings are configured as hosted secrets and are not source-controlled.
+README.md contains the supported commands. Run source checks, then browser suites
+against local Firebase Auth/D1/R2 emulation. Suites mutate local fixtures and should
+run sequentially. Evidence JSON must describe passes, failures and skipped provider
+checks honestly. No credentials, session tokens or real private data belong in evidence.
+The Google helper script is blocked by the local auth harness; provider authentication
+is not established by that case.
 
-The current source of truth for successful browser checks is the saved JSON, not an earlier
-partial run. The published implementation is commit `ddd569f56076f4ecf39372bc97b6d99ef68e9aab`.
-Deployment `appgdep_6ada0d235e1c81919f72b7a40515f32f` succeeded on 2026-10-22:
-[private website](https://airplane-games-community-prototype.givingstar7.chatgpt.site),
+Preserve `.dev.vars`, database state and credentials outside Git. Generated dependencies,
+runtime caches, builds and publication archives are ignored. Restore only known task-owned
+artifacts; do not discard unrelated work. Make focused commits without rewriting published history.
+
+## Publication checkpoint
+
+The previous runtime checkpoint was `ddd569f56076f4ecf39372bc97b6d99ef68e9aab`, deployed as
+`appgdep_6ada0d235e1c81919f72b7a40515f32f`. The Firebase integration is being prepared as the
+next checkpoint; until its deployment receipt is recorded, do not call it hosted verification.
+
+The same [private website](https://airplane-games-community-prototype.givingstar7.chatgpt.site),
 [admin](https://airplane-games-community-prototype.givingstar7.chatgpt.site/admin) and
-[photographer portal](https://airplane-games-community-prototype.givingstar7.chatgpt.site/contribute).
-The hosted site uses owner sign-in; local development provides the no-password demo editor.
-The real product domain was not changed. Later documentation-only commits do not change this
-deployed implementation checkpoint.
+[photographer portal](https://airplane-games-community-prototype.givingstar7.chatgpt.site/contribute)
+retain their owner-private audience. No product domain or public launch was changed.
 
-Quality follow-up: production Lighthouse found a Vinext beta prefetch error, so public navigation
-uses native anchors. The brand fonts now have WOFF2 derivatives and critical-face preloads, and
-photographs have smaller WebP derivatives. The final production build/audit is recorded at handoff.
-
-Final production audit: accessibility 100, best practices 100, performance 82, CLS 0 and total
-blocking time 0ms. The console prefetch error is gone. SEO is 63 because this private prototype
-deliberately uses noindex/nofollow; search indexing is not activated. These are local lab results,
-not field Core Web Vitals. Public-launch upload hardening, approved legal/retention policy, verified
-store links and real game-backend delivery remain later work.
+Public navigation retains native anchors because an earlier production audit reproduced a
+Vinext beta prefetch issue. Historical Lighthouse/production-smoke artifacts predate the
+Firebase integration unless their evidence explicitly records a later source checkpoint.
