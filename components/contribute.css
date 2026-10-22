@@ -1,0 +1,210 @@
+/* Contributor-only details; the site's shared tokens and base form styles live in globals.css. */
+.contribute-root .section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+.contribute-root .section-heading h2 {
+  font-size: 34px;
+  margin: 0 0 7px;
+}
+.contribute-root .section-heading p {
+  color: var(--muted);
+  font-size: 12px;
+}
+.contribute-root .hint {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.55;
+  margin-top: 6px;
+}
+.contribute-root .visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+.contribute-root .visually-hidden:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+.contribute-root .drop-zone {
+  width: 100%;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 24px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--ink);
+  text-align: center;
+}
+.contribute-root .drop-zone svg {
+  color: var(--brass);
+  margin-bottom: 5px;
+}
+.contribute-root .drop-zone strong {
+  font-size: 14px;
+}
+.contribute-root .drop-zone span,
+.contribute-root .drop-zone small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.contribute-root .drop-zone:hover {
+  border-color: var(--brass);
+  background: var(--raised);
+}
+.contribute-root .check-list--games {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+.contribute-root .check-list--games .check-label {
+  min-height: 62px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.contribute-root .check-list--games .check-label span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.4;
+}
+.contribute-root .check-list--games .check-label strong {
+  font-size: 11px;
+  font-weight: 500;
+}
+.contribute-root .check-list--games .check-label small {
+  font-size: 10px;
+  color: var(--muted);
+}
+.contribute-root .status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 10px;
+  line-height: 1.5;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+.contribute-root .status--pending {
+  color: var(--brass);
+  background: color-mix(in srgb, var(--brass) 12%, var(--surface));
+}
+.contribute-root .status--changes_requested {
+  color: var(--action);
+  background: color-mix(in srgb, var(--action) 12%, var(--surface));
+}
+.contribute-root .status--approved {
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 13%, var(--surface));
+}
+.contribute-root .status--rejected {
+  color: var(--error);
+  background: color-mix(in srgb, var(--error) 12%, var(--surface));
+}
+.contribute-root .submission-item__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+}
+.contribute-root .submission-item__body > .actions {
+  width: 100%;
+  justify-content: space-between;
+}
+.contribute-root .submission-item__body h3 {
+  font-size: 24px;
+}
+.contribute-root .submit-actions {
+  align-items: center;
+  gap: 14px;
+  padding: 22px 0 38px;
+}
+.contribute-root .submit-actions > span {
+  color: var(--muted);
+  font-size: 10px;
+}
+.contribute-root .contribute-aside h2 {
+  font-size: 34px;
+}
+.contribute-root .contribute-aside figure {
+  margin: 0 0 20px;
+}
+.contribute-root .contribute-aside figure img {
+  width: 100%;
+  aspect-ratio: 4/3;
+  object-fit: cover;
+  border-radius: 12px;
+}
+.contribute-root .contribute-aside figcaption {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+.contribute-root .contribute-aside figcaption a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: var(--brass);
+}
+.contribute-root .contribute-aside .eyebrow {
+  margin: 18px 0 8px;
+}
+.contribute-root .review-steps {
+  padding-left: 20px;
+  margin: 12px 0 0;
+}
+.contribute-root .review-steps li {
+  padding-left: 4px;
+}
+.contribute-root .signin-panel {
+  margin-bottom: 52px;
+}
+.contribute-root .success {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.contribute-root .success button {
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+}
+.contribute-root .error {
+  margin: 0 0 18px;
+}
+@media (max-width: 767px) {
+  .contribute-root .section-heading h2 {
+    font-size: 30px;
+  }
+  .contribute-root .check-list--games {
+    grid-template-columns: 1fr;
+  }
+  .contribute-root .submit-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .contribute-root .submission-item__body > .actions {
+    align-items: flex-start;
+  }
+}

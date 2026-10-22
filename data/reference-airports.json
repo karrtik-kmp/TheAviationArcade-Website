@@ -1,0 +1,174 @@
+{
+  "source": "https://davidmegginson.github.io/ourairports-data/airports.csv",
+  "licenseSource": "https://raw.githubusercontent.com/davidmegginson/ourairports-data/main/LICENSE",
+  "fetchedAt": "2026-10-22T12:30:47.862606+00:00",
+  "sourceSha256": "0499dbd88de2fc735ac5c09f59796ccc3af544e17ffda807f793c0c6fe6c3d75",
+  "reviewState": "reference-only-not-approved-game-content",
+  "airports": [
+    {
+      "ident": "EHAM",
+      "iata_code": "AMS",
+      "name": "Amsterdam Airport Schiphol",
+      "municipality": "Amsterdam",
+      "iso_country": "NL",
+      "latitude_deg": "52.308601",
+      "longitude_deg": "4.76389",
+      "home_link": "https://www.schiphol.nl/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/Amsterdam_Airport_Schiphol"
+    },
+    {
+      "ident": "VABB",
+      "iata_code": "BOM",
+      "name": "Chhatrapati Shivaji Maharaj International Airport",
+      "municipality": "Mumbai",
+      "iso_country": "IN",
+      "latitude_deg": "19.088699",
+      "longitude_deg": "72.867897",
+      "home_link": "http://www.csia.in/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/Chhatrapati_Shivaji_International_Airport"
+    },
+    {
+      "ident": "LFPG",
+      "iata_code": "CDG",
+      "name": "Charles de Gaulle International Airport",
+      "municipality": "Paris (Roissy-en-France, Val-d'Oise)",
+      "iso_country": "FR",
+      "latitude_deg": "49.00896",
+      "longitude_deg": "2.554117",
+      "home_link": "http://www.aeroportsdeparis.fr/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/Charles_de_Gaulle_Airport"
+    },
+    {
+      "ident": "KDCA",
+      "iata_code": "DCA",
+      "name": "Ronald Reagan Washington National Airport",
+      "municipality": "Washington",
+      "iso_country": "US",
+      "latitude_deg": "38.8521",
+      "longitude_deg": "-77.037697",
+      "home_link": "http://www.flyreagan.com/dca/reagan-national-airport",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/Ronald_Reagan_Washington_National_Airport"
+    },
+    {
+      "ident": "VIDP",
+      "iata_code": "DEL",
+      "name": "Indira Gandhi International Airport",
+      "municipality": "New Delhi",
+      "iso_country": "IN",
+      "latitude_deg": "28.55563",
+      "longitude_deg": "77.09519",
+      "home_link": "https://www.newdelhiairport.in/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/Indira_Gandhi_International_Airport"
+    },
+    {
+      "ident": "OMDB",
+      "iata_code": "DXB",
+      "name": "Dubai International Airport",
+      "municipality": "Dubai",
+      "iso_country": "AE",
+      "latitude_deg": "25.24979",
+      "longitude_deg": "55.370992",
+      "home_link": "https://www.dubaiairport.com/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/Dubai_International_Airport"
+    },
+    {
+      "ident": "EDDF",
+      "iata_code": "FRA",
+      "name": "Frankfurt Main Airport",
+      "municipality": "Frankfurt am Main",
+      "iso_country": "DE",
+      "latitude_deg": "50.026706",
+      "longitude_deg": "8.55835",
+      "home_link": "https://www.frankfurt-airport.de/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/Frankfurt_Airport"
+    },
+    {
+      "ident": "RJTT",
+      "iata_code": "HND",
+      "name": "Tokyo Haneda International Airport",
+      "municipality": "Tokyo",
+      "iso_country": "JP",
+      "latitude_deg": "35.549678",
+      "longitude_deg": "139.786958",
+      "home_link": "http://www.haneda-airport.jp/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/Tokyo_International_Airport"
+    },
+    {
+      "ident": "KJFK",
+      "iata_code": "JFK",
+      "name": "John F. Kennedy International Airport",
+      "municipality": "New York",
+      "iso_country": "US",
+      "latitude_deg": "40.639447",
+      "longitude_deg": "-73.779317",
+      "home_link": "https://www.jfkairport.com/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/John_F._Kennedy_International_Airport"
+    },
+    {
+      "ident": "KLAX",
+      "iata_code": "LAX",
+      "name": "Los Angeles International Airport",
+      "municipality": "Los Angeles",
+      "iso_country": "US",
+      "latitude_deg": "33.942501",
+      "longitude_deg": "-118.407997",
+      "home_link": "https://www.flylax.com/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/Los_Angeles_International_Airport"
+    },
+    {
+      "ident": "EGLL",
+      "iata_code": "LHR",
+      "name": "London Heathrow Airport",
+      "municipality": "London",
+      "iso_country": "GB",
+      "latitude_deg": "51.470748",
+      "longitude_deg": "-0.459909",
+      "home_link": "http://www.heathrow.com/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/Heathrow_Airport"
+    },
+    {
+      "ident": "KSAN",
+      "iata_code": "SAN",
+      "name": "San Diego International Airport",
+      "municipality": "San Diego",
+      "iso_country": "US",
+      "latitude_deg": "32.733601",
+      "longitude_deg": "-117.190002",
+      "home_link": "http://www.san.org/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/San_Diego_International_Airport"
+    },
+    {
+      "ident": "KSFO",
+      "iata_code": "SFO",
+      "name": "San Francisco International Airport",
+      "municipality": "San Francisco",
+      "iso_country": "US",
+      "latitude_deg": "37.619806",
+      "longitude_deg": "-122.374821",
+      "home_link": "http://www.flysfo.com/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/San_Francisco_International_Airport"
+    },
+    {
+      "ident": "WSSS",
+      "iata_code": "SIN",
+      "name": "Singapore Changi Airport",
+      "municipality": "Singapore",
+      "iso_country": "SG",
+      "latitude_deg": "1.35019",
+      "longitude_deg": "103.994003",
+      "home_link": "http://www.changiairport.com/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/Singapore_Changi_Airport"
+    },
+    {
+      "ident": "YSSY",
+      "iata_code": "SYD",
+      "name": "Sydney Kingsford Smith International Airport",
+      "municipality": "Sydney (Mascot)",
+      "iso_country": "AU",
+      "latitude_deg": "-33.946098",
+      "longitude_deg": "151.177002",
+      "home_link": "http://www.sydneyairport.com.au/",
+      "wikipedia_link": "https://en.wikipedia.org/wiki/Sydney_Airport"
+    }
+  ]
+}
