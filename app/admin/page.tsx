@@ -1,12 +1,14 @@
 import { AdminApp } from "@/components/AdminApp";
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { getProductUser } from "@/lib/product-auth";
 import { isStaff } from "@/lib/server";
 import { PublicShell, Brand } from "@/components/PublicShell";
+import { accountSessionKey } from "@/lib/account-server";
+import { accountSignInPath, accountSignOutPath } from "@/lib/account";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const user = await getChatGPTUser();
+  const user = await getProductUser();
 
   if (!user) {
     return (
@@ -15,28 +17,20 @@ export default async function AdminPage() {
           <div className="admin-gate-card">
             <Brand />
             <h1>Editor sign in</h1>
-            <p>Sign in with ChatGPT to access the editorial workspace.</p>
-            <a
-              className="btn"
-              href="/signin-with-chatgpt?return_to=%2Fadmin"
-              target="_top"
-            >
-              {process.env.NODE_ENV !== "production"
-                ? "Try demo editor"
-                : "Sign in with ChatGPT"}
+            <p>
+              Sign in with your email or Google account to access the editorial
+              workspace.
+            </p>
+            <a className="btn" href={accountSignInPath("/admin")} target="_top">
+              Sign in
             </a>
-            {process.env.NODE_ENV !== "production" && (
-              <p className="admin-local-note">
-                Local demo account: <b>seedy@sites.test</b>. No password is
-                required. Hosted access checks the staff allowlist.
-              </p>
-            )}
           </div>
         </main>
       </PublicShell>
     );
   }
 
+  const displayName = user.fullName?.trim() || "Account";
   if (!(await isStaff())) {
     return (
       <PublicShell>
@@ -48,6 +42,15 @@ export default async function AdminPage() {
               This account does not have permission to use the editorial
               workspace.
             </p>
+            <p>Signed in as {displayName}.</p>
+            <div className="admin-gate-actions">
+              <a className="btn secondary" href="/account">
+                Account options
+              </a>
+              <a className="btn" href={accountSignOutPath()} target="_top">
+                Sign out
+              </a>
+            </div>
           </div>
         </main>
       </PublicShell>
@@ -55,6 +58,6 @@ export default async function AdminPage() {
   }
 
   return (
-    <AdminApp user={{ displayName: user.displayName, email: user.email }} />
+    <AdminApp user={{ sessionKey: await accountSessionKey(user.userId) }} />
   );
 }

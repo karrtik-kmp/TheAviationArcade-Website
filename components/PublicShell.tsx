@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Sun, Moon, List, X, ArrowUpRight } from "@phosphor-icons/react";
+import { AccountControl } from "@/components/AccountControl";
+import "@/components/account.css";
 export function Brand() {
   return (
     <Link href="/" className="brand" aria-label="Airplane Games home">
@@ -76,6 +78,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
           </nav>
           <div className="header-actions">
             <ThemeToggle />
+            <AccountControl />
             <Link className="btn" href="/get-the-app">
               Get the App <ArrowUpRight size={15} />
             </Link>

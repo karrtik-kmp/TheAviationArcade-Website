@@ -21,6 +21,13 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { SiteLink as Link } from "@/components/SiteLink";
+import { useAccountSession } from "@/components/AccountSession";
+import {
+  accountHeaders,
+  accountSignInPath,
+  accountSignOutPath,
+  contributorPath,
+} from "@/lib/account";
 import {
   categoryNames,
   channelNames,
@@ -36,16 +43,22 @@ import type {
 } from "@/lib/types";
 import "./contribute.css";
 
-type Contributor = { displayName: string; email: string } | null;
+type Contributor = {
+  displayName: string;
+  email: string;
+  sessionKey: string;
+} | null;
 type Props = {
   user: Contributor;
   initialCategory?: string;
   initialGame?: string;
+  initialView?: "new" | "mine";
   demoMode?: boolean;
 };
 type FieldErrors = Record<string, string>;
 type ApiResponse = {
   error?: string;
+  code?: string;
   submissions?: Submission[];
   submission?: Submission;
   fields?: Record<string, unknown>;
@@ -100,9 +113,16 @@ export default function SubmissionForm({
   user,
   initialCategory,
   initialGame,
+  initialView = "new",
   demoMode = false,
 }: Props) {
-  const [tab, setTab] = useState<"new" | "mine">("new");
+  const accountSession = useAccountSession();
+  const accountRef = useRef(accountSession);
+  accountRef.current = accountSession;
+  const [blockedAccess, setBlockedAccess] = useState<number | null>(null);
+  const blockedAccessRef = useRef<number | null>(null);
+  const generation = useRef(0);
+  const [tab, setTab] = useState<"new" | "mine">(initialView);
   const [data, setData] = useState<SubmissionData>(() =>
     emptyData(user, initialCategory, initialGame),
   );
@@ -121,6 +141,16 @@ export default function SubmissionForm({
   const formRef = useRef<HTMLFormElement>(null);
   const errorRef = useRef<HTMLDivElement>(null);
   const uid = useId();
+  const sessionMatches =
+    !!user &&
+    accountSession.state === "ready" &&
+    !!accountSession.account?.user &&
+    accountSession.account.sessionKey === user.sessionKey &&
+    blockedAccess === null;
+  const sessionMatchesRef = useRef(sessionMatches);
+  sessionMatchesRef.current = sessionMatches;
+
+  useEffect(() => setTab(initialView), [initialView]);
 
   useEffect(
     () => () => {
@@ -131,23 +161,88 @@ export default function SubmissionForm({
 
   const refresh = useCallback(async () => {
     if (!user) return;
+    if (
+      accountRef.current.state !== "ready" ||
+      !accountRef.current.account?.user ||
+      accountRef.current.account.sessionKey !== user.sessionKey ||
+      blockedAccessRef.current !== null ||
+      !sessionMatchesRef.current
+    )
+      return;
+    const requestGeneration = ++generation.current;
     setLoadingList(true);
     try {
-      const response = await fetch("/api/submissions", { cache: "no-store" });
+      const response = await fetch("/api/submissions", {
+        cache: "no-store",
+        headers: accountHeaders(user.sessionKey),
+      });
       const body = (await response.json()) as ApiResponse;
-      if (!response.ok)
+      if (
+        requestGeneration !== generation.current ||
+        accountRef.current.account?.sessionKey !== user.sessionKey ||
+        !sessionMatchesRef.current
+      )
+        return;
+      if (!response.ok) {
+        if (
+          response.status === 401 ||
+          response.status === 403 ||
+          body.code === "ACCOUNT_CHANGED"
+        ) {
+          const status = response.status || 409;
+          generation.current += 1;
+          setItems([]);
+          setRevision(null);
+          setExistingPhoto(null);
+          blockedAccessRef.current = status;
+          setBlockedAccess(status);
+          accountRef.current.reportAccess(status);
+          return;
+        }
         throw new Error(body.error || "Could not load your proposals.");
+      }
       setItems(Array.isArray(body.submissions) ? body.submissions : []);
     } catch (error) {
+      if (requestGeneration !== generation.current) return;
       setProblem(
         error instanceof Error
           ? error.message
           : "Could not load your proposals.",
       );
     } finally {
-      setLoadingList(false);
+      if (requestGeneration === generation.current) setLoadingList(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    if (sessionMatches) void refresh();
+    else {
+      generation.current += 1;
+      if (
+        accountRef.current.state !== "ready" &&
+        blockedAccessRef.current === null
+      )
+        return;
+      setItems([]);
+      if (revision) {
+        setData(emptyData(user, initialCategory, initialGame));
+        setFile(null);
+        setPreview(null);
+      }
+      setRevision(null);
+      setExistingPhoto(null);
+      setLoadingList(false);
+    }
+  }, [
+    sessionMatches,
+    accountSession.state,
+    user,
+    refresh,
+    revision,
+    initialCategory,
+    initialGame,
+  ]);
 
   const set = <K extends keyof SubmissionData>(
     key: K,
@@ -230,7 +325,15 @@ export default function SubmissionForm({
     setNotice("");
     setProblem("");
     if (!user) {
-      setProblem("Sign in with ChatGPT to send a proposal.");
+      setProblem(
+        "Sign in with your email or Google account to send a proposal.",
+      );
+      return;
+    }
+    if (!sessionMatches) {
+      setProblem(
+        "Your account session needs attention before this proposal can be sent.",
+      );
       return;
     }
     const parsed = submissionSchema.safeParse(normalized);
@@ -253,6 +356,7 @@ export default function SubmissionForm({
     }
     setErrors({});
     setBusy(true);
+    const requestGeneration = generation.current;
     try {
       const payload = new FormData();
       payload.set("data", JSON.stringify(parsed.data));
@@ -264,12 +368,36 @@ export default function SubmissionForm({
           : "/api/submissions",
         {
           method: revision ? "PUT" : "POST",
-          headers: { "Idempotency-Key": retryKey },
+          headers: {
+            "Idempotency-Key": retryKey,
+            ...accountHeaders(user.sessionKey),
+          },
           body: payload,
         },
       );
       const body = (await response.json()) as ApiResponse;
+      if (
+        requestGeneration !== generation.current ||
+        accountRef.current.account?.sessionKey !== user.sessionKey ||
+        !sessionMatchesRef.current
+      )
+        return;
       if (!response.ok) {
+        if (
+          response.status === 401 ||
+          response.status === 403 ||
+          body.code === "ACCOUNT_CHANGED"
+        ) {
+          const status = response.status || 409;
+          generation.current += 1;
+          setItems([]);
+          setRevision(null);
+          setExistingPhoto(null);
+          blockedAccessRef.current = status;
+          setBlockedAccess(status);
+          accountRef.current.reportAccess(status);
+          return;
+        }
         if (body.fields) {
           const fromServer: FieldErrors = {};
           for (const [key, messages] of Object.entries(
@@ -309,6 +437,7 @@ export default function SubmissionForm({
       setTab("mine");
       await refresh();
     } catch (error) {
+      if (requestGeneration !== generation.current) return;
       setProblem(
         error instanceof Error
           ? error.message
@@ -348,7 +477,84 @@ export default function SubmissionForm({
           where you think it could fit.
         </p>
       </section>
-      {!user ? (
+      {user && !sessionMatches ? (
+        <section
+          className="signin-panel account-session-gate"
+          role={
+            accountSession.state === "error" || blockedAccess === 403
+              ? "alert"
+              : undefined
+          }
+        >
+          <ImageSquare size={28} weight="duotone" aria-hidden="true" />
+          <h2>
+            {accountSession.state === "error"
+              ? "Account check unavailable"
+              : accountSession.state === "loading"
+                ? "Checking account…"
+                : blockedAccess === 403
+                  ? "Account access changed"
+                  : !accountSession.account?.user || blockedAccess === 401
+                    ? "Sign in to continue"
+                    : "Account session changed"}
+          </h2>
+          <p>
+            {accountSession.state === "error"
+              ? "We could not confirm your account. Retry the check before opening private submissions."
+              : blockedAccess === 403
+                ? "This account can no longer access these private submissions."
+                : accountSession.state === "loading"
+                  ? "Confirming your account before loading private proposals."
+                  : "Private proposal lists and revision details were cleared. Unsent form values remain only in this page; navigating away or reloading will lose them."}
+          </p>
+          <div className="actions account-session-actions">
+            {accountSession.state === "error" && (
+              <button
+                className="btn secondary"
+                type="button"
+                onClick={() => void accountSession.refresh()}
+              >
+                Retry account check
+              </button>
+            )}
+            {(!accountSession.account?.user ||
+              blockedAccess === 401 ||
+              (accountSession.account?.sessionKey &&
+                accountSession.account.sessionKey !== user.sessionKey)) && (
+              <a
+                className="btn"
+                href={accountSignInPath(
+                  contributorPath(
+                    initialCategory,
+                    initialGame,
+                    tab === "mine" ? "mine" : undefined,
+                  ),
+                )}
+                target="_top"
+              >
+                Sign in
+              </a>
+            )}
+            <a className="btn secondary" href="/account">
+              Account options
+            </a>
+            <a
+              className="btn secondary"
+              href={accountSignOutPath()}
+              target="_top"
+            >
+              Sign out
+            </a>
+            <button
+              className="btn secondary"
+              type="button"
+              onClick={() => window.location.reload()}
+            >
+              Reload page
+            </button>
+          </div>
+        </section>
+      ) : !user ? (
         <section className="signin-panel" aria-labelledby="signin-heading">
           <ImageSquare size={28} weight="duotone" aria-hidden="true" />
           <h2 id="signin-heading">Sign in to contribute</h2>
@@ -358,11 +564,16 @@ export default function SubmissionForm({
           </p>
           <a
             className="btn"
-            href={`/signin-with-chatgpt?return_to=${encodeURIComponent("/contribute")}`}
+            href={accountSignInPath(
+              contributorPath(
+                initialCategory,
+                initialGame,
+                initialView === "mine" ? "mine" : undefined,
+              ),
+            )}
             target="_top"
           >
-            {demoMode ? "Try demo contributor" : "Sign in with ChatGPT"}{" "}
-            <ArrowLeft size={16} aria-hidden="true" />
+            Sign in <ArrowLeft size={16} aria-hidden="true" />
           </a>
         </section>
       ) : (

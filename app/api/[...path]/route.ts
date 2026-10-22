@@ -10,6 +10,7 @@ import {
   HttpError,
   limitedForm,
 } from "@/lib/server";
+import { accountSessionKey } from "@/lib/account-server";
 import {
   submissionSchema,
   imageInfo,
@@ -729,6 +730,18 @@ async function handle(request: Request, context: Context) {
     const { path } = await context.params,
       route = path.join("/"),
       method = request.method;
+    // Optional UI fence: reject an operation started under another account. Authentication and
+    // ownership checks still apply independently; this marker grants no access on its own.
+    const expectedAccount = request.headers.get("X-Account-Session");
+    if (expectedAccount && (path[0] === "admin" || path[0] === "submissions")) {
+      const user = await identity();
+      if (expectedAccount !== (await accountSessionKey(user.userId)))
+        throw new HttpError(
+          409,
+          "Your signed-in account changed. Reload before continuing.",
+          "ACCOUNT_CHANGED",
+        );
+    }
     if (method === "GET" && route === "featured")
       return await featured(request);
     if (method === "GET" && path[0] === "photos" && path.length === 2)

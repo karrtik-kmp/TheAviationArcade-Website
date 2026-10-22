@@ -24,10 +24,17 @@ import {
   SquaresFour,
 } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { AccountControl } from "@/components/AccountControl";
+import { useAccountSession } from "@/components/AccountSession";
 import { Brand, ThemeToggle } from "@/components/PublicShell";
 import "@/components/admin.css";
+import {
+  accountHeaders,
+  accountSignInPath,
+  accountSignOutPath,
+} from "@/lib/account";
 import type {
   EditorialData,
   EditorialRecord,
@@ -42,7 +49,7 @@ import {
   reviewError,
 } from "@/lib/rules";
 
-type AdminUser = { displayName: string; email: string };
+type AdminUser = { sessionKey: string };
 type Section =
   | "Overview"
   | "Submissions"
@@ -80,17 +87,6 @@ const ranks = [
   "Chief Pilot",
 ];
 
-function initials(name: string) {
-  return (
-    name
-      .split(/[\s@.]+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0])
-      .join("")
-      .toUpperCase() || "E"
-  );
-}
 function prettyDate(value: string) {
   if (!value) return "Not set";
   const date = new Date(value);
@@ -118,6 +114,14 @@ function responseError(body: unknown, fallback: string) {
     ? body.error
     : fallback;
 }
+function responseCode(body: unknown) {
+  return body &&
+    typeof body === "object" &&
+    "code" in body &&
+    typeof body.code === "string"
+    ? body.code
+    : "";
+}
 function seedData(record: EditorialRecord): EditorialData {
   return { ...record.data, distractors: [...record.data.distractors] };
 }
@@ -126,6 +130,18 @@ function displayStatus(status: string) {
 }
 
 export function AdminApp({ user }: { user: AdminUser }) {
+  const accountSession = useAccountSession();
+  const accountRef = useRef(accountSession);
+  accountRef.current = accountSession;
+  const [blockedAccess, setBlockedAccess] = useState<number | null>(null);
+  const blockedAccessRef = useRef<number | null>(null);
+  const generation = useRef(0);
+  const currentAccountMatches =
+    accountSession.state === "ready" &&
+    !!accountSession.account?.user &&
+    accountSession.account.isStaff &&
+    accountSession.account.sessionKey === user.sessionKey &&
+    blockedAccess === null;
   const { resolvedTheme } = useTheme();
   const fluentTheme = resolvedTheme === "dark" ? webDarkTheme : webLightTheme;
   const brandBackground = resolvedTheme === "dark" ? "#c64731" : "#a93825";
@@ -138,24 +154,69 @@ export function AdminApp({ user }: { user: AdminUser }) {
   const [notice, setNotice] = useState<Notice>(null);
   const [busy, setBusy] = useState(false);
   const [selectedId, setSelectedId] = useState("");
+  const [reviewBaseVersion, setReviewBaseVersion] = useState<number | null>(
+    null,
+  );
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [search, setSearch] = useState("");
   const [checks, setChecks] = useState<ReviewChecks>(emptyChecks());
   const [reviewNote, setReviewNote] = useState("");
   const [recordId, setRecordId] = useState("");
+  const [recordBaseVersion, setRecordBaseVersion] = useState<number | null>(
+    null,
+  );
   const [recordData, setRecordData] = useState<EditorialData | null>(null);
   const [dateKey, setDateKey] = useState("");
   const [showArchived, setShowArchived] = useState(false);
 
+  const clearPrivateData = useCallback(() => {
+    generation.current += 1;
+    setSubmissions([]);
+    setRecords([]);
+    setEvents([]);
+    setSelectedId("");
+    setRecordId("");
+    setReviewBaseVersion(null);
+    setRecordBaseVersion(null);
+    setRecordData(null);
+    setChecks(emptyChecks());
+    setReviewNote("");
+    setLoadError("");
+    setLoadState("loading");
+    setBusy(false);
+  }, []);
+
+  const blockAccess = useCallback(
+    (status: number) => {
+      blockedAccessRef.current = status;
+      setBlockedAccess(status);
+      clearPrivateData();
+      accountRef.current.reportAccess(status);
+    },
+    [clearPrivateData],
+  );
+
   const fetchAll = useCallback(async () => {
+    const session = accountRef.current;
+    if (
+      session.state !== "ready" ||
+      !session.account?.user ||
+      !session.account.isStaff ||
+      session.account.sessionKey !== user.sessionKey ||
+      blockedAccessRef.current !== null ||
+      !currentAccessRef.current
+    )
+      return;
+    const requestGeneration = ++generation.current;
     setLoadState("loading");
     setLoadError("");
     try {
+      const headers = accountHeaders(user.sessionKey);
       const [s, c, a] = await Promise.all([
-        fetch("/api/admin/submissions", { cache: "no-store" }),
-        fetch("/api/admin/content", { cache: "no-store" }),
-        fetch("/api/admin/audit", { cache: "no-store" }),
+        fetch("/api/admin/submissions", { cache: "no-store", headers }),
+        fetch("/api/admin/content", { cache: "no-store", headers }),
+        fetch("/api/admin/audit", { cache: "no-store", headers }),
       ]);
       const results = await Promise.all(
         [s, c, a].map(async (response) => ({
@@ -164,10 +225,23 @@ export function AdminApp({ user }: { user: AdminUser }) {
         })),
       );
       const failed = results.find(({ response }) => !response.ok);
-      if (failed)
-        throw new Error(
-          responseError(failed.body, "Could not load the editorial workspace."),
+      if (failed) {
+        const error = Object.assign(
+          new Error(
+            responseError(
+              failed.body,
+              "Could not load the editorial workspace.",
+            ),
+          ),
+          {
+            status: failed.response.status,
+            code: responseCode(failed.body),
+          },
         );
+        throw error;
+      }
+      if (requestGeneration !== generation.current || !currentAccessRef.current)
+        return;
       const [submissionBody, contentBody, auditBody] = results.map(
         ({ body }) => body as Record<string, unknown>,
       );
@@ -188,6 +262,19 @@ export function AdminApp({ user }: { user: AdminUser }) {
       );
       setLoadState("ready");
     } catch (error) {
+      if (requestGeneration !== generation.current) return;
+      const status =
+        typeof error === "object" && error && "status" in error
+          ? Number(error.status)
+          : 0;
+      const code =
+        typeof error === "object" && error && "code" in error
+          ? String(error.code)
+          : "";
+      if (status === 401 || status === 403 || code === "ACCOUNT_CHANGED") {
+        blockAccess(status || 409);
+        return;
+      }
       setLoadError(
         error instanceof Error
           ? error.message
@@ -195,11 +282,23 @@ export function AdminApp({ user }: { user: AdminUser }) {
       );
       setLoadState("error");
     }
-  }, []);
+  }, [blockAccess, user.sessionKey]);
+
+  const currentAccessRef = useRef(currentAccountMatches);
+  currentAccessRef.current = currentAccountMatches;
 
   useEffect(() => {
-    void fetchAll();
-  }, [fetchAll]);
+    if (currentAccountMatches) void fetchAll();
+    else if (accountSession.state === "ready" || blockedAccess !== null)
+      clearPrivateData();
+    else generation.current += 1;
+  }, [
+    currentAccountMatches,
+    accountSession.state,
+    blockedAccess,
+    fetchAll,
+    clearPrivateData,
+  ]);
 
   const selected =
     submissions.find((submission) => submission.id === selectedId) ?? null;
@@ -235,20 +334,35 @@ export function AdminApp({ user }: { user: AdminUser }) {
   );
 
   async function requestJson(url: string, method: string, payload: unknown) {
+    if (!currentAccessRef.current)
+      throw new Error(
+        "Your account session is no longer active. Review was stopped.",
+      );
+    const requestGeneration = generation.current;
     const response = await fetch(url, {
       method,
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...accountHeaders(user.sessionKey),
+      },
       body: JSON.stringify(payload),
     });
     const body = await response.json().catch(() => ({}));
+    if (requestGeneration !== generation.current || !currentAccessRef.current)
+      throw Object.assign(
+        new Error("This request belongs to an earlier account check."),
+        { stale: true },
+      );
     if (!response.ok)
       throw Object.assign(
         new Error(responseError(body, "The request could not be saved.")),
-        { status: response.status },
+        { status: response.status, code: responseCode(body) },
       );
     return body as Record<string, unknown>;
   }
   function handleMutationError(error: unknown, refreshOnConflict = false) {
+    if (typeof error === "object" && error && "stale" in error && error.stale)
+      return;
     const status =
       typeof error === "object" && error && "status" in error
         ? Number(error.status)
@@ -257,29 +371,39 @@ export function AdminApp({ user }: { user: AdminUser }) {
       error instanceof Error
         ? error.message
         : "The request could not be saved.";
+    const code =
+      typeof error === "object" && error && "code" in error
+        ? String(error.code)
+        : "";
+    if (status === 401 || status === 403 || code === "ACCOUNT_CHANGED") {
+      blockAccess(status || 409);
+      return;
+    }
     setNotice({
       kind: "error",
       text:
         status === 409
-          ? `${message} Your form has been kept; refresh the latest server version before retrying.`
+          ? `${message} Your form has been kept. Select the item again to load its latest version; that replaces your unsaved changes.`
           : message,
     });
     if (refreshOnConflict && status === 409) void fetchAll();
   }
   function openSubmission(item: Submission) {
     setSelectedId(item.id);
+    setReviewBaseVersion(item.version);
     setChecks({ ...emptyChecks(), ...item.checks });
     setReviewNote(item.reviewNote ?? "");
     setNotice(null);
   }
   function openRecord(record: EditorialRecord) {
     setRecordId(record.id);
+    setRecordBaseVersion(record.version);
     setRecordData(seedData(record));
     setDateKey(record.dateKey ?? new Date().toLocaleDateString("en-CA"));
     setNotice(null);
   }
   async function review(next: SubmissionStatus) {
-    if (!selected) return;
+    if (!selected || reviewBaseVersion === null) return;
     const localError = reviewError(
       selected.data,
       selected.status,
@@ -294,12 +418,21 @@ export function AdminApp({ user }: { user: AdminUser }) {
     setBusy(true);
     setNotice(null);
     try {
-      await requestJson(`/api/admin/submissions/${selected.id}`, "PATCH", {
-        status: next,
-        checks,
-        note: reviewNote,
-        version: selected.version,
-      });
+      const body = await requestJson(
+        `/api/admin/submissions/${selected.id}`,
+        "PATCH",
+        {
+          status: next,
+          checks,
+          note: reviewNote,
+          version: reviewBaseVersion,
+        },
+      );
+      const updated = body.submission as Submission;
+      setReviewBaseVersion(updated.version);
+      setSubmissions((previous) =>
+        previous.map((item) => (item.id === updated.id ? updated : item)),
+      );
       setNotice({
         kind: "success",
         text:
@@ -378,7 +511,7 @@ export function AdminApp({ user }: { user: AdminUser }) {
     }
   }
   async function saveRecord(status: EditorialRecord["status"]) {
-    if (!selectedRecord || !recordData) return;
+    if (!selectedRecord || !recordData || recordBaseVersion === null) return;
     if (status === "scheduled" || status === "published") {
       const errors = editorialErrors(selectedRecord.kind, recordData);
       if (errors.length) {
@@ -411,10 +544,11 @@ export function AdminApp({ user }: { user: AdminUser }) {
           data: recordData,
           status: effectiveStatus,
           dateKey: effectiveStatus === "scheduled" ? effectiveDate : dateKey,
-          version: selectedRecord.version,
+          version: recordBaseVersion,
         },
       );
       const updated = body.record as EditorialRecord;
+      setRecordBaseVersion(updated.version);
       setRecords((previous) =>
         previous.map((record) => (record.id === updated.id ? updated : record)),
       );
@@ -444,6 +578,90 @@ export function AdminApp({ user }: { user: AdminUser }) {
       record.kind === contentKind &&
       (showArchived || record.status !== "archived"),
   );
+
+  if (!currentAccountMatches) {
+    const sessionError = accountSession.state === "error";
+    const signedOut =
+      accountSession.state === "ready" && !accountSession.account?.user;
+    const permissionDenied =
+      blockedAccess === 403 ||
+      (accountSession.state === "ready" &&
+        !!accountSession.account?.user &&
+        !accountSession.account.isStaff);
+    const changed =
+      accountSession.state === "ready" &&
+      !!accountSession.account?.user &&
+      accountSession.account.sessionKey !== user.sessionKey;
+    return (
+      <main className="admin-gate" id="main">
+        <section
+          className="admin-gate-card"
+          role={sessionError || permissionDenied ? "alert" : undefined}
+        >
+          <p className="eyebrow">EDITORIAL WORKSPACE</p>
+          <h1>
+            {sessionError
+              ? "Account check unavailable"
+              : permissionDenied
+                ? "Staff access required"
+                : signedOut
+                  ? "Sign in to continue"
+                  : changed || blockedAccess
+                    ? "Account session changed"
+                    : "Checking account…"}
+          </h1>
+          <p>
+            {sessionError
+              ? "We could not confirm this account. Retry the check before continuing."
+              : permissionDenied
+                ? "This account no longer has staff access to the editorial workspace."
+                : signedOut
+                  ? "Your sign-in expired. Sign in again to reopen the workspace."
+                  : changed || blockedAccess
+                    ? "Private editorial data was cleared and pending writes were stopped. Sign in again or reload after choosing the account you want to use."
+                    : "Confirming your staff session before loading private editorial data."}
+          </p>
+          <div className="admin-gate-actions">
+            {sessionError && (
+              <button
+                className="btn secondary"
+                type="button"
+                onClick={() => void accountSession.refresh()}
+              >
+                Retry account check
+              </button>
+            )}
+            {(signedOut || changed || blockedAccess === 401) && (
+              <a
+                className="btn"
+                href={accountSignInPath("/admin")}
+                target="_top"
+              >
+                Sign in
+              </a>
+            )}
+            <a className="btn secondary" href="/account">
+              Account options
+            </a>
+            <a
+              className="btn secondary"
+              href={accountSignOutPath()}
+              target="_top"
+            >
+              Sign out
+            </a>
+            <button
+              className="btn secondary"
+              type="button"
+              onClick={() => window.location.reload()}
+            >
+              Reload workspace
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <FluentProvider
@@ -517,13 +735,7 @@ export function AdminApp({ user }: { user: AdminUser }) {
               </div>
               <div className="admin-topbar-tools">
                 <ThemeToggle />
-                <div className="admin-identity">
-                  <span className="avatar">{initials(user.displayName)}</span>
-                  <span>
-                    <b>{user.displayName}</b>
-                    <small>{user.email}</small>
-                  </span>
-                </div>
+                <AccountControl />
               </div>
             </header>
             <div className="admin-content">

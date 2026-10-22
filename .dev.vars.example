@@ -1,0 +1,7 @@
+# LOCAL ONLY: copy to .dev.vars. These values address the Auth emulator, not a real project.
+STAFF_EMAILS=seedy@sites.test
+FIREBASE_PROJECT_ID=demo-airplane-games
+FIREBASE_WEB_API_KEY=fake-api-key
+FIREBASE_AUTH_DOMAIN=demo-airplane-games.firebaseapp.com
+FIREBASE_APP_ID=1:123:web:demo
+FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099

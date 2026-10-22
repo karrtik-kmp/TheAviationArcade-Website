@@ -1,9 +1,10 @@
 import { env } from "cloudflare:workers";
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { getProductUser } from "@/lib/product-auth";
 export class HttpError extends Error {
   constructor(
     public status: number,
     message: string,
+    public code?: string,
   ) {
     super(message);
   }
@@ -22,17 +23,19 @@ export function bucket(): R2Bucket {
   return env.BUCKET;
 }
 export async function identity() {
-  const user = await getChatGPTUser();
+  const user = await getProductUser();
   if (!user) throw new HttpError(401, "Sign in to continue.");
   return user;
 }
 export async function isStaff() {
-  const user = await getChatGPTUser();
+  const user = await getProductUser();
   const emails = (env.STAFF_EMAILS ?? "")
     .split(",")
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
-  return !!user && emails.includes(user.email.toLowerCase());
+  return (
+    !!user && user.emailVerified && emails.includes(user.email.toLowerCase())
+  );
 }
 export async function staff() {
   const user = await identity();
@@ -58,7 +61,10 @@ export function respond(data: unknown, status = 200) {
 }
 export function failure(error: unknown) {
   if (error instanceof HttpError)
-    return respond({ error: error.message }, error.status);
+    return respond(
+      { error: error.message, ...(error.code ? { code: error.code } : {}) },
+      error.status,
+    );
   console.error(
     "Content request failed",
     error instanceof Error ? error.name : "unknown",

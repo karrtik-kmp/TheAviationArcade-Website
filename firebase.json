@@ -1,0 +1,18 @@
+{
+  "auth": {
+    "authorizedDomains": [
+      "localhost",
+      "127.0.0.1",
+      "airplane-games-community-prototype.givingstar7.chatgpt.site"
+    ],
+    "providers": {
+      "emailPassword": true,
+      "googleSignIn": { "oAuthBrandDisplayName": "Airplane Games" }
+    }
+  },
+  "emulators": {
+    "auth": { "host": "127.0.0.1", "port": 9099 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

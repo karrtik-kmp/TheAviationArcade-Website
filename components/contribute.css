@@ -193,6 +193,12 @@
 .contribute-root .error {
   margin: 0 0 18px;
 }
+.contribute-root .account-session-gate {
+  margin: 28px 0 56px;
+}
+.contribute-root .account-session-actions {
+  justify-content: center;
+}
 @media (max-width: 767px) {
   .contribute-root .section-heading h2 {
     font-size: 30px;

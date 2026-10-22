@@ -1073,3 +1073,12 @@
 .admin-app .audit-mark {
   color: var(--brass);
 }
+.admin-gate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+.admin-gate-card > p:not(.eyebrow) {
+  line-height: 1.7;
+}
