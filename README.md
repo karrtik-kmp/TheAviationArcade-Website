@@ -115,7 +115,7 @@ node scripts/api-qa.mjs
 
 The Firebase harness is restricted to loopback/demo services. Browser suites create local fixture
 records; they are not cloud tests. Results and screenshots are saved under `docs/evidence`.
-The unit suite covers 20 account-path, JWT-validation, submission and editorial cases.
+The unit suite covers 27 account-path, JWT-validation, private-storage, submission and editorial cases.
 The latest local run passes all eight core workflows and the API retry/layout checks.
 Authentication has 13 passes and one skipped Google provider flow: its external helper
 script was blocked, and a recoverable error was shown. Local evidence does not prove live Google login.
@@ -161,3 +161,15 @@ not claimed for an already-issued token. No payments or real game-content delive
 Further context: [task board](docs/TASKS.md), [account review](docs/AUTH_FLOW_REVIEW.md),
 [scope](docs/PROTOTYPE_SCOPE.md), [security review](docs/SECURITY_REVIEW.md), and
 [asset provenance](docs/ASSET_PROVENANCE.md).
+
+## Direct Cloudflare deployment with Bunny
+
+Private Bunny photo storage is supported for zone `aviation-arcade-website`, Frankfurt (`de`),
+at `https://de-s3.storage.bunnycdn.com`. Copy `.dev.vars.cloudflare.example` to ignored
+`.dev.vars.cloudflare`, then fill the read-write zone password and Firebase staff email allowlist
+locally. The existing `.dev.vars` local emulator workflow remains separate.
+
+Run `npm run bunny:check` for a private upload/read/delete probe, then `npm run build` and
+`npm run cloudflare:prepare`. Direct configuration uses the new D1 database and Bunny with no
+R2 binding. Public Worker URLs remain disabled pending private review access. Follow
+[Bunny setup](docs/BUNNY_STORAGE_SETUP.md) and [Cloudflare setup](docs/CLOUDFLARE_SETUP.md).

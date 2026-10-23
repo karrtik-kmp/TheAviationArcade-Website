@@ -27,7 +27,7 @@ folder there. Read README.md and actual Git status when resuming.
 | Registration, sign-in, reset and verification    | Implemented and locally verified | Firebase browser/emulator suite; live Google consent and email delivery remain a human check                    |
 | Account controls and logout                      | Implemented and locally verified | Desktop/mobile menu, account page, safe return path, session-change/denial states                               |
 | Admin and photographer isolation                 | Implemented and locally verified | Verified staff allowlist, project/UID ownership, distinct-user list/photo/revision tests, stale-write rejection |
-| Focused rules and auth tests                     | Complete                         | 20 unit tests pass; TypeScript passes                                                                           |
+| Focused rules, auth and storage tests            | Complete                         | 27 unit tests pass; TypeScript passes                                                                           |
 | Core browser/API regression                      | Complete                         | Eight workflows, concurrent retry, photo retention and narrow/light layouts pass                                |
 | Locked production build                          | Complete                         | Final integrated source builds successfully                                                                     |
 | README and repo guidelines                       | Updated                          | Two-terminal setup, demo seeding, local routes, Windows fallback, auth/data boundaries                          |
@@ -78,7 +78,12 @@ Firebase integration unless their evidence explicitly records a later source che
 
 The user chose Cloudflare hosting first; Vercel bootstrap is saved separately in
 commit `590a271` on `codex/vercel-setup`. TypeScript, 20 unit tests and the
-existing Workers production build pass. Direct deployment is pending the photo
-storage decision and account provisioning; Bunny Storage was proposed by the user.
-No direct Worker, D1 database, R2/Bunny store or public URL has been created.
+existing Workers production build pass. The user has since selected Bunny Storage
+for zone `aviation-arcade-website`, Frankfurt (`de`). The Cloudflare connection switched
+to account `049215df8c62c566983633f79093452c`; a fresh D1 database was created and its
+three-table schema verified there. The Bunny adapter and dedicated deployment env
+example are implemented; 27 tests and TypeScript pass. Production build and direct
+deployment dry run are checked for this integration. Live Bunny access still awaits
+the read-write zone password in ignored `.dev.vars.cloudflare`.
+No direct Worker, R2/Bunny store or public URL has been created by the agent.
 See [Cloudflare setup](CLOUDFLARE_SETUP.md) for verified account state and next steps.

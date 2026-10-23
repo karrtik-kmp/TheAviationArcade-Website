@@ -5,3 +5,7 @@ FIREBASE_WEB_API_KEY=fake-api-key
 FIREBASE_AUTH_DOMAIN=demo-airplane-games.firebaseapp.com
 FIREBASE_APP_ID=1:123:web:demo
 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099
+
+# Local development uses emulated R2 unless you explicitly opt into live Bunny.
+# For the separate Cloudflare/Bunny deployment, copy .dev.vars.cloudflare.example
+# to .dev.vars.cloudflare. Never copy these emulator settings into that file.

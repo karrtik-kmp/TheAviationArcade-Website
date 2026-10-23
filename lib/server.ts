@@ -1,5 +1,7 @@
 import { env } from "cloudflare:workers";
 import { getProductUser } from "@/lib/product-auth";
+import { BunnyPhotoStorage } from "@/lib/bunny-storage";
+import type { PhotoStorage } from "@/lib/photo-storage";
 export class HttpError extends Error {
   constructor(
     public status: number,
@@ -17,7 +19,21 @@ export function database(): D1Database {
     );
   return env.DB;
 }
-export function bucket(): R2Bucket {
+export function bucket(): PhotoStorage {
+  if (env.PHOTO_STORAGE_PROVIDER === "bunny") {
+    try {
+      return new BunnyPhotoStorage({
+        zone: env.BUNNY_STORAGE_ZONE ?? "",
+        endpoint: env.BUNNY_STORAGE_ENDPOINT ?? "",
+        region: env.BUNNY_STORAGE_REGION ?? "",
+        password: env.BUNNY_STORAGE_PASSWORD ?? "",
+      });
+    } catch {
+      throw new HttpError(503, "Photo storage is unavailable. Please try again.");
+    }
+  }
+  if (env.PHOTO_STORAGE_PROVIDER && env.PHOTO_STORAGE_PROVIDER !== "r2")
+    throw new HttpError(503, "Photo storage is unavailable. Please try again.");
   if (!env.BUCKET)
     throw new HttpError(503, "Photo storage is unavailable. Please try again.");
   return env.BUCKET;

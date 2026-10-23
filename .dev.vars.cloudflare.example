@@ -1,0 +1,23 @@
+# Direct Cloudflare deployment + Bunny Storage. Copy to .dev.vars.cloudflare.
+# The copied file is private and ignored by Git. Never paste credentials into chat.
+
+PHOTO_STORAGE_PROVIDER=bunny
+BUNNY_STORAGE_ZONE=aviation-arcade-website
+BUNNY_STORAGE_REGION=de
+BUNNY_STORAGE_ENDPOINT=https://de-s3.storage.bunnycdn.com
+
+# Bunny Access tab: use the read-write Storage Zone Password (S3 Secret Access Key).
+# The S3 Access Key ID is the zone name above. Do not use your Bunny account API key.
+BUNNY_STORAGE_PASSWORD=
+
+# Comma-separated Firebase account emails. Staff must also have verified email.
+STAFF_EMAILS=
+
+# Production Firebase Web SDK settings. The preparation script can also read these
+# from the existing ignored outputs/firebase-web-config.json provisioning output.
+FIREBASE_PROJECT_ID=airplane-games-auth-20261022
+FIREBASE_AUTH_DOMAIN=airplane-games-auth-20261022.firebaseapp.com
+FIREBASE_WEB_API_KEY=
+FIREBASE_APP_ID=1:657564884414:web:0aa58e8e36a6aa83f2adef
+
+# Do not add FIREBASE_AUTH_EMULATOR_HOST to this deployment file.

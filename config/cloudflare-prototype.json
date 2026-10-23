@@ -1,0 +1,13 @@
+{
+  "name": "aviation-arcade-website",
+  "accountId": "049215df8c62c566983633f79093452c",
+  "database": {
+    "name": "aviation-arcade-website",
+    "id": "c76cdebd-08b5-46a5-8045-912abec78511"
+  },
+  "photoStorage": {
+    "zone": "aviation-arcade-website",
+    "region": "de",
+    "endpoint": "https://de-s3.storage.bunnycdn.com"
+  }
+}
