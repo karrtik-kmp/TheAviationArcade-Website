@@ -90,7 +90,7 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
   async function finishSignIn(user: User, signup = false, demoAccount = false) {
     await syncFirebaseSession(user);
     const destination =
-      demoAccount ? "/demo" : signup || !user.emailVerified
+      demoAccount ? "/admin" : signup || !user.emailVerified
         ? `/account?verify_email=1&return_to=${encodeURIComponent(safeAccountReturn(returnTo))}`
         : safeAccountReturn(returnTo);
     if (window.top && window.top !== window)
@@ -206,10 +206,10 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
       {demo && mode === "signin" && (
         <aside className="auth-setup-notice">
           <strong>Explore the demo</strong>
-          <p>Inspect prefilled game settings and sample content. Changes stay in your browser.</p>
+          <p>View the sample editorial content. The demo account is view only.</p>
           <p>Email: <code>{demo.email}</code><br />Password: <code>{demo.password}</code></p>
           <button className="btn secondary" type="button" disabled={!configured || busy}
-            onClick={() => { setEmail(demo.email); setPassword(demo.password); setError(""); setNotice("Demo credentials filled. Select Sign in to open the workspace."); }}>
+            onClick={() => { setEmail(demo.email); setPassword(demo.password); setError(""); setNotice("Demo credentials filled. Select Sign in to open the demo."); }}>
             Fill demo login
           </button>
         </aside>

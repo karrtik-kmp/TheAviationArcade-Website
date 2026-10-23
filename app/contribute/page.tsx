@@ -17,7 +17,7 @@ type PageProps = {
 
 export default async function ContributePage({ searchParams }: PageProps) {
   const [user, params] = await Promise.all([getProductUser(), searchParams]);
-  if (isDemoPrincipal(user)) redirect("/demo");
+  if (isDemoPrincipal(user)) redirect("/admin");
   const category = Array.isArray(params.category)
     ? params.category[0]
     : params.category;

@@ -43,7 +43,7 @@ export async function identity() {
   const user = await getProductUser();
   if (!user) throw new HttpError(401, "Sign in to continue.");
   if (isDemoPrincipal(user))
-    throw new HttpError(403, "Use the demo workspace to inspect sample data. Live content is unavailable to the shared demo account.", "DEMO_ACCOUNT");
+    throw new HttpError(403, "The shared demo account can only view sample content.", "DEMO_ACCOUNT");
   return user;
 }
 export async function isStaff() {

@@ -208,12 +208,6 @@ export function AccountPage({
           </section>
           <div className="account-destinations">
             <section className="account-destination">
-              <span className="eyebrow">Preview</span>
-              <h2>Demo workspace</h2>
-              <p>Explore game defaults, sample content and resettable settings.</p>
-              <SiteLink className="text-link" href="/demo">Open demo <ArrowRight size={16} /></SiteLink>
-            </section>
-            <section className="account-destination">
               <span className="eyebrow">Photography community</span>
               <h2>My submissions</h2>
               <p>

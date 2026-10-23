@@ -11,6 +11,7 @@ import {
   limitedForm,
 } from "@/lib/server";
 import { accountSessionKey } from "@/lib/account-server";
+import { sampleEditorialData } from "@/lib/demo-samples";
 import {
   submissionSchema,
   imageInfo,
@@ -686,23 +687,7 @@ async function loadDemo(request: Request) {
   for (const kind of ["identifier", "potd"] as const) {
     const id = `sample-${kind}`,
       mutation = crypto.randomUUID();
-    const data: EditorialData = {
-      title:
-        kind === "identifier"
-          ? "Identify this aircraft [Demo]"
-          : "Threshold Geometry [Demo]",
-      aircraft: kind === "identifier" ? "Boeing 767-200" : "Boeing 757",
-      photographer: "Josh M",
-      credit: "Josh M (@iamjoshmark)",
-      description:
-        "Client-supplied preview. Source facts and website permission must be independently verified before any publication.",
-      correctAnswer: "Boeing 767-200",
-      distractors: ["Boeing 777", "Airbus A330", "Airbus A350"],
-      difficulty: "Trainee",
-      factualSource: "",
-      imageUrl:
-        kind === "identifier" ? "/media/aircraft.jpg" : "/media/potd-6.jpg",
-    };
+    const data = sampleEditorialData(kind);
     statements.push(
       database()
         .prepare(

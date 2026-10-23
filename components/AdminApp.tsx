@@ -48,6 +48,7 @@ import {
   editorialErrors,
   reviewError,
 } from "@/lib/rules";
+import { sampleEditorialRecords } from "@/lib/demo-samples";
 
 type AdminUser = { sessionKey: string };
 type Section =
@@ -129,7 +130,14 @@ function displayStatus(status: string) {
   return status.replaceAll("_", " ");
 }
 
-export function AdminApp({ user }: { user: AdminUser }) {
+/** readOnly is the shared demo account's view of the sample drafts; it never calls admin APIs. */
+export function AdminApp({
+  user,
+  readOnly = false,
+}: {
+  user: AdminUser;
+  readOnly?: boolean;
+}) {
   const accountSession = useAccountSession();
   const accountRef = useRef(accountSession);
   accountRef.current = accountSession;
@@ -139,7 +147,7 @@ export function AdminApp({ user }: { user: AdminUser }) {
   const currentAccountMatches =
     accountSession.state === "ready" &&
     !!accountSession.account?.user &&
-    accountSession.account.isStaff &&
+    (readOnly || accountSession.account.isStaff) &&
     accountSession.account.sessionKey === user.sessionKey &&
     blockedAccess === null;
   const { resolvedTheme } = useTheme();
@@ -202,13 +210,18 @@ export function AdminApp({ user }: { user: AdminUser }) {
     if (
       session.state !== "ready" ||
       !session.account?.user ||
-      !session.account.isStaff ||
+      (!readOnly && !session.account.isStaff) ||
       session.account.sessionKey !== user.sessionKey ||
       blockedAccessRef.current !== null ||
       !currentAccessRef.current
     )
       return;
     const requestGeneration = ++generation.current;
+    if (readOnly) {
+      setRecords(sampleEditorialRecords());
+      setLoadState("ready");
+      return;
+    }
     setLoadState("loading");
     setLoadError("");
     try {
@@ -282,7 +295,7 @@ export function AdminApp({ user }: { user: AdminUser }) {
       );
       setLoadState("error");
     }
-  }, [blockAccess, user.sessionKey]);
+  }, [blockAccess, readOnly, user.sessionKey]);
 
   const currentAccessRef = useRef(currentAccountMatches);
   currentAccessRef.current = currentAccountMatches;
@@ -691,11 +704,19 @@ export function AdminApp({ user }: { user: AdminUser }) {
           <aside className="admin-sidebar">
             <div className="admin-brand">
               <Brand />
-              <span className="admin-brand-caption">Editorial workspace</span>
+              <span className="admin-brand-caption">
+                {readOnly ? "Demo preview · view only" : "Editorial workspace"}
+              </span>
             </div>
             <nav aria-label="Admin sections" className="admin-nav">
               <span className="admin-nav-caption">WORKSPACE</span>
-              {navItems.map(({ label, icon: Icon }) => (
+              {(readOnly
+                ? navItems.filter(
+                    ({ label }) =>
+                      label !== "Submissions" && label !== "Activity",
+                  )
+                : navItems
+              ).map(({ label, icon: Icon }) => (
                 <button
                   key={label}
                   onClick={() => {
@@ -721,9 +742,13 @@ export function AdminApp({ user }: { user: AdminUser }) {
             <div className="admin-side-bottom">
               <ShieldCheck size={17} />
               <span>
-                Private editorial tools
+                {readOnly ? "Sample drafts" : "Private editorial tools"}
                 <br />
-                <small>Changes are recorded in Activity</small>
+                <small>
+                  {readOnly
+                    ? "Viewing only; nothing can be changed"
+                    : "Changes are recorded in Activity"}
+                </small>
               </span>
             </div>
           </aside>
@@ -791,6 +816,7 @@ export function AdminApp({ user }: { user: AdminUser }) {
                       onOpen={openSubmission}
                       onLoadDemo={loadDemoData}
                       loadingDemo={busy}
+                      readOnly={readOnly}
                     />
                   )}
                   {section === "Submissions" && (
@@ -829,6 +855,7 @@ export function AdminApp({ user }: { user: AdminUser }) {
                       busy={busy}
                       showArchived={showArchived}
                       setShowArchived={setShowArchived}
+                      readOnly={readOnly}
                     />
                   )}
                   {section === "Activity" && <Activity events={events} />}
@@ -852,6 +879,7 @@ function Overview({
   onOpen,
   onLoadDemo,
   loadingDemo,
+  readOnly,
 }: {
   submissions: Submission[];
   records: EditorialRecord[];
@@ -862,6 +890,7 @@ function Overview({
   onOpen: (item: Submission) => void;
   onLoadDemo: () => void;
   loadingDemo: boolean;
+  readOnly: boolean;
 }) {
   const queue = submissions
     .filter(
@@ -874,12 +903,14 @@ function Overview({
       <div className="admin-heading">
         <div>
           <p className="eyebrow">EDITORIAL OPERATIONS</p>
-          <h1>Good to have you back.</h1>
+          <h1>{readOnly ? "Demo preview" : "Good to have you back."}</h1>
           <p>
-            Review community photographs and prepare content for the public
-            prototype.
+            {readOnly
+              ? "Browse the sample editorial drafts. This demo account can view content but cannot edit, review or publish."
+              : "Review community photographs and prepare content for the public prototype."}
           </p>
         </div>
+        {!readOnly && (
         <div className="admin-heading-actions">
           <Button
             appearance="primary"
@@ -898,8 +929,11 @@ function Overview({
             </Button>
           }
         </div>
+        )}
       </div>
       <div className="admin-stats">
+        {!readOnly && (
+        <>
         <Stat
           label="Awaiting review"
           value={pending}
@@ -914,6 +948,8 @@ function Overview({
           icon={<ArrowClockwise size={20} />}
           onClick={() => onNavigate("Submissions")}
         />
+        </>
+        )}
         <Stat
           label="Content records"
           value={records.length}
@@ -921,6 +957,7 @@ function Overview({
           icon={<Newspaper size={20} />}
           onClick={() => onNavigate("Aircraft Identifier")}
         />
+        {!readOnly && (
         <Stat
           label="Recent activity"
           value={events.length}
@@ -928,8 +965,10 @@ function Overview({
           icon={<ClockCounterClockwise size={20} />}
           onClick={() => onNavigate("Activity")}
         />
+        )}
       </div>
       <div className="admin-split">
+        {!readOnly && (
         <section className="admin-panel">
           <div className="admin-panel-header">
             <div>
@@ -975,11 +1014,16 @@ function Overview({
             </div>
           )}
         </section>
+        )}
         <section className="admin-panel overview-shortcuts">
           <div className="admin-panel-header">
             <div>
               <h2>Editorial desks</h2>
-              <p>Continue preparing approved material</p>
+              <p>
+                {readOnly
+                  ? "View the sample content for each desk"
+                  : "Continue preparing approved material"}
+              </p>
             </div>
           </div>
           <button onClick={() => onNavigate("Aircraft Identifier")}>
@@ -1477,6 +1521,7 @@ function ContentWorkspace({
   busy,
   showArchived,
   setShowArchived,
+  readOnly,
 }: {
   kind: "identifier" | "potd";
   records: EditorialRecord[];
@@ -1491,6 +1536,7 @@ function ContentWorkspace({
   busy: boolean;
   showArchived: boolean;
   setShowArchived: (value: boolean) => void;
+  readOnly: boolean;
 }) {
   const title =
     kind === "identifier" ? "Aircraft Identifier" : "Plane of the Day";
@@ -1509,6 +1555,7 @@ function ContentWorkspace({
               : "Schedule a featured aircraft photo by your local calendar date."}
           </p>
         </div>
+        {!readOnly && (
         <Button
           appearance="primary"
           onClick={onCreateSample}
@@ -1517,6 +1564,7 @@ function ContentWorkspace({
         >
           Load sample content
         </Button>
+        )}
       </div>
       <div className="admin-toolbar content-toolbar">
         <label className="admin-check-inline">
@@ -1534,6 +1582,10 @@ function ContentWorkspace({
         <section className="admin-panel admin-content-empty">
           <Newspaper size={32} />
           <h2>No {title} content yet</h2>
+          {readOnly ? (
+            <p>There is no sample content for this desk.</p>
+          ) : (
+            <>
           <p>
             Approved submissions with the matching channel permission can be
             added from the submission review. Load a sample to preview the
@@ -1542,6 +1594,8 @@ function ContentWorkspace({
           <Button onClick={onCreateSample} disabled={busy}>
             Load sample content
           </Button>
+            </>
+          )}
         </section>
       ) : (
         <div className="admin-split content-split">
@@ -1549,7 +1603,11 @@ function ContentWorkspace({
             <div className="admin-panel-header">
               <div>
                 <h2>Content records</h2>
-                <p>Saved in the prototype editorial store</p>
+                <p>
+                  {readOnly
+                    ? "Sample drafts · view only"
+                    : "Saved in the prototype editorial store"}
+                </p>
               </div>
             </div>
             {records.length ? (
@@ -1588,14 +1646,14 @@ function ContentWorkspace({
                       onChange(null);
                     }}
                   >
-                    <ArrowLeft size={16} /> Close editor
+                    <ArrowLeft size={16} /> {readOnly ? "Close" : "Close editor"}
                   </button>
                   <p className="eyebrow">
                     {selected.sourceId
                       ? "APPROVED COMMUNITY PHOTO"
                       : "SAMPLE PREVIEW"}
                   </p>
-                  <h2>Edit content</h2>
+                  <h2>{readOnly ? "View content" : "Edit content"}</h2>
                   <StatusBadge status={selected.status} />
                 </div>
                 <span className="editor-version">
@@ -1603,10 +1661,11 @@ function ContentWorkspace({
                 </span>
               </div>
               {!selected.sourceId && (
-                <MessageBar intent="warning">
+                <MessageBar intent="warning" layout="multiline">
                   <MessageBarBody>
-                    Sample preview only. Add content from an approved,
-                    rights-verified submission to publish.
+                    {readOnly
+                      ? "Sample preview only. The demo account can view this draft but cannot change it."
+                      : "Sample preview only. Add content from an approved, rights-verified submission to publish."}
                   </MessageBarBody>
                 </MessageBar>
               )}
@@ -1617,7 +1676,7 @@ function ContentWorkspace({
                   {selected.sourceId ? "APPROVED SOURCE" : "SAMPLE"}
                 </span>
               </div>
-              <div className="form-grid">
+              <fieldset className="form-grid admin-fieldset" disabled={readOnly}>
                 <TextField
                   label="Editorial title"
                   value={data.title}
@@ -1725,7 +1784,8 @@ function ContentWorkspace({
                     />
                   </label>
                 )}
-              </div>
+              </fieldset>
+              {!readOnly && (
               <div className="admin-actions editor-actions">
                 <Button disabled={busy} onClick={() => onSave("draft")}>
                   Save draft
@@ -1765,6 +1825,7 @@ function ContentWorkspace({
                   </Button>
                 )}
               </div>
+              )}
               {kind === "identifier" && (
                 <p className="admin-demo-note">
                   Prototype-ready marks this website record for review. The game
@@ -1783,7 +1844,9 @@ function ContentWorkspace({
               <Newspaper size={28} />
               <b>Select a record</b>
               <p>
-                Load a sample or create a record from an approved submission.
+                {readOnly
+                  ? "Choose a sample draft to view it."
+                  : "Load a sample or create a record from an approved submission."}
               </p>
             </section>
           )}

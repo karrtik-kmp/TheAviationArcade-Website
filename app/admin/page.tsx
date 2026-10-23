@@ -5,7 +5,6 @@ import { PublicShell, Brand } from "@/components/PublicShell";
 import { accountSessionKey } from "@/lib/account-server";
 import { accountSignInPath, accountSignOutPath } from "@/lib/account";
 import { isDemoPrincipal } from "@/lib/demo-server";
-import { redirect } from "next/navigation";
 import { SiteLink } from "@/components/SiteLink";
 
 export const dynamic = "force-dynamic";
@@ -34,7 +33,13 @@ export default async function AdminPage() {
   }
 
   const displayName = user.fullName?.trim() || "Account";
-  if (isDemoPrincipal(user)) redirect("/demo");
+  if (isDemoPrincipal(user))
+    return (
+      <AdminApp
+        user={{ sessionKey: await accountSessionKey(user.userId) }}
+        readOnly
+      />
+    );
   if (!(await isStaff())) {
     return (
       <PublicShell>

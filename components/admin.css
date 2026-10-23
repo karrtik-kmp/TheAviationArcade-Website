@@ -10,7 +10,18 @@
 .admin-layout {
   grid-template-columns: 248px minmax(0, 1fr);
 }
+/* The sidebar is a viewport-tall sticky box, so it can't stretch with long
+   content. This grid item fills the whole first column behind it instead. */
+.admin-layout::before {
+  content: "";
+  grid-column: 1;
+  grid-row: 1;
+  background: #071724;
+  border-right: 1px solid #29404c;
+}
 .admin-sidebar {
+  grid-column: 1;
+  grid-row: 1;
   position: sticky;
   top: 0;
   height: 100dvh;
@@ -686,6 +697,7 @@
 }
 .content-editor {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   min-width: 0;
   padding: 22px;
@@ -725,6 +737,12 @@
   background: #071724d9;
   color: #fff9ee;
   font-size: 8px;
+}
+.admin-app .admin-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
 .admin-app .form-grid {
   display: grid;
@@ -888,6 +906,9 @@
   }
 }
 @media (max-width: 767px) {
+  .admin-layout::before {
+    display: none;
+  }
   .admin-sidebar {
     position: sticky;
     z-index: 5;
