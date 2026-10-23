@@ -43,8 +43,8 @@ const config = {
   rules: built.rules,
   assets: { directory: "../../dist/client" },
   d1_databases: [{ binding: "DB", database_name: target.database.name, database_id: target.database.id }],
-  // Keep the direct host disabled until its private review gate is configured.
-  workers_dev: false,
+  // Access is provisioned separately; this explicit target flag controls the workers.dev route.
+  workers_dev: target.workersDev === true,
   preview_urls: false,
   observability: { enabled: true },
   vars: {
@@ -76,5 +76,5 @@ if (!local.BUNNY_STORAGE_PASSWORD?.trim() || !local.STAFF_EMAILS?.trim()) {
 }
 console.log("Prepared outputs/cloudflare-deploy/wrangler.json for the recorded account and database.");
 console.log("Default Wrangler deployment now selects this Bunny configuration.");
-console.log("R2 bindings are omitted. workers.dev and preview URLs remain disabled.");
+console.log(`R2 bindings are omitted. workers.dev is ${target.workersDev === true ? "enabled" : "disabled"}; preview URLs remain disabled.`);
 console.log("Secret values are read only from the ignored .dev.vars.cloudflare file and are never printed.");

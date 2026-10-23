@@ -7,11 +7,14 @@ This branch is `codex/cloudflare-prototype`. No remote Git push was performed.
 ## Verified runtime checkpoint
 
 The Bunny integration is committed as `8ea2c22`; default deployment tooling is `55bf91b`.
-TypeScript, all 31 unit tests, focused ESLint, the production build, deploy-wrapper dry run and
-bare Wrangler default dry run passed. The live Bunny connection check also
+TypeScript, focused ESLint, the production build, deploy-wrapper dry run and
+bare Wrangler default dry run passed at that checkpoint. The subsequent protected-host
+configuration passes all 32 unit tests, focused ESLint and a generated-target Wrangler dry run.
+The live Bunny connection check also
 passed: one random probe was uploaded, downloaded with identical bytes, and deleted.
-No existing photos were changed. These checks do not establish live Firebase provider flows
-or browser/editorial workflows on the new host.
+No existing photos were changed. The user confirmed that both Access and the website's
+Firebase sign-in worked at the live URL. Full upload/editorial browser regression on this
+host has not been automated; its workflow evidence remains the earlier local suite.
 
 ## Current account and database
 
@@ -25,17 +28,16 @@ or browser/editorial workflows on the new host.
 - Worker `aviation-arcade-website` has been uploaded with the real D1 binding, production
   Firebase settings, Bunny metadata and encrypted `BUNNY_STORAGE_PASSWORD` / `STAFF_EMAILS`.
   The deployed binding list has no R2 binding and no Firebase Auth emulator binding.
-- The final `npm run deploy` completed. The Cloudflare API reports deployment
-  `e909b48b-3a83-42da-8ed1-f28c41adb925` with version
-  `b221e051-ae3c-4fbe-853a-754767c56ff5` at 100%, created at `2026-10-23T05:00:26.513191Z`.
-  This supersedes the earlier direct uploads. The deployed runtime/build checkpoint is `55bf91b`.
-- `workers.dev` and preview URLs are both disabled, and the Worker has no custom domains.
-  Its planned hostname is `aviation-arcade-website.karrtik-kmphitech.workers.dev`.
-  No product domain, R2 bucket or Access policy was created.
+- `npm run deploy` completed at checkpoint `55bf91b`. The later staff-secret correction
+  created deployment `9b99864e-c961-4d62-86d0-536bdefe6966`, version
+  `3685f364-23a2-45b2-8e1f-8ea8b60cc21b` at 100%, created at `2026-10-23T05:09:22.931789Z`.
+  This supersedes the earlier direct uploads; application code is still checkpoint `55bf91b`.
+- The protected `workers.dev` hostname is enabled; preview URLs remain disabled.
+  The Worker has no custom domains. No product domain or R2 bucket was created.
 
-The existing owner-private Sites deployment remains the reachable reference. The direct Worker
-must preserve the review audience with an outer access gate before its URL is enabled.
-Firebase product login and staff permissions remain separate from that gate.
+The direct [private prototype](https://aviation-arcade-website.karrtik-kmphitech.workers.dev)
+is reachable through Cloudflare Access. The original owner-private Sites deployment remains
+available. Firebase product login and staff permissions remain separate from the Access gate.
 
 ## Bunny storage selected
 
@@ -53,30 +55,38 @@ settings and Worker secrets, never client code or Git.
 
 ## Firebase host authorization
 
-The exact planned Worker hostname was added to project `airplane-games-auth-20261022` through
+The exact Worker hostname was added to project `airplane-games-auth-20261022` through
 the authenticated Firebase CLI's Auth configuration API. The operation read the live domains
 first and preserved every existing entry. `firebase.json` records the hostname locally.
-Real Google consent, verification/reset email delivery and staff sign-in still need a live check.
+The user confirmed successful live Firebase sign-in after passing Access. Verification/reset
+email delivery and every provider variant have not been separately checked.
 
-## Private Access approval required
+## Private Access enabled
 
-This account's Access organization and application reads returned `access.api.error.not_enabled`.
-Automatic approval review rejected creating an Access organization because that is a persistent
-security-boundary change requiring explicit user authorization. Do not bypass that rejection,
-create a substitute gate, or enable the Worker URL before the required approval.
+The user explicitly approved the proposed organization, application, reviewer policy and enabling
+the protected hostname. The prior local staff setting was a reserved test address; the user
+selected a real receiving email for both Access and product staff. The ignored deployment env,
+generated secrets file and deployed `STAFF_EMAILS` secret now contain that selection.
 
-A concrete proposal is saved privately in ignored `outputs/cloudflare-deploy/access-proposal.json`:
+- Organization: `Airplane Games prototype`, domain `misty-mud-b554.cloudflareaccess.com`.
+- Application: `Airplane Games prototype review`, ID `77c80c6f-1612-4726-bb7e-4c354202ac57`,
+  restricted to the exact Worker hostname above.
+- Login: email verification code, IdP `c1da79a5-13a3-4b93-b0da-201ec568138e`;
+  a 24-hour session and HTTP-only cookie.
+- Reusable policy: `Prototype reviewers`, ID `605b8157-ec0c-41ed-bd33-6567050c29e5`,
+  allowing only the user-selected real email. Product staff verification still applies separately.
+- Preview URLs are disabled; unrelated applications and policies were not changed.
 
-- Organization: `Airplane Games prototype` in the account above.
-- Application: `Airplane Games prototype review`, restricted to the exact planned hostname.
-- Login: email verification code; a 24-hour session and HTTP-only cookie.
-- Policy: `Prototype reviewers`, allowing only the emails currently listed in the local
-  `STAFF_EMAILS` setting. Product staff verification still applies inside the website.
-- Keep all unrelated applications/policies intact and keep preview URLs disabled.
+Application/policy read-back matched before enabling the hostname. Six unauthenticated routes
+(homepage, admin, contributor portal, API, account and asset path) returned 302 redirects to
+the Access organization. The email form returned HTTP 200 with the expected application name.
+The user then confirmed both sign-ins worked. See
+[credential-free smoke evidence](evidence/cloudflare-access-smoke.json).
 
-Explicit approval for this proposal is still pending. After approval, create and verify the
-exact-host Access application and allowlist before enabling `workers.dev`. Verify that an
-unauthenticated visitor reaches the Access gate, then run the protected app's browser workflows.
+`config/cloudflare-prototype.json` records `workersDev: true` and the Access app/host metadata.
+Preparation defaults the flag to false if absent and always disables previews. The flag controls
+routing; it does not create or verify an Access policy. Keep the approved Access app intact.
+To withdraw the direct host, disable `workers.dev` remotely and set the source flag to false.
 
 ## Cloudflare agent environment
 
@@ -94,17 +104,15 @@ available on a subsequent turn; restart Codex to fully reload the agent environm
 
 ## Next deployment steps
 
-1. Obtain explicit approval for the Access proposal above, then configure and verify the gate.
-2. Enable only the protected Worker hostname; retain disabled preview URLs.
-3. Verify real Firebase sign-in, uploads, contributor isolation, revisions and editorial workflows
+1. For further live QA, exercise uploads, contributor isolation, revisions and editorial workflows
    at the protected URL. Record passes, failures and human-only checks honestly.
-4. For later uploads, run `npm run build` and `npm run cloudflare:prepare` to generate an ignored direct Wrangler
-   configuration using the real account/database and Bunny metadata. `workers_dev` and
-   `preview_urls` remain disabled by default. Do not deploy the original Sites placeholder config.
+2. For later uploads, run `npm run build` and `npm run cloudflare:prepare` to generate an ignored direct Wrangler
+   configuration using the real account/database and Bunny metadata. The source target preserves
+   the approved protected hostname; previews stay disabled. Do not deploy the Sites placeholder config.
    Use `--config outputs/cloudflare-deploy/wrangler.json` and
    `--secrets-file outputs/cloudflare-secrets.json` with Wrangler. Wrangler is authenticated;
    no new login is required unless the stored authorization expires.
-5. The D1 schema is already initialized. Do not reapply the initial schema or import demo data.
+3. The D1 schema is already initialized. Do not reapply the initial schema or import demo data.
 
 ## Default build and deploy commands
 
@@ -117,7 +125,8 @@ npm run deploy
 
 The deploy command requires the Bunny password and staff allowlist before starting, rebuilds,
 prepares the Bunny target and supplies the ignored secrets file to the project-local Wrangler.
-Only `--dry-run` is accepted as a command override. It keeps the direct and preview URLs disabled.
+Only `--dry-run` is accepted as a command override. It preserves the source target's approved
+protected hostname and keeps preview URLs disabled.
 
 Portable `npm run build` waits for Vinext to finish, then prepares Bunny configuration and updates
 `.wrangler/deploy/config.json`. This prevents a bare Wrangler deploy from falling back to the
@@ -127,9 +136,9 @@ Do not hand-edit generated output. The managed Linux Site build retains its own 
 `npm run start` still selects the local emulator config explicitly.
 
 The parallel default-deployment task completed and committed its five owned files as `55bf91b`.
-The checks above include four regressions for generated config selection, build completion,
-explicit config/secrets arguments and refusal to upload after invalid input or a failed build.
-Its final upload and private URL flags were verified through the Cloudflare API.
+The current five deployment regressions cover absent/explicit Worker route options, generated
+config selection, build completion, explicit config/secrets arguments and refusal to upload
+after invalid input or a failed build. Final bindings and URL flags were verified through the API.
 
 References: [Bunny S3 setup](https://bunny.net/docs/storage/s3),
 [Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/),

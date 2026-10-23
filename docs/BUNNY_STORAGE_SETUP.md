@@ -53,15 +53,17 @@ Preparation creates ignored `outputs/cloudflare-deploy/wrangler.json` and derive
 `outputs/cloudflare-secrets.json` from the current private settings. Both password and staff
 allowlist must be filled before deployment; blank settings also clear any old generated values.
 The public config contains no Bunny password. The direct config omits R2 and
-keeps `workers_dev` and preview URLs disabled until the private review gate is configured.
+uses the explicit `workersDev` source target option and always disables preview URLs.
+The current target enables only the approved hostname protected by Cloudflare Access;
+the option defaults to false when absent. Access is provisioned separately.
 Do not edit or commit generated outputs. `npm run deploy` rebuilds/re-prepares and supplies the
 ignored secrets file automatically. The portable build also restores Bunny as Wrangler's default
 target after the framework generates its config; it requires the production Firebase Web settings.
 
 The live Bunny check passed on 2026-10-23: upload, identical-byte download and deletion.
-The Worker has been uploaded with Bunny and D1 bindings; both public Worker and preview URLs
-remain disabled pending explicit approval for the private Access gate. Firebase has authorized
-the planned exact hostname. The deployment state and remaining checks are in
+The Worker is live with Bunny and D1 behind the approved private Access gate; preview URLs
+remain disabled. Firebase has authorized the exact hostname, and the user confirmed Access
+and Firebase sign-in. The deployment state and remaining checks are in
 [Cloudflare setup](CLOUDFLARE_SETUP.md).
 
 Official references: [Bunny S3 setup and credentials](https://bunny.net/docs/storage/s3),

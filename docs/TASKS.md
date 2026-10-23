@@ -27,7 +27,7 @@ folder there. Read README.md and actual Git status when resuming.
 | Registration, sign-in, reset and verification    | Implemented and locally verified | Firebase browser/emulator suite; live Google consent and email delivery remain a human check                    |
 | Account controls and logout                      | Implemented and locally verified | Desktop/mobile menu, account page, safe return path, session-change/denial states                               |
 | Admin and photographer isolation                 | Implemented and locally verified | Verified staff allowlist, project/UID ownership, distinct-user list/photo/revision tests, stale-write rejection |
-| Focused rules, auth, storage and deploy tests    | Complete                         | 31 unit tests pass; TypeScript and focused deploy-tooling ESLint pass                                            |
+| Focused rules, auth, storage and deploy tests    | Complete                         | 32 unit tests pass; TypeScript and focused deploy-tooling ESLint pass                                            |
 | Core browser/API regression                      | Complete                         | Eight workflows, concurrent retry, photo retention and narrow/light layouts pass                                |
 | Locked production build                          | Complete                         | Final integrated source builds successfully                                                                     |
 | README and repo guidelines                       | Updated                          | Two-terminal setup, demo seeding, local routes, Windows fallback, auth/data boundaries                          |
@@ -89,18 +89,25 @@ Wrangler pointer, and `npm run deploy` rebuilds/prepares and supplies the ignore
 All 31 unit tests, TypeScript, focused ESLint, production build, wrapper dry run and bare
 Wrangler dry run passed. A live deployment through the new command succeeded.
 
-Worker `aviation-arcade-website` is uploaded with D1/Bunny, production Firebase and encrypted
-password/staff bindings. Current API deployment is `e909b48b-3a83-42da-8ed1-f28c41adb925`,
-version `b221e051-ae3c-4fbe-853a-754767c56ff5` at 100%, from checkpoint `55bf91b`.
-Worker and preview URLs are disabled;
-there are no custom domains or R2 bindings. Firebase authorized the planned exact host
+Worker `aviation-arcade-website` is live with D1/Bunny, production Firebase and encrypted
+password/staff bindings. The user replaced the saved test staff address with a real email;
+that deployed-secret update created deployment `9b99864e-c961-4d62-86d0-536bdefe6966`,
+version `3685f364-23a2-45b2-8e1f-8ea8b60cc21b` at 100%. App code is checkpoint `55bf91b`.
+The protected hostname is enabled, previews are disabled, and there are no custom domains
+or R2 bindings. Firebase authorized the exact host
 `aviation-arcade-website.karrtik-kmphitech.workers.dev`, preserving live existing domains.
 
-Access is not enabled for this account. Automatic approval review rejected organization
-creation as a persistent security change requiring explicit approval. The exact organization,
-host, email-code login and STAFF_EMAILS-only policy are prepared privately in
-`outputs/cloudflare-deploy/access-proposal.json`. Approval and protected browser workflows
-remain pending. Do not bypass the rejection or enable a public URL first.
+The user approved and the agent configured Access organization `Airplane Games prototype`,
+exact-host app `77c80c6f-1612-4726-bb7e-4c354202ac57`, an OTP provider and a reusable allow
+policy restricted to the selected real email. Read-back matched before enabling the URL.
+Six unauthenticated route probes redirect to Access and its email form loads successfully.
+The user confirmed both Access and website Firebase sign-ins worked. Credential-free evidence
+is in `docs/evidence/cloudflare-access-smoke.json`; full upload/editorial browser regression
+on this host remains unverified.
+
+The protected-host source target persists `workersDev: true`, defaults to false when absent,
+and keeps previews disabled. All 32 tests, focused ESLint and the protected-target Wrangler
+dry run pass. The original owner-private Site remains available and no product domain changed.
 
 The official Cloudflare agent setup is complete: 19 global Codex skills, authenticated
 Cloudflare MCP, and a verified read of the intended account. The user retained Wrangler

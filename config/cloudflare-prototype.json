@@ -5,6 +5,12 @@
     "name": "aviation-arcade-website",
     "id": "c76cdebd-08b5-46a5-8045-912abec78511"
   },
+  "workersDev": true,
+  "privateAccess": {
+    "applicationId": "77c80c6f-1612-4726-bb7e-4c354202ac57",
+    "hostname": "aviation-arcade-website.karrtik-kmphitech.workers.dev",
+    "sessionDuration": "24h"
+  },
   "photoStorage": {
     "zone": "aviation-arcade-website",
     "region": "de",

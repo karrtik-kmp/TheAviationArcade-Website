@@ -115,7 +115,7 @@ node scripts/api-qa.mjs
 
 The Firebase harness is restricted to loopback/demo services. Browser suites create local fixture
 records; they are not cloud tests. Results and screenshots are saved under `docs/evidence`.
-The unit suite covers 31 account-path, JWT-validation, private-storage, submission, editorial
+The unit suite covers 32 account-path, JWT-validation, private-storage, submission, editorial
 and deployment cases.
 The latest local run passes all eight core workflows and the API retry/layout checks.
 Authentication has 13 passes and one skipped Google provider flow: its external helper
@@ -172,7 +172,7 @@ locally. The existing `.dev.vars` local emulator workflow remains separate.
 
 Run `npm run bunny:check` for a private upload/read/delete probe, then `npm run build` and
 `npm run cloudflare:prepare`. Direct configuration uses the new D1 database and Bunny with no
-R2 binding. Public Worker URLs remain disabled pending private review access. Follow
+R2 binding. The direct hostname is protected by Cloudflare Access. Follow
 [Bunny setup](docs/BUNNY_STORAGE_SETUP.md) and [Cloudflare setup](docs/CLOUDFLARE_SETUP.md).
 
 Use `npm run deploy -- --dry-run` to verify, then `npm run deploy` to rebuild and upload with the
@@ -180,7 +180,8 @@ recorded Bunny config and ignored secrets file. Portable builds automatically re
 Wrangler's default deployment target and require the production Firebase Web settings described
 above. Local `npm run start` continues using the emulator config.
 
-The live Bunny probe passed and the Worker is uploaded. Its direct and preview URLs remain
-disabled until the proposed private Access organization/application and reviewer allowlist
-receive explicit approval. The planned host is authorized in Firebase; live provider and
-protected browser checks remain pending. The existing owner-private Site remains reachable.
+The live Bunny probe passed. The [Cloudflare prototype](https://aviation-arcade-website.karrtik-kmphitech.workers.dev)
+is enabled behind the approved Access email-code gate; preview URLs remain disabled.
+Use the real email selected for the private reviewer allowlist, then sign in through Firebase
+inside the website. The user confirmed both sign-ins worked. Full upload/editorial browser
+regression remains to be checked on this host. The original owner-private Site remains available.

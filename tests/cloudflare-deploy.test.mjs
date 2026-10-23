@@ -8,7 +8,7 @@ import test from "node:test";
 const source = new URL("../", import.meta.url);
 const requiredSecrets = ["BUNNY_STORAGE_PASSWORD", "STAFF_EMAILS"];
 
-async function fixture(t) {
+async function fixture(t, { omitWorkersDev = false } = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "airplane-deploy-"));
   t.after(async () => {
     assert.equal(path.dirname(root), os.tmpdir());
@@ -25,7 +25,9 @@ async function fixture(t) {
     await mkdir(path.join(root, "scripts"), { recursive: true });
     await copyFile(new URL(`scripts/${script}`, source), path.join(root, "scripts", script));
   }
-  await put("config/cloudflare-prototype.json", await readFile(new URL("config/cloudflare-prototype.json", source), "utf8"));
+  const target = JSON.parse(await readFile(new URL("config/cloudflare-prototype.json", source), "utf8"));
+  if (omitWorkersDev) delete target.workersDev;
+  await put("config/cloudflare-prototype.json", JSON.stringify(target));
   await put(".dev.vars.cloudflare", "BUNNY_STORAGE_PASSWORD=test-only-secret\nSTAFF_EMAILS=editor@example.test\n");
   await put("outputs/firebase-web-config.json", JSON.stringify({ runtimeBindings: {
     FIREBASE_PROJECT_ID: "airplane-games-auth-20261022",
@@ -58,26 +60,33 @@ async function fixture(t) {
   return { root, put, run, json };
 }
 
-async function assertBunnyDefault(f) {
+async function assertBunnyDefault(f, { workersDev = true } = {}) {
   const redirect = await f.json(".wrangler/deploy/config.json");
   assert.equal(path.resolve(f.root, ".wrangler/deploy", redirect.configPath), path.join(f.root, "outputs/cloudflare-deploy/wrangler.json"));
   const config = await f.json("outputs/cloudflare-deploy/wrangler.json");
   assert.equal(config.vars.PHOTO_STORAGE_PROVIDER, "bunny");
   assert.equal(config.r2_buckets, undefined);
   assert.equal(config.d1_databases[0].database_name, "aviation-arcade-website");
-  assert.equal(config.workers_dev, false);
+  assert.equal(config.workers_dev, workersDev);
   assert.equal(config.preview_urls, false);
   assert.ok(!JSON.stringify(config).includes("test-only-secret"));
 }
 
-test("preparation replaces the default R2 deployment with the Bunny config", async (t) => {
-  const f = await fixture(t);
+test("preparation keeps workers.dev disabled when the source target has no explicit option", async (t) => {
+  const f = await fixture(t, { omitWorkersDev: true });
   const result = f.run("scripts/prepare-cloudflare-deploy.mjs");
   assert.equal(result.status, 0, result.stderr);
-  await assertBunnyDefault(f);
+  await assertBunnyDefault(f, { workersDev: false });
   const secrets = await f.json("outputs/cloudflare-secrets.json");
   assert.deepEqual(Object.keys(secrets).sort(), [...requiredSecrets].sort());
   assert.ok(!result.stdout.includes("test-only-secret"));
+});
+
+test("preparation enables workers.dev when the source target explicitly enables it", async (t) => {
+  const f = await fixture(t);
+  const result = f.run("scripts/prepare-cloudflare-deploy.mjs");
+  assert.equal(result.status, 0, result.stderr);
+  await assertBunnyDefault(f, { workersDev: true });
 });
 
 test("a completed portable build restores Bunny as the default after the framework resets it", async (t) => {

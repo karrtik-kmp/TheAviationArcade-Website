@@ -1,0 +1,71 @@
+{
+  "checkedAt": "2026-10-23T05:10:23.725Z",
+  "origin": "https://aviation-arcade-website.karrtik-kmphitech.workers.dev",
+  "runtimeSource": "55bf91b",
+  "deployment": "9b99864e-c961-4d62-86d0-536bdefe6966",
+  "version": "3685f364-23a2-45b2-8e1f-8ea8b60cc21b",
+  "photoStorageProvider": "bunny",
+  "r2BindingCount": 0,
+  "workersDev": true,
+  "previewUrls": false,
+  "access": {
+    "applicationId": "77c80c6f-1612-4726-bb7e-4c354202ac57",
+    "organizationDomain": "misty-mud-b554.cloudflareaccess.com",
+    "policyId": "605b8157-ec0c-41ed-bd33-6567050c29e5",
+    "identityProviderType": "onetimepin",
+    "reviewerCount": 1,
+    "sessionDuration": "24h",
+    "httpOnlyCookie": true
+  },
+  "checks": [
+    {
+      "path": "/",
+      "status": 302,
+      "accessGate": true,
+      "redirectHost": "misty-mud-b554.cloudflareaccess.com"
+    },
+    {
+      "path": "/admin",
+      "status": 302,
+      "accessGate": true,
+      "redirectHost": "misty-mud-b554.cloudflareaccess.com"
+    },
+    {
+      "path": "/contribute",
+      "status": 302,
+      "accessGate": true,
+      "redirectHost": "misty-mud-b554.cloudflareaccess.com"
+    },
+    {
+      "path": "/api/submissions",
+      "status": 302,
+      "accessGate": true,
+      "redirectHost": "misty-mud-b554.cloudflareaccess.com"
+    },
+    {
+      "path": "/account",
+      "status": 302,
+      "accessGate": true,
+      "redirectHost": "misty-mud-b554.cloudflareaccess.com"
+    },
+    {
+      "path": "/_next/static/chunks/runtime.js",
+      "status": 302,
+      "accessGate": true,
+      "redirectHost": "misty-mud-b554.cloudflareaccess.com"
+    }
+  ],
+  "loginForm": {
+    "status": 200,
+    "hostname": "misty-mud-b554.cloudflareaccess.com",
+    "hasEmailInput": true,
+    "hasApplicationName": true
+  },
+  "authenticatedBrowserFlows": "Access and Firebase sign-in passed by human confirmation. Full upload/editorial regression on this host is not automated; the browser sandbox helper failed to initialize.",
+  "humanVerification": {
+    "reportedOn": "2026-10-23",
+    "accessSignIn": "passed",
+    "firebaseSignIn": "passed",
+    "source": "User confirmed both sign-ins worked in this chat."
+  }
+}
