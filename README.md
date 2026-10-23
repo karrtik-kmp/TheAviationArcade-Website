@@ -8,17 +8,18 @@ Product login uses **Firebase email/password and Google only**. Account controls
 My submissions, staff-only editorial access, email verification, password reset and logout. The
 Cloudflare preview is publicly viewable; account and editorial actions still require product login.
 
-## Demo workspace
+## Demo account
 
 With the Auth Emulator running, use `npm run demo:preview` and open
-http://127.0.0.1:5186/sign-in?return_to=%2Fdemo. Select **Fill demo login**, then **Sign in**.
+http://127.0.0.1:5186/sign-in?return_to=%2Fadmin. Select **Fill demo login**, then **Sign in**.
 The local-only account is `demo-pilot@sites.test`, password `LocalPreview-2026!`.
 This dedicated profile leaves `.dev.vars` and other local servers alone.
 
-The resettable workspace imports the game's settings, 31 aircraft questions, five Plane of the Day
-entries and current game registry. Changes stay in the browser. The approved hosted demo is
-available on the [preview sign-in page](https://aviation-arcade-website.karrtik-kmphitech.workers.dev/sign-in?return_to=%2Fdemo):
-select **Fill demo login**, then **Sign in**. See [demo setup and boundaries](docs/DEMO_PREVIEW.md).
+The demo account opens a view-only admin with the two admin **Load demo data** sample drafts
+(Aircraft Identifier and Plane of the Day). It cannot edit, review, publish or open submissions.
+The approved hosted demo is available on the
+[preview sign-in page](https://aviation-arcade-website.karrtik-kmphitech.workers.dev/sign-in?return_to=%2Fadmin).
+See [demo setup and boundaries](docs/DEMO_PREVIEW.md).
 
 ## First-time local setup
 

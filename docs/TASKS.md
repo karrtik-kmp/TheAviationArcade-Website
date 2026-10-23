@@ -219,3 +219,13 @@ rejected publishing because the page-fix request did not explicitly authorize
 updating the shared Cloudflare service; deployment awaits the requested approval.
 The tested release is retained in ignored `outputs/submissions-release-6562e35`.
 Unrelated demo-workspace changes in the shared checkout are excluded from it.
+
+## Demo account reverted to view-only admin samples (2026-10-23)
+
+At the user's request, the `/demo` workspace and its browser-saved edits were removed: imported
+game snapshot, editable settings, POTD/review drafts, `demo:import` and the Account page card.
+The demo login remains and now opens a view-only `/admin` showing only the earlier Load demo data
+drafts (Aircraft Identifier and Plane of the Day). Submissions and Activity are hidden; server
+403 denial for the demo UID is unchanged. The phone editor overflow (warning bar forcing a wide
+grid column) is also fixed for staff. TypeScript, 35 unit tests, production build and six local
+browser checks pass; see [demo setup](DEMO_PREVIEW.md). Not yet committed or deployed.

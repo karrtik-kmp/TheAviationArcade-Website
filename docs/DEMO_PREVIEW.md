@@ -1,80 +1,50 @@
-# Demo workspace
+# Demo account
 
-The demo uses the existing Firebase email/password flow and a separate `/demo` workspace.
-Settings and editorial examples are saved only in the current browser, under its account
-session key. Reset restores the imported game defaults. No demo edit writes to D1, photo
-storage, the mobile game, or the public website. Shared demo users are denied live editorial
-and contributor APIs on the server, including if someone later adds their email to STAFF_EMAILS.
+The shared demo account signs in with the existing Firebase email/password flow and lands on a
+view-only `/admin`. It shows only the earlier admin **Load demo data** sample drafts, defined once
+in `lib/demo-samples.ts`:
 
-The screen uses the existing website tokens, typography and native form controls. Its job is
-to inspect game defaults and edit sample preferences/content. The main action is Save demo
-changes; Reset demo is secondary. Desktop uses a side navigation and a content column;
-phones stack navigation above content. Loading, expired/account-changed, storage-error,
-save-success and empty-filter states must be explicit. Existing site CSS is the design reference.
+- Aircraft Identifier: "Identify this aircraft [Demo]" (Boeing 767-200)
+- Plane of the Day: "Threshold Geometry [Demo]" (Boeing 757)
 
-## Data and behavior
+Both are nonpublishable drafts with no source submission. The view has Overview and the two
+content desks. Submissions and Activity are hidden; the photographer submission workflow is
+out of scope for the demo. Fields are disabled and there are no save, load, schedule, publish
+or archive controls. The page renders the bundled samples and never calls an admin API.
+`/contribute` sends the demo account to `/admin`.
 
-`npm run demo:import -- C:/Unity/Projects/AviationArcade_v2` refreshes the committed metadata
-snapshot from the game. It records source paths and SHA-256 hashes. It does not copy photos,
-grant publishing rights, change the game catalog, or infer aircraft facts from website images.
-The approved Commercial/Military split appears in this reference even while the public website
-catalog awaits its own update. Military remains Coming Soon.
+The earlier `/demo` workspace (browser-saved settings, the imported game snapshot and the
+sample review states) was removed on 2026-10-23 at the user's request. Demo edits and
+settings are not allowed.
 
-Defaults come from PlayerPrefsSettingsRepository, FeedbackCues, ThemeManager, HintBank,
-FlightRankThresholds and InProcessMockBackend. A fresh player starts at zero Miles and
-Status Points, has no Callsign, and receives five starter hints. Daily resets follow the
-player's local calendar day. Monetization stays off. The untimed setting is a demo inspection
-control; the game does not currently expose a Settings row for it.
+## Server boundary
 
-Submissions are illustrative records built around imported metadata. A sample approval
-changes only its local review state; it does not establish usage rights or publish content.
-POTD edits operate on a browser copy of the selected imported record. Support, reporting,
-staff roles, account linking and release settings are shown with their real implementation
-status rather than simulated as working production services.
-
-## Account configuration
-
-Local verification uses `npm run auth:emulator`, then `npm run demo:preview` in a separate terminal.
-The preview runs at http://127.0.0.1:5186 and uses ignored `.dev.vars.demo-preview` with
-`CLOUDFLARE_ENV=demo-preview`. Its local sample account is `demo-pilot@sites.test` with the
-existing emulator-only password `LocalPreview-2026!`. The profile captures that account's actual
-UID and applies the same server restrictions as the hosted configuration. It does not read or
-modify hosted Firebase accounts or the regular `.dev.vars` settings.
-
-Run `node scripts/demo-workspace-qa.mjs` with QA_ORIGIN set to that local origin and
-PLAYWRIGHT_MODULE pointing to an installed module. Evidence is in `docs/evidence/demo-workspace/`.
-All 36 unit tests, TypeScript and focused lint pass. Eight browser checks cover credential
-prefill/sign-in, live API denial, persistence/reset, source data/filtering, draft review, both
-themes at 320/390/768/1440px, and distinct-account isolation. No page errors were observed.
-Desktop/mobile screenshots were visually reviewed. Production build passes; a pre-existing
-AccountPage set-state-in-effect lint error and existing AuthForm navigation warning remain
-outside the new demo implementation's focused lint result.
-
-The user explicitly approved hosted provisioning and publication on 2026-10-23 after the
-initial automatic approval rejection. The account `demo@airplane-games.test` uses the existing
-Firebase project `airplane-games-auth-20261022`. It has no staff access and its email verification
-was not overridden. The sign-in page displays its approved public sample credentials.
-
-Runtime checkpoint `feb4cba` is deployed to the existing public Cloudflare preview as version
-`bccfe168-5004-4557-98ad-3416ccf57d06` at 100%. D1, Bunny, the staff allowlist and the current
-audience are preserved; version-specific preview URLs remain disabled. Demo bindings are:
+`DEMO_ACCOUNT_UID` identifies the demo principal by Firebase project and UID. Every product
+API that requires identity returns 403 for it, including the admin, contributor and Load demo
+data routes. It is never staff, even if its email is later added to `STAFF_EMAILS`.
 
 - DEMO_ACCOUNT_UID: the actual Firebase UID; it removes live data capabilities server-side.
 - DEMO_LOGIN_EMAIL / DEMO_LOGIN_PASSWORD: intentionally shared sample credentials exposed by
   `/api/auth/config` so the sign-in form can prefill them. Never use a private or staff password.
 
-These bindings are optional and default off. Firebase tokens, HttpOnly session cookies, Google
-login and server staff allowlisting remain the existing authentication path. The production
-demo account must never be a staff member. The credential values belong in ignored local
-settings and encrypted Worker bindings, not in source control. The browser workspace is also
-available to ordinary authenticated users for inspection.
+These bindings are optional and default off. The credential values belong in ignored local
+settings and encrypted Worker bindings, not in source control. To stop advertising the login,
+remove the email/password bindings and keep DEMO_ACCOUNT_UID, which keeps the account blocked.
+The hosted account `demo@airplane-games.test` in `airplane-games-auth-20261022` has no staff
+access, and its email verification was not overridden.
 
-To stop advertising the login, remove its email/password bindings while retaining
-DEMO_ACCOUNT_UID. Retaining the UID keeps the account blocked from live data APIs.
+## Local verification
 
-Hosted verification passes all eight Chrome flows, including real Firebase login, sample saves,
-server live-data denial, editorial/contributor redirects, all five sections across both themes
-and four viewport widths, and sign-out. See `docs/evidence/hosted-demo-workspace/qa.json`.
-The full runtime dependency audit and reachability assessment is recorded in
-`docs/evidence/demo-workspace/dependency-audit.md`; existing advisories remain a separate
-dependency-maintenance task. No dependency version was changed for this demo feature.
+Run `npm run auth:emulator`, then `npm run demo:preview` in a separate terminal. The preview
+runs at http://127.0.0.1:5186 with ignored `.dev.vars.demo-preview` and the local account
+`demo-pilot@sites.test` / `LocalPreview-2026!`. Then run `node scripts/demo-admin-qa.mjs`
+with QA_ORIGIN set to that origin and PLAYWRIGHT_MODULE pointing to an installed module.
+
+Evidence: `docs/evidence/demo-admin/`. Six local checks pass: `/demo` returns 404; prefilled
+login opens the view-only admin with only Overview and the two desks; both sample drafts open
+with disabled fields, no mutation controls and no API writes; five live API probes return 403
+and `/contribute` returns to `/admin`; all desks have no horizontal overflow at
+320/390/768/1440px in both themes; sign-out returns anonymous 401. No page errors.
+
+The hosted preview still runs the earlier `/demo` build (`feb4cba`) until it is redeployed.
+Evidence for that build remains under `docs/evidence/*demo-workspace/` as history.
