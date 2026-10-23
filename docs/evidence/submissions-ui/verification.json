@@ -1,0 +1,25 @@
+{
+  "sourceCommit": "6562e356ad189dc64934b606afb18df45e3d2ed1",
+  "target": "https://aviation-arcade-website.karrtik-kmphitech.workers.dev",
+  "typecheck": "passed",
+  "unit": {
+    "passed": 32,
+    "failed": 0
+  },
+  "build": "passed",
+  "deploymentDryRun": "passed",
+  "focusedBrowser": {
+    "passed": 13,
+    "failed": 0
+  },
+  "authBrowser": {
+    "passed": 13,
+    "skipped": 1,
+    "failed": 0
+  },
+  "limitations": [
+    "Google provider sign-in is not exercised because the local harness blocks the external Google helper script.",
+    "Signed-in behavior was tested against the local demo Firebase emulator, not a live account."
+  ],
+  "deployment": "pending explicit approval; automatic approval review rejected the deployment because publishing was not explicitly authorized"
+}

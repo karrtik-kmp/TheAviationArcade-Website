@@ -1,0 +1,99 @@
+{
+  "createdAt": "2026-10-23T05:46:21.316Z",
+  "qaOrigin": "http://127.0.0.1:5173",
+  "authEmulator": "http://127.0.0.1:9099",
+  "firebaseProject": "demo-airplane-games",
+  "scope": "Local browser + Firebase Auth Emulator only. No production or live Google identity tested.",
+  "results": [
+    {
+      "name": "Firebase runtime config is configured for this local emulator only",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:44:26.430Z",
+      "projectId": "demo-airplane-games",
+      "emulator": "http://127.0.0.1:9099"
+    },
+    {
+      "name": "Anonymous account response is private and protected APIs deny access",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:44:26.561Z"
+    },
+    {
+      "name": "Sign-in rejects an incorrect password without authenticating",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:44:27.171Z"
+    },
+    {
+      "name": "Account control preserves safe category, game and mine filters through sign-in",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:44:28.425Z"
+    },
+    {
+      "name": "Signed-in account menu works on desktop and mobile, and Callsign copy is accurate",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:44:31.158Z"
+    },
+    {
+      "name": "Staff identity is enforced by the server and nonstaff cannot open editorial routes",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:44:32.819Z"
+    },
+    {
+      "name": "Two emulator users see only their own contribution records",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:45:25.245Z",
+      "submissionIds": {
+        "a": "74628404-aaa2-4fa2-abb5-651edab5f607",
+        "b": "46267879-46fe-4ca1-8e65-4e023cd4a168"
+      }
+    },
+    {
+      "name": "A stale contributor session clears private lists and revision controls",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:45:47.847Z",
+      "outcome": "simulated anonymous account snapshot via browser route; no real expiry duration waited"
+    },
+    {
+      "name": "Expired staff session stops admin writes and clears private workspace data",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:45:49.309Z",
+      "outcome": "stale session write denied; account-session mismatch UI simulated without waiting for expiry duration"
+    },
+    {
+      "name": "Same-origin session exchange rejects wrong, expired, and cross-origin credentials",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:45:55.774Z"
+    },
+    {
+      "name": "Registration and email verification use emulator OOB codes",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:45:55.906Z"
+    },
+    {
+      "name": "Password reset response is neutral and emulator reset code changes the credential",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:45:59.080Z"
+    },
+    {
+      "name": "Google sign-in starts only the emulator-hosted provider flow",
+      "status": "skipped",
+      "startedAt": "2026-10-23T05:46:04.400Z",
+      "reason": "The emulator Google popup did not open because the Google helper script was blocked; a recoverable error was shown. Provider authentication was not exercised.",
+      "outcome": "blocked-before-emulator-popup",
+      "recoverableError": "We couldn’t complete that request. Please try again.",
+      "scope": "local emulator only; live Google not tested"
+    },
+    {
+      "name": "Logout clears the Firebase-backed server session and account menu",
+      "status": "passed",
+      "startedAt": "2026-10-23T05:46:15.492Z"
+    }
+  ],
+  "blockedRequests": [],
+  "expectedBlockedRequests": [
+    {
+      "url": "https://apis.google.com",
+      "resourceType": "script"
+    }
+  ],
+  "pageErrors": []
+}

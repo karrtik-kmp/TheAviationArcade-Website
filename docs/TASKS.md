@@ -151,3 +151,27 @@ account state has no user/staff session, and six private API probes return 401. 
 Cloudflare access-setting change. Signed-in upload/editorial regression remains pending.
 The five existing deployment regression tests and `git diff --check` pass after the source
 target update.
+
+## Contributor refresh and spacing fix (2026-10-23)
+
+Runtime checkpoint `6562e35` stops same-account focus/visibility/token checks from
+replacing the contributor UI or automatically fetching the submissions list again.
+Loaded rows remain visible during manual refresh, unsent drafts remain mounted,
+and writes wait for account validation. Firebase identity changes and failed
+validation continue to hide private data; a failed-check retry stays gated until
+confirmation succeeds. Contributor-scoped spacing now separates the hero, tabs,
+heading and empty state, with responsive padding down to 320px.
+
+Reviewed with separate implementation, layout and session-review subagents. The
+original browser repro failed on background-check visibility and manual-refresh
+row visibility; the focused regression is now 13/13. An isolated checkout of the
+runtime checkpoint passes TypeScript, 32 unit tests, production build and the
+Cloudflare deployment dry run. Full local auth regression: 13 passed, one Google
+provider check skipped, zero failures. This does not establish live Google login.
+Evidence and responsive screenshots: `docs/evidence/submissions-ui/`.
+
+The live preview has **not** been updated by this task. Automatic approval review
+rejected publishing because the page-fix request did not explicitly authorize
+updating the shared Cloudflare service; deployment awaits the requested approval.
+The tested release is retained in ignored `outputs/submissions-release-6562e35`.
+Unrelated demo-workspace changes in the shared checkout are excluded from it.
