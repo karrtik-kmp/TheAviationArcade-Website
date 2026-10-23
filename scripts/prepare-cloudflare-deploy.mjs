@@ -64,9 +64,17 @@ await writeFile(secretsPath, JSON.stringify({
   BUNNY_STORAGE_PASSWORD: local.BUNNY_STORAGE_PASSWORD ?? "",
   STAFF_EMAILS: local.STAFF_EMAILS ?? "",
 }, null, 2) + "\n", { mode: 0o600 });
+// A plain `wrangler deploy` must use the same Bunny target as `npm run deploy`.
+// The framework replaces this pointer on every build, so the portable build
+// runner invokes this preparation only after the framework has finished.
+await mkdir(path.join(root, ".wrangler/deploy"), { recursive: true });
+await writeFile(path.join(root, ".wrangler/deploy/config.json"), JSON.stringify({
+  configPath: "../../outputs/cloudflare-deploy/wrangler.json",
+}) + "\n");
 if (!local.BUNNY_STORAGE_PASSWORD?.trim() || !local.STAFF_EMAILS?.trim()) {
   console.log("Copy .dev.vars.cloudflare.example to .dev.vars.cloudflare and fill BUNNY_STORAGE_PASSWORD and STAFF_EMAILS.");
 }
 console.log("Prepared outputs/cloudflare-deploy/wrangler.json for the recorded account and database.");
+console.log("Default Wrangler deployment now selects this Bunny configuration.");
 console.log("R2 bindings are omitted. workers.dev and preview URLs remain disabled.");
 console.log("Secret values are read only from the ignored .dev.vars.cloudflare file and are never printed.");
