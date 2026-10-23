@@ -122,6 +122,7 @@ export default function SubmissionForm({
   const [blockedAccess, setBlockedAccess] = useState<number | null>(null);
   const blockedAccessRef = useRef<number | null>(null);
   const generation = useRef(0);
+  const loadedListSessionKey = useRef<string | null>(null);
   const [tab, setTab] = useState<"new" | "mine">(initialView);
   const [data, setData] = useState<SubmissionData>(() =>
     emptyData(user, initialCategory, initialGame),
@@ -147,6 +148,13 @@ export default function SubmissionForm({
     !!accountSession.account?.user &&
     accountSession.account.sessionKey === user.sessionKey &&
     blockedAccess === null;
+  const canShowContentDuringRevalidation =
+    !!user &&
+    accountSession.state === "loading" &&
+    accountSession.sameUserRevalidating &&
+    accountSession.account?.sessionKey === user.sessionKey &&
+    (tab !== "mine" || loadedListSessionKey.current === user.sessionKey) &&
+    blockedAccess === null;
   const sessionMatchesRef = useRef(sessionMatches);
   sessionMatchesRef.current = sessionMatches;
 
@@ -159,12 +167,13 @@ export default function SubmissionForm({
     [preview],
   );
 
+  const sessionKey = user?.sessionKey ?? null;
   const refresh = useCallback(async () => {
-    if (!user) return;
+    if (!sessionKey) return;
     if (
       accountRef.current.state !== "ready" ||
       !accountRef.current.account?.user ||
-      accountRef.current.account.sessionKey !== user.sessionKey ||
+      accountRef.current.account.sessionKey !== sessionKey ||
       blockedAccessRef.current !== null ||
       !sessionMatchesRef.current
     )
@@ -174,12 +183,12 @@ export default function SubmissionForm({
     try {
       const response = await fetch("/api/submissions", {
         cache: "no-store",
-        headers: accountHeaders(user.sessionKey),
+        headers: accountHeaders(sessionKey),
       });
       const body = (await response.json()) as ApiResponse;
       if (
         requestGeneration !== generation.current ||
-        accountRef.current.account?.sessionKey !== user.sessionKey ||
+        accountRef.current.account?.sessionKey !== sessionKey ||
         !sessionMatchesRef.current
       )
         return;
@@ -191,6 +200,7 @@ export default function SubmissionForm({
         ) {
           const status = response.status || 409;
           generation.current += 1;
+          loadedListSessionKey.current = null;
           setItems([]);
           setRevision(null);
           setExistingPhoto(null);
@@ -201,6 +211,7 @@ export default function SubmissionForm({
         }
         throw new Error(body.error || "Could not load your proposals.");
       }
+      loadedListSessionKey.current = sessionKey;
       setItems(Array.isArray(body.submissions) ? body.submissions : []);
     } catch (error) {
       if (requestGeneration !== generation.current) return;
@@ -212,18 +223,18 @@ export default function SubmissionForm({
     } finally {
       if (requestGeneration === generation.current) setLoadingList(false);
     }
-  }, [user]);
+  }, [sessionKey]);
 
   useEffect(() => {
     if (!user) return;
-    if (sessionMatches) void refresh();
-    else {
+    if (sessionMatches) {
+      if (loadedListSessionKey.current !== user.sessionKey) void refresh();
+    } else {
       generation.current += 1;
-      if (
-        accountRef.current.state !== "ready" &&
-        blockedAccessRef.current === null
-      )
+      setLoadingList(false);
+      if (accountSession.state !== "ready" && blockedAccessRef.current === null)
         return;
+      loadedListSessionKey.current = null;
       setItems([]);
       if (revision) {
         setData(emptyData(user, initialCategory, initialGame));
@@ -237,6 +248,7 @@ export default function SubmissionForm({
   }, [
     sessionMatches,
     accountSession.state,
+    accountSession.sameUserRevalidating,
     user,
     refresh,
     revision,
@@ -477,7 +489,7 @@ export default function SubmissionForm({
           where you think it could fit.
         </p>
       </section>
-      {user && !sessionMatches ? (
+      {user && !sessionMatches && !canShowContentDuringRevalidation ? (
         <section
           className="signin-panel account-session-gate"
           role={
@@ -596,7 +608,6 @@ export default function SubmissionForm({
               onClick={() => {
                 setTab("mine");
                 setNotice("");
-                void refresh();
               }}
             >
               My submissions{" "}
@@ -634,53 +645,58 @@ export default function SubmissionForm({
                   type="button"
                   className="btn secondary"
                   onClick={() => void refresh()}
-                  disabled={loadingList}
+                  disabled={loadingList || accountSession.state !== "ready"}
                 >
                   <ArrowClockwise size={17} aria-hidden="true" /> Refresh
                 </button>
               </div>
-              {loadingList ? (
+              {loadingList && !items.length ? (
                 <p role="status">Loading your proposals…</p>
               ) : items.length ? (
-                <div className="submission-list">
-                  {items.map((item) => (
-                    <article className="submission-item" key={item.id}>
-                      {item.photoUrl && (
-                        <img src={item.photoUrl} alt="" loading="lazy" />
-                      )}
-                      <div className="submission-item__body">
-                        <div className="actions">
-                          <h3>{item.data.title}</h3>
-                          <span className={`status status--${item.status}`}>
-                            {item.status.replaceAll("_", " ")}
-                          </span>
-                        </div>
-                        <p>
-                          {categoryNames[item.data.category]} · Updated{" "}
-                          {new Date(item.updatedAt).toLocaleDateString()}
-                        </p>
-                        {item.reviewNote && (
-                          <div className="notice">
-                            <strong>Editorial review note</strong>
-                            <p>{item.reviewNote}</p>
+                <>
+                  {loadingList && (
+                    <p role="status">Refreshing your proposals…</p>
+                  )}
+                  <div className="submission-list">
+                    {items.map((item) => (
+                      <article className="submission-item" key={item.id}>
+                        {item.photoUrl && (
+                          <img src={item.photoUrl} alt="" loading="lazy" />
+                        )}
+                        <div className="submission-item__body">
+                          <div className="actions">
+                            <h3>{item.data.title}</h3>
+                            <span className={`status status--${item.status}`}>
+                              {item.status.replaceAll("_", " ")}
+                            </span>
                           </div>
-                        )}
-                        {(["pending", "changes_requested"] as const).includes(
-                          item.status as "pending" | "changes_requested",
-                        ) && (
-                          <button
-                            className="btn secondary"
-                            type="button"
-                            onClick={() => beginRevision(item)}
-                          >
-                            <PencilSimple size={17} aria-hidden="true" /> Revise
-                            proposal
-                          </button>
-                        )}
-                      </div>
-                    </article>
-                  ))}
-                </div>
+                          <p>
+                            {categoryNames[item.data.category]} · Updated{" "}
+                            {new Date(item.updatedAt).toLocaleDateString()}
+                          </p>
+                          {item.reviewNote && (
+                            <div className="notice">
+                              <strong>Editorial review note</strong>
+                              <p>{item.reviewNote}</p>
+                            </div>
+                          )}
+                          {(["pending", "changes_requested"] as const).includes(
+                            item.status as "pending" | "changes_requested",
+                          ) && (
+                            <button
+                              className="btn secondary"
+                              type="button"
+                              onClick={() => beginRevision(item)}
+                            >
+                              <PencilSimple size={17} aria-hidden="true" /> Revise
+                              proposal
+                            </button>
+                          )}
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                </>
               ) : (
                 <div className="notice">
                   <p>You haven’t sent a proposal yet.</p>
@@ -1186,7 +1202,11 @@ export default function SubmissionForm({
                   </label>
                 </section>
                 <div className="actions submit-actions">
-                  <button type="submit" className="btn" disabled={busy}>
+                  <button
+                    type="submit"
+                    className="btn"
+                    disabled={busy || !sessionMatches}
+                  >
                     <PaperPlaneTilt size={18} aria-hidden="true" />
                     {busy
                       ? "Sending proposal…"

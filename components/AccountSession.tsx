@@ -11,6 +11,7 @@ import type { AccountSnapshot } from "@/lib/account";
 type AccountSession = {
   state: "loading" | "ready" | "error";
   account: AccountSnapshot | null;
+  sameUserRevalidating: boolean;
   refresh: () => Promise<void>;
   reportAccess: (status: number) => void;
 };
@@ -22,11 +23,23 @@ export function AccountSessionProvider({
 }) {
   const [state, setState] = useState<AccountSession["state"]>("loading");
   const [account, setAccount] = useState<AccountSnapshot | null>(null);
+  const [sameUserRevalidating, setSameUserRevalidating] = useState(false);
   const serial = useRef(0),
     active = useRef(true),
-    aborter = useRef<AbortController | null>(null);
+    aborter = useRef<AbortController | null>(null),
+    confirmedFirebaseUid = useRef<string | null>(null),
+    observedFirebaseUid = useRef<string | null>(null),
+    firebaseAuth = useRef<{ currentUser: { uid: string } | null } | null>(null),
+    accountRef = useRef<AccountSnapshot | null>(account);
+  accountRef.current = account;
   const refresh = useCallback(async () => {
     const request = ++serial.current;
+    const synchronousUid = firebaseAuth.current?.currentUser?.uid ?? null;
+    const sameConfirmedUser =
+      synchronousUid !== null &&
+      confirmedFirebaseUid.current === synchronousUid &&
+      !!accountRef.current?.user;
+    setSameUserRevalidating(sameConfirmedUser);
     setState("loading");
     aborter.current?.abort();
     const controller = new AbortController();
@@ -35,6 +48,21 @@ export function AccountSessionProvider({
       const { getFirebaseClient, syncFirebaseSession } =
         await import("@/lib/firebase-client");
       const auth = await getFirebaseClient();
+      firebaseAuth.current = auth;
+      const firebaseUid = auth?.currentUser?.uid ?? null;
+      if (request !== serial.current || controller.signal.aborted) return;
+      observedFirebaseUid.current = firebaseUid;
+      const sameConfirmedUser =
+        firebaseUid !== null &&
+        confirmedFirebaseUid.current === firebaseUid &&
+        !!accountRef.current?.user;
+      if (sameConfirmedUser) {
+        setSameUserRevalidating(true);
+      } else {
+        confirmedFirebaseUid.current = null;
+        setSameUserRevalidating(false);
+        setAccount(null);
+      }
       if (auth) await syncFirebaseSession(auth.currentUser);
       if (request !== serial.current || controller.signal.aborted) return;
       const response = await fetch("/api/account", {
@@ -51,7 +79,17 @@ export function AccountSessionProvider({
           : next.sessionKey !== null)
       )
         throw new Error("Invalid account response");
+      if ((auth?.currentUser?.uid ?? null) !== firebaseUid) {
+        confirmedFirebaseUid.current = null;
+        observedFirebaseUid.current = auth?.currentUser?.uid ?? null;
+        setAccount(null);
+        setSameUserRevalidating(false);
+        void refresh();
+        return;
+      }
       if (active.current && request === serial.current) {
+        confirmedFirebaseUid.current = next.user ? firebaseUid : null;
+        setSameUserRevalidating(false);
         setAccount(next);
         setState("ready");
       }
@@ -60,8 +98,11 @@ export function AccountSessionProvider({
         active.current &&
         request === serial.current &&
         !controller.signal.aborted
-      )
+      ) {
+        confirmedFirebaseUid.current = null;
+        setSameUserRevalidating(false);
         setState("error");
+      }
     }
   }, []);
   const reportAccess = useCallback(
@@ -70,6 +111,8 @@ export function AccountSessionProvider({
       ++serial.current;
       aborter.current?.abort();
       if (status === 401) {
+        confirmedFirebaseUid.current = null;
+        setSameUserRevalidating(false);
         setAccount({ user: null, isStaff: false, sessionKey: null });
         setState("ready");
       } else {
@@ -89,11 +132,20 @@ export function AccountSessionProvider({
       if (!auth || !active.current) return;
       const { onIdTokenChanged } = await import("firebase/auth");
       if (!active.current) return;
+      firebaseAuth.current = auth;
       let first = true;
-      unsubscribe = onIdTokenChanged(auth, () => {
+      unsubscribe = onIdTokenChanged(auth, (nextUser) => {
         if (first) {
           first = false;
+          observedFirebaseUid.current = nextUser?.uid ?? null;
           return;
+        }
+        const nextUid = nextUser?.uid ?? null;
+        if (observedFirebaseUid.current !== nextUid) {
+          observedFirebaseUid.current = nextUid;
+          confirmedFirebaseUid.current = null;
+          setAccount(null);
+          setSameUserRevalidating(false);
         }
         void refresh();
       });
@@ -107,12 +159,17 @@ export function AccountSessionProvider({
     const changing = () => {
       ++serial.current;
       aborter.current?.abort();
+      confirmedFirebaseUid.current = null;
+      observedFirebaseUid.current = null;
+      setSameUserRevalidating(false);
       setAccount({ user: null, isStaff: false, sessionKey: null });
       setState("loading");
     };
     const failed = () => {
       ++serial.current;
       aborter.current?.abort();
+      confirmedFirebaseUid.current = null;
+      setSameUserRevalidating(false);
       setAccount(null);
       setState("error");
     };
@@ -136,7 +193,9 @@ export function AccountSessionProvider({
     };
   }, [refresh]);
   return (
-    <Context.Provider value={{ state, account, refresh, reportAccess }}>
+    <Context.Provider
+      value={{ state, account, sameUserRevalidating, refresh, reportAccess }}
+    >
       {children}
     </Context.Provider>
   );

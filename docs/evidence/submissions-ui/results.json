@@ -1,0 +1,83 @@
+{
+  "origin": "http://127.0.0.1:5173",
+  "results": [
+    {
+      "name": "An idle submissions page does not repeatedly fetch or navigate",
+      "passed": true,
+      "listRequests": 1,
+      "navigations": 6
+    },
+    {
+      "name": "Same-account background checks keep the page visible and do not reload submissions",
+      "passed": true
+    },
+    {
+      "name": "Submissions have breathing room at 320px",
+      "passed": true,
+      "overflow": false,
+      "tabsGap": 22,
+      "contentGap": 20,
+      "padding": 22,
+      "emptyHeight": 144.1875
+    },
+    {
+      "name": "Submissions have breathing room at 768px",
+      "passed": true,
+      "overflow": false,
+      "tabsGap": 30,
+      "contentGap": 26,
+      "padding": 26,
+      "emptyHeight": 156
+    },
+    {
+      "name": "Submissions have breathing room at 1024px",
+      "passed": true,
+      "overflow": false,
+      "tabsGap": 30,
+      "contentGap": 26,
+      "padding": 26,
+      "emptyHeight": 156
+    },
+    {
+      "name": "Submissions have breathing room at 1440px",
+      "passed": true,
+      "overflow": false,
+      "tabsGap": 30,
+      "contentGap": 26,
+      "padding": 26,
+      "emptyHeight": 156
+    },
+    {
+      "name": "New proposal form fits narrow mobile",
+      "passed": true
+    },
+    {
+      "name": "Drafts stay mounted and submit waits for background validation",
+      "passed": true
+    },
+    {
+      "name": "Manual refresh preserves the loaded rows while pending",
+      "passed": true
+    },
+    {
+      "name": "Failed background validation hides private data and retry recovers",
+      "passed": true
+    },
+    {
+      "name": "A real Firebase account switch fences old rows before delayed validation",
+      "passed": true
+    },
+    {
+      "name": "Confirmed sign-out clears private submissions",
+      "passed": true
+    },
+    {
+      "name": "No uncaught browser errors",
+      "passed": true
+    }
+  ],
+  "errors": [],
+  "listRequests": 4,
+  "accountChecks": 9,
+  "navigations": 6
+}
