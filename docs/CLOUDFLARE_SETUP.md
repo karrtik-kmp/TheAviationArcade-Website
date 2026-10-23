@@ -1,14 +1,17 @@
-# Direct Cloudflare deployment preparation — 2026-10-23
+# Direct Cloudflare deployment — 2026-10-23
 
 The user chose Cloudflare hosting first and asked that the Vercel setup be saved separately.
 Vercel bootstrap commit `590a271` is on `codex/vercel-setup`; it is intentionally not merged here.
 This branch is `codex/cloudflare-prototype`. No remote Git push was performed.
 
-## Verified baseline
+## Verified runtime checkpoint
 
-The original Workers/Vinext source is retained. TypeScript passed, all 20 unit tests passed,
-and the five-stage production build completed successfully on 2026-10-23.
-This does not establish a new live deployment, provider login, or browser regression result.
+The Bunny integration is committed as `8ea2c22`; default deployment tooling is `55bf91b`.
+TypeScript, all 31 unit tests, focused ESLint, the production build, deploy-wrapper dry run and
+bare Wrangler default dry run passed. The live Bunny connection check also
+passed: one random probe was uploaded, downloaded with identical bytes, and deleted.
+No existing photos were changed. These checks do not establish live Firebase provider flows
+or browser/editorial workflows on the new host.
 
 ## Current account and database
 
@@ -19,19 +22,27 @@ This does not establish a new live deployment, provider login, or browser regres
   `c76cdebd-08b5-46a5-8045-912abec78511`. After confirming it had no user tables,
   the initial checked-in schema was applied; all three tables were verified.
 - No existing photos, private records or demo data were copied into the new database.
-- No Worker, public URL, product domain, R2 bucket or Access policy was created.
-  The earlier account's Access/R2 activation state does not establish this account's state.
+- Worker `aviation-arcade-website` has been uploaded with the real D1 binding, production
+  Firebase settings, Bunny metadata and encrypted `BUNNY_STORAGE_PASSWORD` / `STAFF_EMAILS`.
+  The deployed binding list has no R2 binding and no Firebase Auth emulator binding.
+- The final `npm run deploy` completed. The Cloudflare API reports deployment
+  `e909b48b-3a83-42da-8ed1-f28c41adb925` with version
+  `b221e051-ae3c-4fbe-853a-754767c56ff5` at 100%, created at `2026-10-23T05:00:26.513191Z`.
+  This supersedes the earlier direct uploads. The deployed runtime/build checkpoint is `55bf91b`.
+- `workers.dev` and preview URLs are both disabled, and the Worker has no custom domains.
+  Its planned hostname is `aviation-arcade-website.karrtik-kmphitech.workers.dev`.
+  No product domain, R2 bucket or Access policy was created.
 
-The existing owner-private Sites deployment remains the deployed reference. A direct deployment
-must preserve the review audience with an explicitly configured outer access gate; Firebase product
-login and staff permissions are separate. Do not publish the entire prototype publicly by accident.
+The existing owner-private Sites deployment remains the reachable reference. The direct Worker
+must preserve the review audience with an outer access gate before its URL is enabled.
+Firebase product login and staff permissions remain separate from that gate.
 
 ## Bunny storage selected
 
 The user selected Bunny and supplied zone `aviation-arcade-website`, region `de`
 (Frankfurt, Germany), S3 endpoint `https://de-s3.storage.bunnycdn.com`.
-The zone must have been created with S3 compatibility enabled. Its supplied details
-have not yet been authenticated against Bunny. No Bunny zone or account balance was changed.
+The live connection check authenticated these settings successfully. No Bunny zone or account
+balance was changed by the agent; the temporary probe was removed.
 
 The server now has an opt-in Bunny S3 adapter for signed PUT/GET/DELETE requests, payload hashing,
 streamed reads, timeouts and safe errors. Existing API authorization, validation, revisions and
@@ -40,31 +51,86 @@ The direct deployment selects Bunny and omits R2 bindings. See [Bunny setup](BUN
 and `.dev.vars.cloudflare.example` for private settings. Passwords belong only in ignored local
 settings and Worker secrets, never client code or Git.
 
-Bunny has a $1 monthly minimum per account with active zones; it is not a permanent free tier.
-R2 includes 10 GB-month Standard storage free but requires an activated subscription.
-Supabase Free includes 1 GB file storage and 50 MB uploads, with inactivity pausing.
-Recheck provider pricing when resuming.
+## Firebase host authorization
+
+The exact planned Worker hostname was added to project `airplane-games-auth-20261022` through
+the authenticated Firebase CLI's Auth configuration API. The operation read the live domains
+first and preserved every existing entry. `firebase.json` records the hostname locally.
+Real Google consent, verification/reset email delivery and staff sign-in still need a live check.
+
+## Private Access approval required
+
+This account's Access organization and application reads returned `access.api.error.not_enabled`.
+Automatic approval review rejected creating an Access organization because that is a persistent
+security-boundary change requiring explicit user authorization. Do not bypass that rejection,
+create a substitute gate, or enable the Worker URL before the required approval.
+
+A concrete proposal is saved privately in ignored `outputs/cloudflare-deploy/access-proposal.json`:
+
+- Organization: `Airplane Games prototype` in the account above.
+- Application: `Airplane Games prototype review`, restricted to the exact planned hostname.
+- Login: email verification code; a 24-hour session and HTTP-only cookie.
+- Policy: `Prototype reviewers`, allowing only the emails currently listed in the local
+  `STAFF_EMAILS` setting. Product staff verification still applies inside the website.
+- Keep all unrelated applications/policies intact and keep preview URLs disabled.
+
+Explicit approval for this proposal is still pending. After approval, create and verify the
+exact-host Access application and allowlist before enabling `workers.dev`. Verify that an
+unauthenticated visitor reaches the Access gate, then run the protected app's browser workflows.
+
+## Cloudflare agent environment
+
+The user requested the [official agent setup](https://developers.cloudflare.com/agent-setup/prompt.md).
+All 19 skills from `cloudflare/skills` were installed globally for Codex in
+`C:/Users/PC/.agents/skills`. The skills CLI recognizes them as Codex skills.
+The official `https://mcp.cloudflare.com/mcp` server was registered in
+`C:/Users/PC/.codex/config.toml` and OAuth login succeeded. Its live identity and account read
+confirmed the intended Karrtik account. Existing Codex settings, including Unity MCP, were preserved
+(the CLI normalized an empty Node REPL argument list). The config backup stays in the private
+Codex configuration directory, outside this repository.
+
+The user chose to keep Wrangler rather than install the optional beta `cf` CLI. New skills are
+available on a subsequent turn; restart Codex to fully reload the agent environment if needed.
 
 ## Next deployment steps
 
-1. Fill the read-write Bunny zone password and staff emails in ignored `.dev.vars.cloudflare`.
-2. Run `npm run bunny:check`: one random probe upload, exact-byte read and deletion.
-3. The new D1 database and schema are ready. Do not reapply the initial schema.
-4. Run `npm run build` and `npm run cloudflare:prepare` to generate an ignored direct Wrangler
+1. Obtain explicit approval for the Access proposal above, then configure and verify the gate.
+2. Enable only the protected Worker hostname; retain disabled preview URLs.
+3. Verify real Firebase sign-in, uploads, contributor isolation, revisions and editorial workflows
+   at the protected URL. Record passes, failures and human-only checks honestly.
+4. For later uploads, run `npm run build` and `npm run cloudflare:prepare` to generate an ignored direct Wrangler
    configuration using the real account/database and Bunny metadata. `workers_dev` and
-   `preview_urls` remain disabled. Do not deploy the original Sites placeholder config.
-5. Configure production Firebase bindings from ignored `outputs/firebase-web-config.json`,
-   verify the staff allowlist, keep emulator settings out, and authorize the final host in Firebase.
-6. Configure the outer private review gate before making a direct host reachable.
-7. The local Wrangler CLI still needs authentication to the intended account. Dry-run, deploy
-   with the generated secrets file, and verify accounts, uploads, contributor isolation, revisions
-   and editorial workflows at the actual protected URL. Record the deployment and source commit.
+   `preview_urls` remain disabled by default. Do not deploy the original Sites placeholder config.
+   Use `--config outputs/cloudflare-deploy/wrangler.json` and
+   `--secrets-file outputs/cloudflare-secrets.json` with Wrangler. Wrangler is authenticated;
+   no new login is required unless the stored authorization expires.
+5. The D1 schema is already initialized. Do not reapply the initial schema or import demo data.
 
-References: [R2 setup](https://developers.cloudflare.com/r2/get-started/),
-[R2 pricing](https://developers.cloudflare.com/r2/pricing/),
-[Supabase pricing](https://supabase.com/pricing),
-[Bunny Storage pricing](https://bunny.net/pricing/storage/),
-[Bunny billing FAQ](https://bunny.net/faq/).
+## Default build and deploy commands
 
-Integration checks: TypeScript, adapter tests, the production build and a direct Wrangler
-deployment dry run pass. No live Bunny connection or new browser/provider-login result is claimed.
+For this portable Cloudflare checkout, use:
+
+```powershell
+npm run deploy -- --dry-run
+npm run deploy
+```
+
+The deploy command requires the Bunny password and staff allowlist before starting, rebuilds,
+prepares the Bunny target and supplies the ignored secrets file to the project-local Wrangler.
+Only `--dry-run` is accepted as a command override. It keeps the direct and preview URLs disabled.
+
+Portable `npm run build` waits for Vinext to finish, then prepares Bunny configuration and updates
+`.wrangler/deploy/config.json`. This prevents a bare Wrangler deploy from falling back to the
+framework's original `site-creator-r2` binding. A portable build now needs production Firebase
+Web configuration in `.dev.vars.cloudflare` or ignored `outputs/firebase-web-config.json`.
+Do not hand-edit generated output. The managed Linux Site build retains its own path;
+`npm run start` still selects the local emulator config explicitly.
+
+The parallel default-deployment task completed and committed its five owned files as `55bf91b`.
+The checks above include four regressions for generated config selection, build completion,
+explicit config/secrets arguments and refusal to upload after invalid input or a failed build.
+Its final upload and private URL flags were verified through the Cloudflare API.
+
+References: [Bunny S3 setup](https://bunny.net/docs/storage/s3),
+[Worker secrets](https://developers.cloudflare.com/workers/configuration/secrets/),
+[Cloudflare agent setup](https://developers.cloudflare.com/agent-setup/prompt.md).

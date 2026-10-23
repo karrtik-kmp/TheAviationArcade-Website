@@ -3,7 +3,8 @@
     "authorizedDomains": [
       "localhost",
       "127.0.0.1",
-      "airplane-games-community-prototype.givingstar7.chatgpt.site"
+      "airplane-games-community-prototype.givingstar7.chatgpt.site",
+      "aviation-arcade-website.karrtik-kmphitech.workers.dev"
     ],
     "providers": {
       "emailPassword": true,

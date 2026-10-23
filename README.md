@@ -115,7 +115,8 @@ node scripts/api-qa.mjs
 
 The Firebase harness is restricted to loopback/demo services. Browser suites create local fixture
 records; they are not cloud tests. Results and screenshots are saved under `docs/evidence`.
-The unit suite covers 27 account-path, JWT-validation, private-storage, submission and editorial cases.
+The unit suite covers 31 account-path, JWT-validation, private-storage, submission, editorial
+and deployment cases.
 The latest local run passes all eight core workflows and the API retry/layout checks.
 Authentication has 13 passes and one skipped Google provider flow: its external helper
 script was blocked, and a recoverable error was shown. Local evidence does not prove live Google login.
@@ -173,3 +174,13 @@ Run `npm run bunny:check` for a private upload/read/delete probe, then `npm run 
 `npm run cloudflare:prepare`. Direct configuration uses the new D1 database and Bunny with no
 R2 binding. Public Worker URLs remain disabled pending private review access. Follow
 [Bunny setup](docs/BUNNY_STORAGE_SETUP.md) and [Cloudflare setup](docs/CLOUDFLARE_SETUP.md).
+
+Use `npm run deploy -- --dry-run` to verify, then `npm run deploy` to rebuild and upload with the
+recorded Bunny config and ignored secrets file. Portable builds automatically restore Bunny as
+Wrangler's default deployment target and require the production Firebase Web settings described
+above. Local `npm run start` continues using the emulator config.
+
+The live Bunny probe passed and the Worker is uploaded. Its direct and preview URLs remain
+disabled until the proposed private Access organization/application and reviewer allowlist
+receive explicit approval. The planned host is authorized in Firebase; live provider and
+protected browser checks remain pending. The existing owner-private Site remains reachable.

@@ -27,7 +27,7 @@ folder there. Read README.md and actual Git status when resuming.
 | Registration, sign-in, reset and verification    | Implemented and locally verified | Firebase browser/emulator suite; live Google consent and email delivery remain a human check                    |
 | Account controls and logout                      | Implemented and locally verified | Desktop/mobile menu, account page, safe return path, session-change/denial states                               |
 | Admin and photographer isolation                 | Implemented and locally verified | Verified staff allowlist, project/UID ownership, distinct-user list/photo/revision tests, stale-write rejection |
-| Focused rules, auth and storage tests            | Complete                         | 27 unit tests pass; TypeScript passes                                                                           |
+| Focused rules, auth, storage and deploy tests    | Complete                         | 31 unit tests pass; TypeScript and focused deploy-tooling ESLint pass                                            |
 | Core browser/API regression                      | Complete                         | Eight workflows, concurrent retry, photo retention and narrow/light layouts pass                                |
 | Locked production build                          | Complete                         | Final integrated source builds successfully                                                                     |
 | README and repo guidelines                       | Updated                          | Two-terminal setup, demo seeding, local routes, Windows fallback, auth/data boundaries                          |
@@ -74,16 +74,36 @@ Public navigation retains native anchors because an earlier production audit rep
 Vinext beta prefetch issue. Historical Lighthouse/production-smoke artifacts predate the
 Firebase integration unless their evidence explicitly records a later source checkpoint.
 
-## Direct Cloudflare preparation (2026-10-23)
+## Direct Cloudflare checkpoint (2026-10-23)
 
 The user chose Cloudflare hosting first; Vercel bootstrap is saved separately in
-commit `590a271` on `codex/vercel-setup`. TypeScript, 20 unit tests and the
-existing Workers production build pass. The user has since selected Bunny Storage
-for zone `aviation-arcade-website`, Frankfurt (`de`). The Cloudflare connection switched
+commit `590a271` on `codex/vercel-setup`. Bunny Storage uses zone
+`aviation-arcade-website`, Frankfurt (`de`). The Cloudflare connection switched
 to account `049215df8c62c566983633f79093452c`; a fresh D1 database was created and its
-three-table schema verified there. The Bunny adapter and dedicated deployment env
-example are implemented; 27 tests and TypeScript pass. Production build and direct
-deployment dry run are checked for this integration. Live Bunny access still awaits
-the read-write zone password in ignored `.dev.vars.cloudflare`.
-No direct Worker, R2/Bunny store or public URL has been created by the agent.
-See [Cloudflare setup](CLOUDFLARE_SETUP.md) for verified account state and next steps.
+three-table schema verified there. Runtime checkpoint `8ea2c22` passes TypeScript,
+27 tests, production build and direct deployment dry run. The live Bunny upload,
+identical-byte download and deletion passed using ignored `.dev.vars.cloudflare`.
+
+The default-deploy correction is committed as `55bf91b`: portable builds restore the Bunny
+Wrangler pointer, and `npm run deploy` rebuilds/prepares and supplies the ignored secrets file.
+All 31 unit tests, TypeScript, focused ESLint, production build, wrapper dry run and bare
+Wrangler dry run passed. A live deployment through the new command succeeded.
+
+Worker `aviation-arcade-website` is uploaded with D1/Bunny, production Firebase and encrypted
+password/staff bindings. Current API deployment is `e909b48b-3a83-42da-8ed1-f28c41adb925`,
+version `b221e051-ae3c-4fbe-853a-754767c56ff5` at 100%, from checkpoint `55bf91b`.
+Worker and preview URLs are disabled;
+there are no custom domains or R2 bindings. Firebase authorized the planned exact host
+`aviation-arcade-website.karrtik-kmphitech.workers.dev`, preserving live existing domains.
+
+Access is not enabled for this account. Automatic approval review rejected organization
+creation as a persistent security change requiring explicit approval. The exact organization,
+host, email-code login and STAFF_EMAILS-only policy are prepared privately in
+`outputs/cloudflare-deploy/access-proposal.json`. Approval and protected browser workflows
+remain pending. Do not bypass the rejection or enable a public URL first.
+
+The official Cloudflare agent setup is complete: 19 global Codex skills, authenticated
+Cloudflare MCP, and a verified read of the intended account. The user retained Wrangler
+instead of the optional beta `cf` CLI. Progress was synchronized with the parallel
+default-deployment chat: it completed the five build/deploy files, while this chat handled
+host/access setup and these deployment records. See [Cloudflare setup](CLOUDFLARE_SETUP.md).
