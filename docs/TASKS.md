@@ -174,12 +174,27 @@ no content API writes, distinct-account isolation, and all sections at 320/390/7
 light/dark themes. Screenshots were visually reviewed. The pre-existing AccountPage effect
 lint error and AuthForm navigation warning were observed and left out of scope.
 
-Hosted provisioning and deployment remain pending explicit approval after automatic approval
-review rejected adding a persistent Firebase account with public sample credentials. The public
-preview's Firebase project was read-verified as `airplane-games-auth-20261022`; its existing
-audience, staff allowlist and content were not changed. See [demo setup](DEMO_PREVIEW.md) and
-[local evidence](evidence/demo-workspace/qa.json). No new shared game identity or browser play
-was introduced.
+The user subsequently approved the exact hosted demo account, public sample credentials,
+encrypted Worker bindings and deployment. Provisioned `demo@airplane-games.test` in Firebase
+project `airplane-games-auth-20261022` without staff privileges or a verification override.
+The runtime checkpoint is `feb4cba`, deployment `b99b08b5-e08c-4449-b156-a2afdc5c4b98`,
+version `bccfe168-5004-4557-98ad-3416ccf57d06` at 100%. Read-back confirms the actual UID
+restriction and encrypted demo credential bindings. The current public audience, D1, Bunny,
+staff allowlist and disabled version-specific previews remain intact.
+
+All **8/8 hosted Chrome checks** pass with zero page errors: anonymous gate, real Firebase
+prefill/login, save/reload/reset, denied live-data APIs plus `/admin`/`/contribute` redirects,
+imported content/filtering, local POTD/review drafts with no content API writes, all five
+sections at 320/390/768/1440px in both themes, and sign-out followed by anonymous 401.
+The first browser probe preceded rollout propagation; fresh page/asset probes and the complete
+rerun passed. No production content was written. Hosted screenshots were visually reviewed.
+
+See [demo setup](DEMO_PREVIEW.md), [local evidence](evidence/demo-workspace/qa.json),
+[hosted evidence](evidence/hosted-demo-workspace/qa.json) and the
+[inherited dependency advisory assessment](evidence/demo-workspace/dependency-audit.md).
+The audit is not clean; the identified vulnerable server/image/gRPC paths were not found in
+the generated Worker. Updates remain a separate compatibility checkpoint, review 2026-10-30
+and before a production-domain launch. No new shared game identity or browser play was introduced.
 
 ## Contributor refresh and spacing fix (2026-10-23)
 

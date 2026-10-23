@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-10-23T05:56:46.705Z",
+  "origin": "https://aviation-arcade-website.karrtik-kmphitech.workers.dev",
+  "scope": "Approved hosted Firebase demo; browser-only edits and read-only API denial probes",
+  "checks": [
+    {
+      "name": "anonymous demo requires Firebase sign-in",
+      "passed": true
+    },
+    {
+      "name": "existing Firebase login opens prefilled demo",
+      "passed": true
+    },
+    {
+      "name": "settings save, reload and reset",
+      "passed": true
+    },
+    {
+      "name": "shared demo account cannot read or mutate live contributor and editorial data",
+      "passed": true
+    },
+    {
+      "name": "imported catalog, source review state and question filters",
+      "passed": true
+    },
+    {
+      "name": "daily feature and review drafts persist without network writes",
+      "passed": true
+    },
+    {
+      "name": "all sections fit phones and desktop in both themes",
+      "passed": true
+    },
+    {
+      "name": "hosted sign-out clears demo access",
+      "passed": true
+    }
+  ],
+  "pageErrors": []
+}

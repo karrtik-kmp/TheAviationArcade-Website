@@ -50,9 +50,14 @@ Desktop/mobile screenshots were visually reviewed. Production build passes; a pr
 AccountPage set-state-in-effect lint error and existing AuthForm navigation warning remain
 outside the new demo implementation's focused lint result.
 
-The hosted demo account has not been provisioned. Automatic approval review rejected creating
-a persistent Firebase account with public sample credentials. Explicit approval is required
-before provisioning it, configuring the following bindings, and publishing the reviewed source.
+The user explicitly approved hosted provisioning and publication on 2026-10-23 after the
+initial automatic approval rejection. The account `demo@airplane-games.test` uses the existing
+Firebase project `airplane-games-auth-20261022`. It has no staff access and its email verification
+was not overridden. The sign-in page displays its approved public sample credentials.
+
+Runtime checkpoint `feb4cba` is deployed to the existing public Cloudflare preview as version
+`bccfe168-5004-4557-98ad-3416ccf57d06` at 100%. D1, Bunny, the staff allowlist and the current
+audience are preserved; version-specific preview URLs remain disabled. Demo bindings are:
 
 - DEMO_ACCOUNT_UID: the actual Firebase UID; it removes live data capabilities server-side.
 - DEMO_LOGIN_EMAIL / DEMO_LOGIN_PASSWORD: intentionally shared sample credentials exposed by
@@ -66,3 +71,10 @@ available to ordinary authenticated users for inspection.
 
 To stop advertising the login, remove its email/password bindings while retaining
 DEMO_ACCOUNT_UID. Retaining the UID keeps the account blocked from live data APIs.
+
+Hosted verification passes all eight Chrome flows, including real Firebase login, sample saves,
+server live-data denial, editorial/contributor redirects, all five sections across both themes
+and four viewport widths, and sign-out. See `docs/evidence/hosted-demo-workspace/qa.json`.
+The full runtime dependency audit and reachability assessment is recorded in
+`docs/evidence/demo-workspace/dependency-audit.md`; existing advisories remain a separate
+dependency-maintenance task. No dependency version was changed for this demo feature.

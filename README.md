@@ -16,8 +16,9 @@ The local-only account is `demo-pilot@sites.test`, password `LocalPreview-2026!`
 This dedicated profile leaves `.dev.vars` and other local servers alone.
 
 The resettable workspace imports the game's settings, 31 aircraft questions, five Plane of the Day
-entries and current game registry. Changes stay in the browser. Hosted demo-account provisioning
-and publication are pending approval; see [demo setup and boundaries](docs/DEMO_PREVIEW.md).
+entries and current game registry. Changes stay in the browser. The approved hosted demo is
+available on the [preview sign-in page](https://aviation-arcade-website.karrtik-kmphitech.workers.dev/sign-in?return_to=%2Fdemo):
+select **Fill demo login**, then **Sign in**. See [demo setup and boundaries](docs/DEMO_PREVIEW.md).
 
 ## First-time local setup
 

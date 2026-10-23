@@ -1,0 +1,19 @@
+{
+  "checkedAt": "2026-10-23T05:57:47.300Z",
+  "origin": "https://aviation-arcade-website.karrtik-kmphitech.workers.dev",
+  "runtimeSourceCheckpoint": "feb4cba",
+  "deploymentId": "b99b08b5-e08c-4449-b156-a2afdc5c4b98",
+  "versionId": "bccfe168-5004-4557-98ad-3416ccf57d06",
+  "percentage": 100,
+  "firebaseProject": "airplane-games-auth-20261022",
+  "demoEmail": "demo@airplane-games.test",
+  "demoUidRestrictionReadBack": true,
+  "demoCredentialBindingType": "secret_text",
+  "emailVerificationOverridden": false,
+  "audience": "Existing public workers.dev preview",
+  "workersDev": true,
+  "versionPreviewUrls": false,
+  "photoStorageProvider": "bunny",
+  "r2Bindings": 0,
+  "productionContentWritesDuringQA": 0
+}
