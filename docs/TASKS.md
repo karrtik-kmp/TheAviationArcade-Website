@@ -115,6 +115,26 @@ instead of the optional beta `cf` CLI. Progress was synchronized with the parall
 default-deployment chat: it completed the five build/deploy files, while this chat handled
 host/access setup and these deployment records. See [Cloudflare setup](CLOUDFLARE_SETUP.md).
 
+## Contributor form alignment (2026-10-23)
+
+Corrected the radio/checkbox alignment in **Rights & proposed use**. The shared text-field
+selector also matched these native controls, applying 46px minimum height and text-field
+padding. It now excludes radio/checkbox inputs; choice controls keep an 18px box, no padding
+and a consistent 9px label gap. The mobile header can wrap when its account controls and
+wordmark exceed the available width, eliminating the observed 320px horizontal overflow.
+
+Local Chrome checks passed at 320, 390, 768, 958, 1024 and 1440px in both themes:
+all 13 controls aligned, no horizontal overflow, textarea sizing retained, radio exclusivity,
+channel/game/consent selection and keyboard Space toggling passed, with no page errors.
+TypeScript, all 32 existing tests and the production build passed. Browser checks used the
+demo Firebase Auth emulator; the original local settings were restored byte for byte.
+See [verification evidence](evidence/contributor-alignment-qa.json) and
+[corrected desktop form](evidence/contributor-alignment-desktop-dark.png).
+
+The live site is not updated yet. Automatic approval review rejected the pre-deployment
+remote Worker configuration read as outside the request's authorized account access.
+Remote inspection/publication requires user approval; no deployment was attempted.
+
 ## Public Cloudflare preview (2026-10-23)
 
 The user explicitly approved removing the Cloudflare email-code gate and making

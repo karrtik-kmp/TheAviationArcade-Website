@@ -1,0 +1,262 @@
+{
+  "date": "2026-10-23",
+  "source": "Local Chrome with demo Firebase Auth emulator",
+  "route": "/contribute",
+  "checks": [
+    {
+      "theme": "dark",
+      "width": 1440,
+      "controls": 13,
+      "allControls18px": true,
+      "controlPadding": [
+        "0px"
+      ],
+      "firstLineTopOffsetRange": [
+        1,
+        3
+      ],
+      "labelGapRange": [
+        9,
+        9
+      ],
+      "textareaHeight": 104,
+      "gameColumns": "434.5px 434.5px",
+      "horizontalOverflow": false
+    },
+    {
+      "theme": "dark",
+      "width": 1024,
+      "controls": 13,
+      "allControls18px": true,
+      "controlPadding": [
+        "0px"
+      ],
+      "firstLineTopOffsetRange": [
+        1,
+        3
+      ],
+      "labelGapRange": [
+        9,
+        9
+      ],
+      "textareaHeight": 104,
+      "gameColumns": "319.5px 319.5px",
+      "horizontalOverflow": false
+    },
+    {
+      "theme": "dark",
+      "width": 958,
+      "controls": 13,
+      "allControls18px": true,
+      "controlPadding": [
+        "0px"
+      ],
+      "firstLineTopOffsetRange": [
+        1,
+        3
+      ],
+      "labelGapRange": [
+        9,
+        9
+      ],
+      "textareaHeight": 104,
+      "gameColumns": "286.5px 286.5px",
+      "horizontalOverflow": false
+    },
+    {
+      "theme": "dark",
+      "width": 768,
+      "controls": 13,
+      "allControls18px": true,
+      "controlPadding": [
+        "0px"
+      ],
+      "firstLineTopOffsetRange": [
+        1,
+        3
+      ],
+      "labelGapRange": [
+        9,
+        9
+      ],
+      "textareaHeight": 104,
+      "gameColumns": "347.5px 347.5px",
+      "horizontalOverflow": false
+    },
+    {
+      "theme": "dark",
+      "width": 390,
+      "controls": 13,
+      "allControls18px": true,
+      "controlPadding": [
+        "0px"
+      ],
+      "firstLineTopOffsetRange": [
+        1,
+        3
+      ],
+      "labelGapRange": [
+        9,
+        9
+      ],
+      "textareaHeight": 104,
+      "gameColumns": "350px",
+      "horizontalOverflow": false
+    },
+    {
+      "theme": "dark",
+      "width": 320,
+      "controls": 13,
+      "allControls18px": true,
+      "controlPadding": [
+        "0px"
+      ],
+      "firstLineTopOffsetRange": [
+        1,
+        3
+      ],
+      "labelGapRange": [
+        9,
+        9
+      ],
+      "textareaHeight": 104,
+      "gameColumns": "280px",
+      "horizontalOverflow": false
+    },
+    {
+      "theme": "light",
+      "width": 1440,
+      "controls": 13,
+      "allControls18px": true,
+      "controlPadding": [
+        "0px"
+      ],
+      "firstLineTopOffsetRange": [
+        1,
+        3
+      ],
+      "labelGapRange": [
+        9,
+        9
+      ],
+      "textareaHeight": 104,
+      "gameColumns": "434.5px 434.5px",
+      "horizontalOverflow": false
+    },
+    {
+      "theme": "light",
+      "width": 1024,
+      "controls": 13,
+      "allControls18px": true,
+      "controlPadding": [
+        "0px"
+      ],
+      "firstLineTopOffsetRange": [
+        1,
+        3
+      ],
+      "labelGapRange": [
+        9,
+        9
+      ],
+      "textareaHeight": 104,
+      "gameColumns": "319.5px 319.5px",
+      "horizontalOverflow": false
+    },
+    {
+      "theme": "light",
+      "width": 958,
+      "controls": 13,
+      "allControls18px": true,
+      "controlPadding": [
+        "0px"
+      ],
+      "firstLineTopOffsetRange": [
+        1,
+        3
+      ],
+      "labelGapRange": [
+        9,
+        9
+      ],
+      "textareaHeight": 104,
+      "gameColumns": "286.5px 286.5px",
+      "horizontalOverflow": false
+    },
+    {
+      "theme": "light",
+      "width": 768,
+      "controls": 13,
+      "allControls18px": true,
+      "controlPadding": [
+        "0px"
+      ],
+      "firstLineTopOffsetRange": [
+        1,
+        3
+      ],
+      "labelGapRange": [
+        9,
+        9
+      ],
+      "textareaHeight": 104,
+      "gameColumns": "347.5px 347.5px",
+      "horizontalOverflow": false
+    },
+    {
+      "theme": "light",
+      "width": 390,
+      "controls": 13,
+      "allControls18px": true,
+      "controlPadding": [
+        "0px"
+      ],
+      "firstLineTopOffsetRange": [
+        1,
+        3
+      ],
+      "labelGapRange": [
+        9,
+        9
+      ],
+      "textareaHeight": 104,
+      "gameColumns": "350px",
+      "horizontalOverflow": false
+    },
+    {
+      "theme": "light",
+      "width": 320,
+      "controls": 13,
+      "allControls18px": true,
+      "controlPadding": [
+        "0px"
+      ],
+      "firstLineTopOffsetRange": [
+        1,
+        3
+      ],
+      "labelGapRange": [
+        9,
+        9
+      ],
+      "textareaHeight": 104,
+      "gameColumns": "280px",
+      "horizontalOverflow": false
+    }
+  ],
+  "interactions": [
+    "Radio selections remain mutually exclusive",
+    "Channel labels toggle checkbox selection",
+    "Space key toggles focused checkbox",
+    "Game checkbox selection works",
+    "Consent checkbox selection works"
+  ],
+  "pageErrors": [],
+  "typecheck": "passed",
+  "unitTests": {
+    "passed": 32,
+    "failed": 0
+  },
+  "productionBuild": "passed",
+  "deployment": "Not attempted: automatic approval review rejected pre-deployment remote Worker configuration access"
+}

@@ -749,7 +749,7 @@ button:active,
 .field label {
   font-weight: 500;
 }
-.field input,
+.field input:where(:not([type="checkbox"], [type="radio"])),
 .field select,
 .field textarea {
   background: var(--panel);
@@ -796,8 +796,10 @@ button:active,
 .check-label input {
   width: 18px;
   height: 18px;
+  min-height: 18px;
+  padding: 0;
   accent-color: var(--action);
-  margin-top: 2px;
+  margin: 2px 0 0;
   flex-shrink: 0;
 }
 .drop-zone {
@@ -1461,8 +1463,12 @@ button:active,
     padding-bottom: 52px;
   }
   .header-inner {
-    height: 72px;
+    min-height: 72px;
+    height: auto;
+    flex-wrap: wrap;
     gap: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
   }
   .brand img {
     width: 40px;
@@ -1476,6 +1482,7 @@ button:active,
   }
   .header-actions {
     gap: 8px;
+    margin-left: auto;
   }
   .header-actions > .btn {
     display: none;
