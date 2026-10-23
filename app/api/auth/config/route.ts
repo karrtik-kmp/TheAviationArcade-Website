@@ -1,8 +1,10 @@
 import { firebaseSettings } from "@/lib/firebase-config";
+import { demoLogin } from "@/lib/demo-server";
 export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
-    return Response.json(firebaseSettings(new URL(request.url).host), {
+    const host = new URL(request.url).host;
+    return Response.json({ ...firebaseSettings(host), demoLogin: demoLogin(host) }, {
       headers: { "Cache-Control": "private, no-store" },
     });
   } catch {

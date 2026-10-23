@@ -1,0 +1,40 @@
+{
+  "checkedAt": "2026-10-23T05:46:41.940Z",
+  "origin": "http://127.0.0.1:5186",
+  "scope": "Local emulator and browser-only demo; hosted demo account not provisioned",
+  "checks": [
+    {
+      "name": "anonymous demo requires Firebase sign-in",
+      "passed": true
+    },
+    {
+      "name": "existing Firebase login opens prefilled demo",
+      "passed": true
+    },
+    {
+      "name": "settings save, reload and reset",
+      "passed": true
+    },
+    {
+      "name": "shared demo account cannot read or mutate live contributor and editorial data",
+      "passed": true
+    },
+    {
+      "name": "imported catalog, source review state and question filters",
+      "passed": true
+    },
+    {
+      "name": "daily feature and review drafts persist without network writes",
+      "passed": true
+    },
+    {
+      "name": "all sections fit phones and desktop in both themes",
+      "passed": true
+    },
+    {
+      "name": "separate authenticated accounts get isolated browser drafts",
+      "passed": true
+    }
+  ],
+  "pageErrors": []
+}

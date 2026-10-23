@@ -1,0 +1,2374 @@
+{
+  "schemaVersion": 1,
+  "sourceDate": "2026-10-23",
+  "demoOnly": true,
+  "defaults": {
+    "livery": "Chartroom",
+    "sound": true,
+    "navigationVibration": true,
+    "gameplayVibration": true,
+    "reducedMotion": false,
+    "untimedMode": false,
+    "miles": 0,
+    "statusPoints": 0,
+    "callsign": null,
+    "dailyReset": "Player local midnight",
+    "monetization": false
+  },
+  "hints": {
+    "StarterHints": 5,
+    "TripsPerHint": 4,
+    "DaysPerHint": 7,
+    "FlightsPerTrip": 10
+  },
+  "thresholds": [
+    {
+      "rank": "Trainee",
+      "statusPoints": 0
+    },
+    {
+      "rank": "First Officer",
+      "statusPoints": 10000
+    },
+    {
+      "rank": "Captain",
+      "statusPoints": 50000
+    },
+    {
+      "rank": "Check Airman",
+      "statusPoints": 100000
+    },
+    {
+      "rank": "Chief Pilot",
+      "statusPoints": 400000
+    }
+  ],
+  "modules": [
+    {
+      "id": "AircraftIdentifier",
+      "slug": "aircraft-identifier",
+      "backendId": "identifier",
+      "name": "AIRPLANE IDENTIFIER - COMMERCIAL",
+      "status": "Bundled demo"
+    },
+    {
+      "id": "AircraftIdentifierMilitary",
+      "slug": "aircraft-identifier-military",
+      "backendId": "aircraft-identifier-military",
+      "name": "AIRPLANE IDENTIFIER - MILITARY",
+      "status": "Coming Soon"
+    },
+    {
+      "id": "TailIdentifier",
+      "slug": "tail-identifier",
+      "backendId": "tail-identifier",
+      "name": "TAIL IDENTIFIER",
+      "status": "Bundled demo"
+    },
+    {
+      "id": "AirportSpotter",
+      "slug": "airport-spotter",
+      "backendId": "airport-spotter",
+      "name": "AIRPORT SPOTTER",
+      "status": "Coming Soon"
+    },
+    {
+      "id": "AtcMatch",
+      "slug": "atc-match",
+      "backendId": "atc-match",
+      "name": "ATC MATCH",
+      "status": "Bundled demo"
+    },
+    {
+      "id": "CallSignMatch",
+      "slug": "call-sign-match",
+      "backendId": "call-sign-match",
+      "name": "CALL SIGN MATCH",
+      "status": "Bundled demo"
+    },
+    {
+      "id": "CodeSearch",
+      "slug": "code-search",
+      "backendId": "code-search",
+      "name": "CODE SEARCH",
+      "status": "Bundled demo"
+    },
+    {
+      "id": "RunwayIdentifier",
+      "slug": "runway-identifier",
+      "backendId": "runway-identifier",
+      "name": "RUNWAY IDENTIFIER",
+      "status": "Coming Soon"
+    }
+  ],
+  "identifier": [
+    {
+      "id": "ai-a1",
+      "photoId": "ai-a1",
+      "level": "Captain",
+      "answer": "Boeing 787-10",
+      "wrong": [
+        "Boeing 787-9",
+        "Boeing 787-8",
+        "Boeing 767-200"
+      ],
+      "family": "787",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a2",
+      "photoId": "ai-a2",
+      "level": "Trainee",
+      "answer": "Boeing 787",
+      "wrong": [
+        "Boeing 767",
+        "Airbus A330",
+        "Boeing 757"
+      ],
+      "family": "787",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a3",
+      "photoId": "ai-a3",
+      "level": "Trainee",
+      "answer": "Airbus A319",
+      "wrong": [
+        "Airbus A320",
+        "Airbus A321",
+        "Boeing 737"
+      ],
+      "family": "A320",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a4",
+      "photoId": "ai-a4",
+      "level": "ChiefPilot",
+      "answer": "Airbus A319-115",
+      "wrong": [
+        "Airbus A319-151N",
+        "Airbus A319-171N",
+        "Airbus ACJ319"
+      ],
+      "family": "A320",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a5",
+      "photoId": "ai-a5",
+      "level": "Trainee",
+      "answer": "Airbus A380",
+      "wrong": [
+        "Boeing 747",
+        "Airbus A330",
+        "Airbus A340"
+      ],
+      "family": "A380",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a6",
+      "photoId": "ai-a6",
+      "level": "Captain",
+      "answer": "Embraer E175",
+      "wrong": [
+        "Bombardier CRJ900",
+        "Embraer E195",
+        "Airbus A220"
+      ],
+      "family": "E175",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a7",
+      "photoId": "ai-a7",
+      "level": "Trainee",
+      "answer": "Boeing 737",
+      "wrong": [
+        "Airbus A320",
+        "Airbus A321",
+        "Boeing 727"
+      ],
+      "family": "737",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a9",
+      "photoId": "ai-a9",
+      "level": "FirstOfficer",
+      "answer": "Airbus A320neo",
+      "wrong": [
+        "Airbus A320ceo",
+        "Boeing 737NG",
+        "Boeing 737-MAX"
+      ],
+      "family": "A320",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a10",
+      "photoId": "ai-a10",
+      "level": "CheckAirman",
+      "answer": "Airbus A320neo",
+      "wrong": [
+        "Boeing 737-700",
+        "Boeing 737-MAX",
+        "Airbus A320ceo"
+      ],
+      "family": "A320",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a11",
+      "photoId": "ai-a11",
+      "level": "Trainee",
+      "answer": "Airbus A321",
+      "wrong": [
+        "Boeing 737",
+        "Airbus A319",
+        "Boeing 717"
+      ],
+      "family": "A320",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a11-2",
+      "photoId": "ai-a11",
+      "level": "ChiefPilot",
+      "answer": "Airbus A321neo",
+      "wrong": [
+        "Airbus A321ceo",
+        "Airbus A320neo",
+        "Airbus A320ceo"
+      ],
+      "family": "A320",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a12",
+      "photoId": "ai-a12",
+      "level": "Trainee",
+      "answer": "Airbus A319",
+      "wrong": [
+        "Airbus A320",
+        "Airbus A321",
+        "Boeing 737"
+      ],
+      "family": "A320",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a13",
+      "photoId": "ai-a13",
+      "level": "FirstOfficer",
+      "answer": "Boeing 777-200ER",
+      "wrong": [
+        "Boeing 777-300",
+        "Boeing 777-8",
+        "Boeing 777-9"
+      ],
+      "family": "777",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a15",
+      "photoId": "ai-a15",
+      "level": "FirstOfficer",
+      "answer": "Boeing 787",
+      "wrong": [
+        "Boeing 777",
+        "Boeing 767",
+        "Boeing 757"
+      ],
+      "family": "787",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a16",
+      "photoId": "ai-a16",
+      "level": "ChiefPilot",
+      "answer": "Boeing 737",
+      "wrong": [
+        "Airbus A319",
+        "Airbus A320",
+        "Airbus A321"
+      ],
+      "family": "737",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a17",
+      "photoId": "ai-a17",
+      "level": "CheckAirman",
+      "answer": "Boeing 767-300ER",
+      "wrong": [
+        "Boeing 777-300",
+        "Boeing 777-200ER",
+        "Boeing 767-400ER"
+      ],
+      "family": "767",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a18",
+      "photoId": "ai-a18",
+      "level": "CheckAirman",
+      "answer": "Embraer ERJ-175LR",
+      "wrong": [
+        "Embraer ERJ-175",
+        "Embraer E175-E2",
+        "Embraer ERJ-195"
+      ],
+      "family": "E175",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a18-2",
+      "photoId": "ai-a18",
+      "level": "FirstOfficer",
+      "answer": "Embraer ERJ-175",
+      "wrong": [
+        "Airbus A220",
+        "Boeing 717",
+        "Embraer ERJ-195"
+      ],
+      "family": "E175",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a19",
+      "photoId": "ai-a19",
+      "level": "FirstOfficer",
+      "answer": "Airbus A320neo",
+      "wrong": [
+        "Airbus A321neo",
+        "Airbus A320ceo",
+        "Boeing 737-MAX"
+      ],
+      "family": "A320",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a20",
+      "photoId": "ai-a20",
+      "level": "Captain",
+      "answer": "Airbus A320neo",
+      "wrong": [
+        "Airbus A321neo",
+        "Airbus A320ceo",
+        "Boeing 737-MAX"
+      ],
+      "family": "A320",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a21",
+      "photoId": "ai-a21",
+      "level": "FirstOfficer",
+      "answer": "Boeing 737-700",
+      "wrong": [
+        "Boeing 737-800",
+        "Boeing 737-MAX8",
+        "Boeing 737-MAX7"
+      ],
+      "family": "737",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a22",
+      "photoId": "ai-a22",
+      "level": "Trainee",
+      "answer": "Boeing 737",
+      "wrong": [
+        "Airbus A319",
+        "Airbus A320",
+        "Airbus A321"
+      ],
+      "family": "737",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a23",
+      "photoId": "ai-a23",
+      "level": "Trainee",
+      "answer": "Boeing 787",
+      "wrong": [
+        "Boeing 777",
+        "Boeing 767",
+        "Boeing 757"
+      ],
+      "family": "787",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a24",
+      "photoId": "ai-a24",
+      "level": "Trainee",
+      "answer": "Boeing 787",
+      "wrong": [
+        "Boeing 777",
+        "Airbus A350",
+        "Boeing 767"
+      ],
+      "family": "787",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a25",
+      "photoId": "ai-a25",
+      "level": "Captain",
+      "answer": "Boeing 787-9",
+      "wrong": [
+        "Boeing 787-8",
+        "Boeing 787-10",
+        "Airbus A350"
+      ],
+      "family": "787",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a26",
+      "photoId": "ai-a26",
+      "level": "ChiefPilot",
+      "answer": "Boeing 787",
+      "wrong": [
+        "Boeing 777",
+        "Airbus A350",
+        "Boeing 767"
+      ],
+      "family": "787",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a27",
+      "photoId": "ai-a27",
+      "level": "Trainee",
+      "answer": "Airbus A320neo",
+      "wrong": [
+        "Boeing 737-MAX8",
+        "Airbus A220-300",
+        "Boeing 737-800"
+      ],
+      "family": "A320",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a28",
+      "photoId": "ai-a28",
+      "level": "Captain",
+      "answer": "Airbus A320neo",
+      "wrong": [
+        "Airbus A220-300",
+        "Boeing 737-800",
+        "Boeing 737-MAX8"
+      ],
+      "family": "A320",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a29",
+      "photoId": "ai-a29",
+      "level": "CheckAirman",
+      "answer": "Boeing 757-200",
+      "wrong": [
+        "Boeing 757-300",
+        "Boeing 737-900",
+        "Boeing 737-MAX10"
+      ],
+      "family": "757",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a30",
+      "photoId": "ai-a30",
+      "level": "Trainee",
+      "answer": "Airbus A320",
+      "wrong": [
+        "Airbus A220",
+        "Boeing 737",
+        "Boeing 757"
+      ],
+      "family": "A320",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "ai-a31",
+      "photoId": "ai-a31",
+      "level": "Captain",
+      "answer": "Airbus A330",
+      "wrong": [
+        "Boeing 777",
+        "Boeing 767",
+        "Airbus A340"
+      ],
+      "family": "A330",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    }
+  ],
+  "potd": [
+    {
+      "id": "pod-4",
+      "photoId": "pod-4",
+      "title": "Beneath the Heartbeat",
+      "manufacturer": "Boeing",
+      "model": "737",
+      "description": "Framed from directly beneath the glide path, this Southwest Airlines Boeing 737NG highlights the iconic flattened CFM56 engine nacelles and exposed main gear bays on short final. Wrapped in the striking Heart livery, the twinjet offers a powerful, perfectly symmetrical perspective just seconds before touchdown.",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "pod-5",
+      "photoId": "pod-5",
+      "title": "Golden Superjumbo",
+      "manufacturer": "Airbus",
+      "model": "A380",
+      "description": "This Qantas Airbus A380 superjumbo lines up on short final with its gear down and massive turbofans catching the warm sunlight. Named David Warren in honor of the Australian scientist who invented the flight data recorder, the iconic double-decker aircraft epitomizes the grand scale of long-haul international aviation.",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "pod-6",
+      "photoId": "pod-6",
+      "title": "Threshold Geometry",
+      "manufacturer": "Boeing",
+      "model": "757",
+      "description": "Framed directly against a field of altocumulus clouds, this Boeing 757 passes over an approach lighting tower while configured gear-down for landing. The planform view highlights the airliner's high-aspect-ratio wing sweep, tall efficiency-boosting blended winglets, and pristine belly symmetry.",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "pod-7",
+      "photoId": "pod-7",
+      "title": "Scimitar Silhouette",
+      "manufacturer": "Boeing",
+      "model": "737-900ER",
+      "description": "Captured from directly below, this Delta Boeing 737-900ER displays its striking blue belly logo and distinctive Split Scimitar winglets against a dappled cloud canopy. The vertical perspective showcases the airliner's extended fuselage geometry, deployable main gear, and flap track fairings as it descends on final approach.",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    },
+    {
+      "id": "pod-8",
+      "photoId": "pod-8",
+      "title": "Queen",
+      "manufacturer": "Boeing",
+      "model": "747-8F",
+      "description": "Rendered in high-contrast black and white, this AirBridgeCargo Boeing 747-8F presents a formidable front profile as it taxies along the tarmac. The distinctive chevron engine nacelles and sweeping raked wingtips highlight the modern aerodynamic refinements of Boeing's ultimate \"Queen of the Skies\" freighter.",
+      "photographer": "Josh M",
+      "credit": "@iamjoshmark",
+      "instagram": "https://www.instagram.com/iamjoshmark/"
+    }
+  ],
+  "atc": {
+    "schemaVersion": 1,
+    "packId": "atc-trainee-demo",
+    "contentVersion": "2026-10-20-v1",
+    "moduleId": "atc-match",
+    "demoOnly": true,
+    "supportedRanks": [
+      "Trainee"
+    ],
+    "sourceSnapshot": "b529623d2a0b09a9be78d37fc7a7a5e1e16e3451",
+    "sourceUrl": "https://raw.githubusercontent.com/davidmegginson/ourairports-data/b529623d2a0b09a9be78d37fc7a7a5e1e16e3451/airports.csv",
+    "licenseUrl": "https://github.com/davidmegginson/ourairports-data/blob/b529623d2a0b09a9be78d37fc7a7a5e1e16e3451/LICENSE",
+    "verifiedAt": "2026-10-20",
+    "reviewState": "demo-reviewed",
+    "reviewer": "source-import",
+    "records": [
+      {
+        "id": "2513",
+        "ident": "EHAM",
+        "name": "Amsterdam Airport Schiphol",
+        "label": "Amsterdam Airport Schiphol",
+        "city": "Amsterdam",
+        "country": "NL",
+        "code": "AMS"
+      },
+      {
+        "id": "4185",
+        "ident": "LFPG",
+        "name": "Charles de Gaulle International Airport",
+        "label": "Charles de Gaulle International Airport",
+        "city": "Paris (Roissy-en-France, Val-d'Oise)",
+        "country": "FR",
+        "code": "CDG"
+      },
+      {
+        "id": "3486",
+        "ident": "KDEN",
+        "name": "Denver International Airport",
+        "label": "Denver International Airport",
+        "city": "Denver",
+        "country": "US",
+        "code": "DEN"
+      },
+      {
+        "id": "5235",
+        "ident": "OMDB",
+        "name": "Dubai International Airport",
+        "label": "Dubai International Airport",
+        "city": "Dubai",
+        "country": "AE",
+        "code": "DXB"
+      },
+      {
+        "id": "2212",
+        "ident": "EDDF",
+        "name": "Frankfurt Main Airport",
+        "label": "Frankfurt Main Airport",
+        "city": "Frankfurt am Main",
+        "country": "DE",
+        "code": "FRA"
+      },
+      {
+        "id": "5910",
+        "ident": "SBGR",
+        "name": "São Paulo/Guarulhos–Governor André Franco Montoro International Airport",
+        "label": "São Paulo",
+        "city": "São Paulo",
+        "country": "BR",
+        "code": "GRU"
+      },
+      {
+        "id": "26535",
+        "ident": "VHHH",
+        "name": "Hong Kong International Airport",
+        "label": "Hong Kong International Airport",
+        "city": "Hong Kong",
+        "country": "HK",
+        "code": "HKG"
+      },
+      {
+        "id": "5627",
+        "ident": "RJTT",
+        "name": "Tokyo Haneda International Airport",
+        "label": "Tokyo Haneda International Airport",
+        "city": "Tokyo",
+        "country": "JP",
+        "code": "HND"
+      },
+      {
+        "id": "5653",
+        "ident": "RKSI",
+        "name": "Incheon International Airport",
+        "label": "Incheon International Airport",
+        "city": "Seoul",
+        "country": "KR",
+        "code": "ICN"
+      },
+      {
+        "id": "317457",
+        "ident": "LTFM",
+        "name": "İstanbul Airport",
+        "label": "İstanbul Airport",
+        "city": "Istanbul",
+        "country": "TR",
+        "code": "IST"
+      },
+      {
+        "id": "3622",
+        "ident": "KJFK",
+        "name": "John F. Kennedy International Airport",
+        "label": "John F. Kennedy International Airport",
+        "city": "New York",
+        "country": "US",
+        "code": "JFK"
+      },
+      {
+        "id": "3632",
+        "ident": "KLAX",
+        "name": "Los Angeles International Airport",
+        "label": "Los Angeles International Airport",
+        "city": "Los Angeles",
+        "country": "US",
+        "code": "LAX"
+      },
+      {
+        "id": "2434",
+        "ident": "EGLL",
+        "name": "London Heathrow Airport",
+        "label": "London Heathrow Airport",
+        "city": "London",
+        "country": "GB",
+        "code": "LHR"
+      },
+      {
+        "id": "4019",
+        "ident": "LEMD",
+        "name": "Adolfo Suárez Madrid–Barajas Airport",
+        "label": "Adolfo Suárez Madrid–Barajas Airport",
+        "city": "Madrid",
+        "country": "ES",
+        "code": "MAD"
+      },
+      {
+        "id": "4731",
+        "ident": "MMMX",
+        "name": "Mexico City Benito Juárez International Airport",
+        "label": "Mexico City",
+        "city": "Mexico City",
+        "country": "MX",
+        "code": "MEX"
+      },
+      {
+        "id": "3754",
+        "ident": "KORD",
+        "name": "Chicago O'Hare International Airport",
+        "label": "Chicago O'Hare International Airport",
+        "city": "Chicago",
+        "country": "US",
+        "code": "ORD"
+      },
+      {
+        "id": "26887",
+        "ident": "WSSS",
+        "name": "Singapore Changi Airport",
+        "label": "Singapore Changi Airport",
+        "city": "Singapore",
+        "country": "SG",
+        "code": "SIN"
+      },
+      {
+        "id": "27145",
+        "ident": "YSSY",
+        "name": "Sydney Kingsford Smith International Airport",
+        "label": "Sydney (Mascot)",
+        "city": "Sydney (Mascot)",
+        "country": "AU",
+        "code": "SYD"
+      },
+      {
+        "id": "1990",
+        "ident": "CYYZ",
+        "name": "Toronto Pearson International Airport",
+        "label": "Toronto Pearson International Airport",
+        "city": "Toronto",
+        "country": "CA",
+        "code": "YYZ"
+      },
+      {
+        "id": "4505",
+        "ident": "LSZH",
+        "name": "Zürich Airport",
+        "label": "Zürich Airport",
+        "city": "Zurich",
+        "country": "CH",
+        "code": "ZRH"
+      }
+    ]
+  },
+  "callsign": {
+    "schemaVersion": 1,
+    "packId": "callsign-trainee-demo",
+    "contentVersion": "2026-10-21-v1",
+    "moduleId": "call-sign-match",
+    "demoOnly": true,
+    "supportedRanks": [
+      "Trainee"
+    ],
+    "sourceSnapshot": "FAA JO 7340.2 Chapter 3 Section 3, retrieved 2026-10-21",
+    "sourceUrl": "https://www.faa.gov/air_traffic/publications/atpubs/cnt_html/chap3_section_3.html",
+    "verifiedAt": "2026-10-21",
+    "reviewState": "demo-unreviewed",
+    "reviewer": "source-import",
+    "records": [
+      {
+        "id": "airline-aal",
+        "icao": "AAL",
+        "telephony": "AMERICAN",
+        "airline": "American Airlines",
+        "status": "active"
+      },
+      {
+        "id": "airline-afr",
+        "icao": "AFR",
+        "telephony": "AIRFRANS",
+        "airline": "Air France",
+        "status": "active"
+      },
+      {
+        "id": "airline-baw",
+        "icao": "BAW",
+        "telephony": "SPEEDBIRD",
+        "airline": "British Airways",
+        "status": "active"
+      },
+      {
+        "id": "airline-cal",
+        "icao": "CAL",
+        "telephony": "DYNASTY",
+        "airline": "China Airlines",
+        "status": "active"
+      },
+      {
+        "id": "airline-cpa",
+        "icao": "CPA",
+        "telephony": "CATHAY",
+        "airline": "Cathay Pacific",
+        "status": "active"
+      },
+      {
+        "id": "airline-dal",
+        "icao": "DAL",
+        "telephony": "DELTA",
+        "airline": "Delta Air Lines",
+        "status": "active"
+      },
+      {
+        "id": "airline-dlh",
+        "icao": "DLH",
+        "telephony": "LUFTHANSA",
+        "airline": "Lufthansa",
+        "status": "active"
+      },
+      {
+        "id": "airline-ein",
+        "icao": "EIN",
+        "telephony": "SHAMROCK",
+        "airline": "Aer Lingus",
+        "status": "active"
+      },
+      {
+        "id": "airline-ice",
+        "icao": "ICE",
+        "telephony": "ICEAIR",
+        "airline": "Icelandair",
+        "status": "active"
+      },
+      {
+        "id": "airline-jal",
+        "icao": "JAL",
+        "telephony": "JAPANAIR",
+        "airline": "Japan Airlines",
+        "status": "active"
+      },
+      {
+        "id": "airline-kal",
+        "icao": "KAL",
+        "telephony": "KOREANAIR",
+        "airline": "Korean Air",
+        "status": "active"
+      },
+      {
+        "id": "airline-klm",
+        "icao": "KLM",
+        "telephony": "KLM",
+        "airline": "KLM Royal Dutch Airlines",
+        "status": "active"
+      },
+      {
+        "id": "airline-qfa",
+        "icao": "QFA",
+        "telephony": "QANTAS",
+        "airline": "Qantas",
+        "status": "active"
+      },
+      {
+        "id": "airline-qtr",
+        "icao": "QTR",
+        "telephony": "QATARI",
+        "airline": "Qatar Airways",
+        "status": "active"
+      },
+      {
+        "id": "airline-saa",
+        "icao": "SAA",
+        "telephony": "SPRINGBOK",
+        "airline": "South African Airways",
+        "status": "active"
+      },
+      {
+        "id": "airline-sia",
+        "icao": "SIA",
+        "telephony": "SINGAPORE",
+        "airline": "Singapore Airlines",
+        "status": "active"
+      },
+      {
+        "id": "airline-thy",
+        "icao": "THY",
+        "telephony": "TURKISH",
+        "airline": "Turkish Airlines",
+        "status": "active"
+      },
+      {
+        "id": "airline-uae",
+        "icao": "UAE",
+        "telephony": "EMIRATES",
+        "airline": "Emirates",
+        "status": "active"
+      },
+      {
+        "id": "airline-ual",
+        "icao": "UAL",
+        "telephony": "UNITED",
+        "airline": "United Airlines",
+        "status": "active"
+      },
+      {
+        "id": "airline-vir",
+        "icao": "VIR",
+        "telephony": "VIRGIN",
+        "airline": "Virgin Atlantic",
+        "status": "active"
+      }
+    ]
+  },
+  "codeSearch": {
+    "schemaVersion": 1,
+    "packId": "code-search-trainee-demo",
+    "contentVersion": "2026-10-21-v1",
+    "moduleId": "code-search",
+    "demoOnly": true,
+    "supportedRanks": [
+      "Trainee"
+    ],
+    "reviewState": "demo-reviewed",
+    "reviewer": "source-import",
+    "verifiedAt": "2026-10-21",
+    "airportPackId": "atc-trainee-demo",
+    "sourceSnapshot": "b529623d2a0b09a9be78d37fc7a7a5e1e16e3451",
+    "sourceUrl": "https://raw.githubusercontent.com/davidmegginson/ourairports-data/b529623d2a0b09a9be78d37fc7a7a5e1e16e3451/airports.csv",
+    "licenseUrl": "https://github.com/davidmegginson/ourairports-data/blob/b529623d2a0b09a9be78d37fc7a7a5e1e16e3451/LICENSE",
+    "airportContentVersion": "2026-10-20-v1",
+    "directions": [
+      "East",
+      "SouthEast",
+      "South",
+      "SouthWest",
+      "West",
+      "NorthWest",
+      "North",
+      "NorthEast"
+    ],
+    "records": [
+      {
+        "id": "code-search-01",
+        "rank": "Trainee",
+        "clueMode": "code",
+        "seed": 20261021,
+        "width": 6,
+        "height": 6,
+        "letters": "BPGMGAIXGCDGAAENMDMADNXNSFEBSEFDMVEQ",
+        "targets": [
+          {
+            "airportId": "2513",
+            "code": "AMS",
+            "clue": "Amsterdam",
+            "path": [
+              {
+                "row": 2,
+                "column": 0
+              },
+              {
+                "row": 3,
+                "column": 0
+              },
+              {
+                "row": 4,
+                "column": 0
+              }
+            ]
+          },
+          {
+            "airportId": "4185",
+            "code": "CDG",
+            "clue": "Paris",
+            "path": [
+              {
+                "row": 1,
+                "column": 3
+              },
+              {
+                "row": 1,
+                "column": 4
+              },
+              {
+                "row": 1,
+                "column": 5
+              }
+            ]
+          },
+          {
+            "airportId": "3486",
+            "code": "DEN",
+            "clue": "Denver",
+            "path": [
+              {
+                "row": 5,
+                "column": 1
+              },
+              {
+                "row": 4,
+                "column": 2
+              },
+              {
+                "row": 3,
+                "column": 3
+              }
+            ]
+          },
+          {
+            "airportId": "5235",
+            "code": "DXB",
+            "clue": "Dubai",
+            "path": [
+              {
+                "row": 2,
+                "column": 5
+              },
+              {
+                "row": 3,
+                "column": 4
+              },
+              {
+                "row": 4,
+                "column": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "code-search-02",
+        "rank": "Trainee",
+        "clueMode": "code",
+        "seed": 20268940,
+        "width": 6,
+        "height": 6,
+        "letters": "WLUDOGHCFUXOJNJRUWPODRAYMHGWGVJMFGKH",
+        "targets": [
+          {
+            "airportId": "2212",
+            "code": "FRA",
+            "clue": "Frankfurt am Main",
+            "path": [
+              {
+                "row": 1,
+                "column": 2
+              },
+              {
+                "row": 2,
+                "column": 3
+              },
+              {
+                "row": 3,
+                "column": 4
+              }
+            ]
+          },
+          {
+            "airportId": "5910",
+            "code": "GRU",
+            "clue": "São Paulo",
+            "path": [
+              {
+                "row": 4,
+                "column": 2
+              },
+              {
+                "row": 3,
+                "column": 3
+              },
+              {
+                "row": 2,
+                "column": 4
+              }
+            ]
+          },
+          {
+            "airportId": "26535",
+            "code": "HKG",
+            "clue": "Hong Kong",
+            "path": [
+              {
+                "row": 5,
+                "column": 5
+              },
+              {
+                "row": 5,
+                "column": 4
+              },
+              {
+                "row": 5,
+                "column": 3
+              }
+            ]
+          },
+          {
+            "airportId": "5627",
+            "code": "HND",
+            "clue": "Tokyo",
+            "path": [
+              {
+                "row": 1,
+                "column": 0
+              },
+              {
+                "row": 2,
+                "column": 1
+              },
+              {
+                "row": 3,
+                "column": 2
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "code-search-03",
+        "rank": "Trainee",
+        "clueMode": "code",
+        "seed": 20276859,
+        "width": 6,
+        "height": 6,
+        "letters": "ZYERJGPLTFAYVAKQGIWXRRESRIICNTNKIARS",
+        "targets": [
+          {
+            "airportId": "5653",
+            "code": "ICN",
+            "clue": "Seoul",
+            "path": [
+              {
+                "row": 4,
+                "column": 2
+              },
+              {
+                "row": 4,
+                "column": 3
+              },
+              {
+                "row": 4,
+                "column": 4
+              }
+            ]
+          },
+          {
+            "airportId": "317457",
+            "code": "IST",
+            "clue": "Istanbul",
+            "path": [
+              {
+                "row": 2,
+                "column": 5
+              },
+              {
+                "row": 3,
+                "column": 5
+              },
+              {
+                "row": 4,
+                "column": 5
+              }
+            ]
+          },
+          {
+            "airportId": "3622",
+            "code": "JFK",
+            "clue": "New York",
+            "path": [
+              {
+                "row": 0,
+                "column": 4
+              },
+              {
+                "row": 1,
+                "column": 3
+              },
+              {
+                "row": 2,
+                "column": 2
+              }
+            ]
+          },
+          {
+            "airportId": "3632",
+            "code": "LAX",
+            "clue": "Los Angeles",
+            "path": [
+              {
+                "row": 1,
+                "column": 1
+              },
+              {
+                "row": 2,
+                "column": 1
+              },
+              {
+                "row": 3,
+                "column": 1
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "code-search-04",
+        "rank": "Trainee",
+        "clueMode": "code",
+        "seed": 20284778,
+        "width": 6,
+        "height": 6,
+        "letters": "ZXXMADTKEEOIEOMRRXONDHILVLLFCQTZJAOQ",
+        "targets": [
+          {
+            "airportId": "2434",
+            "code": "LHR",
+            "clue": "London",
+            "path": [
+              {
+                "row": 4,
+                "column": 2
+              },
+              {
+                "row": 3,
+                "column": 3
+              },
+              {
+                "row": 2,
+                "column": 4
+              }
+            ]
+          },
+          {
+            "airportId": "4019",
+            "code": "MAD",
+            "clue": "Madrid",
+            "path": [
+              {
+                "row": 0,
+                "column": 3
+              },
+              {
+                "row": 0,
+                "column": 4
+              },
+              {
+                "row": 0,
+                "column": 5
+              }
+            ]
+          },
+          {
+            "airportId": "4731",
+            "code": "MEX",
+            "clue": "Mexico City",
+            "path": [
+              {
+                "row": 2,
+                "column": 2
+              },
+              {
+                "row": 1,
+                "column": 2
+              },
+              {
+                "row": 0,
+                "column": 2
+              }
+            ]
+          },
+          {
+            "airportId": "3754",
+            "code": "ORD",
+            "clue": "Chicago",
+            "path": [
+              {
+                "row": 1,
+                "column": 4
+              },
+              {
+                "row": 2,
+                "column": 3
+              },
+              {
+                "row": 3,
+                "column": 2
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "code-search-05",
+        "rank": "Trainee",
+        "clueMode": "code",
+        "seed": 20292697,
+        "width": 6,
+        "height": 6,
+        "letters": "FMTGRDMGYNJATSUYHASYJRZIIDZUVQNQDVDU",
+        "targets": [
+          {
+            "airportId": "26887",
+            "code": "SIN",
+            "clue": "Singapore",
+            "path": [
+              {
+                "row": 3,
+                "column": 0
+              },
+              {
+                "row": 4,
+                "column": 0
+              },
+              {
+                "row": 5,
+                "column": 0
+              }
+            ]
+          },
+          {
+            "airportId": "27145",
+            "code": "SYD",
+            "clue": "Sydney",
+            "path": [
+              {
+                "row": 2,
+                "column": 1
+              },
+              {
+                "row": 3,
+                "column": 1
+              },
+              {
+                "row": 4,
+                "column": 1
+              }
+            ]
+          },
+          {
+            "airportId": "1990",
+            "code": "YYZ",
+            "clue": "Toronto",
+            "path": [
+              {
+                "row": 1,
+                "column": 2
+              },
+              {
+                "row": 2,
+                "column": 3
+              },
+              {
+                "row": 3,
+                "column": 4
+              }
+            ]
+          },
+          {
+            "airportId": "4505",
+            "code": "ZRH",
+            "clue": "Zurich",
+            "path": [
+              {
+                "row": 4,
+                "column": 2
+              },
+              {
+                "row": 3,
+                "column": 3
+              },
+              {
+                "row": 2,
+                "column": 4
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "code-search-06",
+        "rank": "Trainee",
+        "clueMode": "code",
+        "seed": 20300616,
+        "width": 6,
+        "height": 6,
+        "letters": "LVOGTMHJKRPSRFHBDMDKMUUAOWNGRNKTAUGU",
+        "targets": [
+          {
+            "airportId": "2513",
+            "code": "AMS",
+            "clue": "Amsterdam",
+            "path": [
+              {
+                "row": 3,
+                "column": 5
+              },
+              {
+                "row": 2,
+                "column": 5
+              },
+              {
+                "row": 1,
+                "column": 5
+              }
+            ]
+          },
+          {
+            "airportId": "5910",
+            "code": "GRU",
+            "clue": "São Paulo",
+            "path": [
+              {
+                "row": 5,
+                "column": 4
+              },
+              {
+                "row": 4,
+                "column": 4
+              },
+              {
+                "row": 3,
+                "column": 4
+              }
+            ]
+          },
+          {
+            "airportId": "3622",
+            "code": "JFK",
+            "clue": "New York",
+            "path": [
+              {
+                "row": 1,
+                "column": 1
+              },
+              {
+                "row": 2,
+                "column": 1
+              },
+              {
+                "row": 3,
+                "column": 1
+              }
+            ]
+          },
+          {
+            "airportId": "3754",
+            "code": "ORD",
+            "clue": "Chicago",
+            "path": [
+              {
+                "row": 0,
+                "column": 2
+              },
+              {
+                "row": 1,
+                "column": 3
+              },
+              {
+                "row": 2,
+                "column": 4
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "code-search-07",
+        "rank": "Trainee",
+        "clueMode": "code",
+        "seed": 20308535,
+        "width": 6,
+        "height": 6,
+        "letters": "NIIIQLLEFRUGBFZLAXEQNISMOZPGDCBJIGKH",
+        "targets": [
+          {
+            "airportId": "4185",
+            "code": "CDG",
+            "clue": "Paris",
+            "path": [
+              {
+                "row": 4,
+                "column": 5
+              },
+              {
+                "row": 4,
+                "column": 4
+              },
+              {
+                "row": 4,
+                "column": 3
+              }
+            ]
+          },
+          {
+            "airportId": "26535",
+            "code": "HKG",
+            "clue": "Hong Kong",
+            "path": [
+              {
+                "row": 5,
+                "column": 5
+              },
+              {
+                "row": 5,
+                "column": 4
+              },
+              {
+                "row": 5,
+                "column": 3
+              }
+            ]
+          },
+          {
+            "airportId": "3632",
+            "code": "LAX",
+            "clue": "Los Angeles",
+            "path": [
+              {
+                "row": 2,
+                "column": 3
+              },
+              {
+                "row": 2,
+                "column": 4
+              },
+              {
+                "row": 2,
+                "column": 5
+              }
+            ]
+          },
+          {
+            "airportId": "26887",
+            "code": "SIN",
+            "clue": "Singapore",
+            "path": [
+              {
+                "row": 3,
+                "column": 4
+              },
+              {
+                "row": 3,
+                "column": 3
+              },
+              {
+                "row": 3,
+                "column": 2
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "code-search-08",
+        "rank": "Trainee",
+        "clueMode": "code",
+        "seed": 20316454,
+        "width": 6,
+        "height": 6,
+        "letters": "PSYDWTHBEIZRBNKWHIVPOLIKMVZHIGHNDULX",
+        "targets": [
+          {
+            "airportId": "3486",
+            "code": "DEN",
+            "clue": "Denver",
+            "path": [
+              {
+                "row": 0,
+                "column": 3
+              },
+              {
+                "row": 1,
+                "column": 2
+              },
+              {
+                "row": 2,
+                "column": 1
+              }
+            ]
+          },
+          {
+            "airportId": "5627",
+            "code": "HND",
+            "clue": "Tokyo",
+            "path": [
+              {
+                "row": 5,
+                "column": 0
+              },
+              {
+                "row": 5,
+                "column": 1
+              },
+              {
+                "row": 5,
+                "column": 2
+              }
+            ]
+          },
+          {
+            "airportId": "2434",
+            "code": "LHR",
+            "clue": "London",
+            "path": [
+              {
+                "row": 3,
+                "column": 3
+              },
+              {
+                "row": 2,
+                "column": 4
+              },
+              {
+                "row": 1,
+                "column": 5
+              }
+            ]
+          },
+          {
+            "airportId": "27145",
+            "code": "SYD",
+            "clue": "Sydney",
+            "path": [
+              {
+                "row": 0,
+                "column": 1
+              },
+              {
+                "row": 0,
+                "column": 2
+              },
+              {
+                "row": 0,
+                "column": 3
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "code-search-09",
+        "rank": "Trainee",
+        "clueMode": "city",
+        "seed": 20324373,
+        "width": 6,
+        "height": 6,
+        "letters": "GFKQGMTLUYFKTFBBLSPXMWZZDAQTZYDLICNY",
+        "targets": [
+          {
+            "airportId": "5235",
+            "code": "DXB",
+            "clue": "Dubai",
+            "path": [
+              {
+                "row": 4,
+                "column": 0
+              },
+              {
+                "row": 3,
+                "column": 1
+              },
+              {
+                "row": 2,
+                "column": 2
+              }
+            ]
+          },
+          {
+            "airportId": "5653",
+            "code": "ICN",
+            "clue": "Seoul",
+            "path": [
+              {
+                "row": 5,
+                "column": 2
+              },
+              {
+                "row": 5,
+                "column": 3
+              },
+              {
+                "row": 5,
+                "column": 4
+              }
+            ]
+          },
+          {
+            "airportId": "4019",
+            "code": "MAD",
+            "clue": "Madrid",
+            "path": [
+              {
+                "row": 3,
+                "column": 2
+              },
+              {
+                "row": 4,
+                "column": 1
+              },
+              {
+                "row": 5,
+                "column": 0
+              }
+            ]
+          },
+          {
+            "airportId": "1990",
+            "code": "YYZ",
+            "clue": "Toronto",
+            "path": [
+              {
+                "row": 5,
+                "column": 5
+              },
+              {
+                "row": 4,
+                "column": 5
+              },
+              {
+                "row": 3,
+                "column": 5
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "code-search-10",
+        "rank": "Trainee",
+        "clueMode": "city",
+        "seed": 20332292,
+        "width": 6,
+        "height": 6,
+        "letters": "UHHZFNQSTSICVDPGVBOOTZMDFRAREMMEVHXN",
+        "targets": [
+          {
+            "airportId": "2212",
+            "code": "FRA",
+            "clue": "Frankfurt am Main",
+            "path": [
+              {
+                "row": 4,
+                "column": 0
+              },
+              {
+                "row": 4,
+                "column": 1
+              },
+              {
+                "row": 4,
+                "column": 2
+              }
+            ]
+          },
+          {
+            "airportId": "317457",
+            "code": "IST",
+            "clue": "Istanbul",
+            "path": [
+              {
+                "row": 1,
+                "column": 4
+              },
+              {
+                "row": 1,
+                "column": 3
+              },
+              {
+                "row": 1,
+                "column": 2
+              }
+            ]
+          },
+          {
+            "airportId": "4731",
+            "code": "MEX",
+            "clue": "Mexico City",
+            "path": [
+              {
+                "row": 3,
+                "column": 4
+              },
+              {
+                "row": 4,
+                "column": 4
+              },
+              {
+                "row": 5,
+                "column": 4
+              }
+            ]
+          },
+          {
+            "airportId": "4505",
+            "code": "ZRH",
+            "clue": "Zurich",
+            "path": [
+              {
+                "row": 3,
+                "column": 3
+              },
+              {
+                "row": 4,
+                "column": 3
+              },
+              {
+                "row": 5,
+                "column": 3
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "tail": {
+    "schemaVersion": 1,
+    "packId": "tail-identifier-demo",
+    "contentVersion": "2026-10-21.1",
+    "moduleId": "tail-identifier",
+    "demoOnly": true,
+    "supportedRanks": [
+      "Trainee"
+    ],
+    "reviewState": "demo-unreviewed",
+    "reviewer": "",
+    "sourceSnapshot": "1465b30190f2d42150067f4ee5469aa01e3c1004",
+    "sourceNote": "Client-supplied Identifier photos (rights held by the client). Airline labels, tail crops and distractors were read off each photo for this demo and await client review.",
+    "playable": true,
+    "records": [
+      {
+        "id": "tail-ai-a2",
+        "photoId": "ai-a2",
+        "correctOptionId": "klm",
+        "options": [
+          {
+            "id": "klm",
+            "label": "KLM Royal Dutch Airlines"
+          },
+          {
+            "id": "air-france",
+            "label": "Air France"
+          },
+          {
+            "id": "finnair",
+            "label": "Finnair"
+          },
+          {
+            "id": "sas",
+            "label": "SAS Scandinavian Airlines"
+          }
+        ],
+        "crop": {
+          "x": 0.71,
+          "y": 0.46,
+          "width": 0.14,
+          "height": 0.19
+        },
+        "credit": "Josh M · @iamjoshmark",
+        "sourceUrl": "bundled:ai-a2",
+        "sourceRecordId": "ai-a2",
+        "verifiedAt": "2026-10-21",
+        "reviewState": "demo-unreviewed",
+        "reviewer": ""
+      },
+      {
+        "id": "tail-ai-a3",
+        "photoId": "ai-a3",
+        "correctOptionId": "delta",
+        "options": [
+          {
+            "id": "delta",
+            "label": "Delta Air Lines"
+          },
+          {
+            "id": "american",
+            "label": "American Airlines"
+          },
+          {
+            "id": "united",
+            "label": "United Airlines"
+          },
+          {
+            "id": "alaska",
+            "label": "Alaska Airlines"
+          }
+        ],
+        "crop": {
+          "x": 0.13,
+          "y": 0.31,
+          "width": 0.18,
+          "height": 0.23
+        },
+        "credit": "Josh M · @iamjoshmark",
+        "sourceUrl": "bundled:ai-a3",
+        "sourceRecordId": "ai-a3",
+        "verifiedAt": "2026-10-21",
+        "reviewState": "demo-unreviewed",
+        "reviewer": ""
+      },
+      {
+        "id": "tail-ai-a5",
+        "photoId": "ai-a5",
+        "correctOptionId": "lufthansa",
+        "options": [
+          {
+            "id": "lufthansa",
+            "label": "Lufthansa"
+          },
+          {
+            "id": "austrian",
+            "label": "Austrian Airlines"
+          },
+          {
+            "id": "swiss",
+            "label": "Swiss International Air Lines"
+          },
+          {
+            "id": "eurowings",
+            "label": "Eurowings"
+          }
+        ],
+        "crop": {
+          "x": 0.51,
+          "y": 0.32,
+          "width": 0.07,
+          "height": 0.12
+        },
+        "credit": "Josh M · @iamjoshmark",
+        "sourceUrl": "bundled:ai-a5",
+        "sourceRecordId": "ai-a5",
+        "verifiedAt": "2026-10-21",
+        "reviewState": "demo-unreviewed",
+        "reviewer": ""
+      },
+      {
+        "id": "tail-ai-a10",
+        "photoId": "ai-a10",
+        "correctOptionId": "volaris",
+        "options": [
+          {
+            "id": "volaris",
+            "label": "Volaris"
+          },
+          {
+            "id": "vivaaerobus",
+            "label": "Viva Aerobus"
+          },
+          {
+            "id": "aeromexico",
+            "label": "Aeromexico"
+          },
+          {
+            "id": "frontier",
+            "label": "Frontier Airlines"
+          }
+        ],
+        "crop": {
+          "x": 0.29,
+          "y": 0.13,
+          "width": 0.11,
+          "height": 0.19
+        },
+        "credit": "Josh M · @iamjoshmark",
+        "sourceUrl": "bundled:ai-a10",
+        "sourceRecordId": "ai-a10",
+        "verifiedAt": "2026-10-21",
+        "reviewState": "demo-unreviewed",
+        "reviewer": ""
+      },
+      {
+        "id": "tail-ai-a11",
+        "photoId": "ai-a11",
+        "correctOptionId": "jetblue",
+        "options": [
+          {
+            "id": "jetblue",
+            "label": "JetBlue"
+          },
+          {
+            "id": "southwest",
+            "label": "Southwest Airlines"
+          },
+          {
+            "id": "alaska",
+            "label": "Alaska Airlines"
+          },
+          {
+            "id": "spirit",
+            "label": "Spirit Airlines"
+          }
+        ],
+        "crop": {
+          "x": 0.17,
+          "y": 0.4,
+          "width": 0.14,
+          "height": 0.21
+        },
+        "credit": "Josh M · @iamjoshmark",
+        "sourceUrl": "bundled:ai-a11",
+        "sourceRecordId": "ai-a11",
+        "verifiedAt": "2026-10-21",
+        "reviewState": "demo-unreviewed",
+        "reviewer": ""
+      },
+      {
+        "id": "tail-ai-a13",
+        "photoId": "ai-a13",
+        "correctOptionId": "american",
+        "options": [
+          {
+            "id": "american",
+            "label": "American Airlines"
+          },
+          {
+            "id": "united",
+            "label": "United Airlines"
+          },
+          {
+            "id": "delta",
+            "label": "Delta Air Lines"
+          },
+          {
+            "id": "alaska",
+            "label": "Alaska Airlines"
+          }
+        ],
+        "crop": {
+          "x": 0.36,
+          "y": 0.48,
+          "width": 0.09,
+          "height": 0.18
+        },
+        "credit": "Josh M · @iamjoshmark",
+        "sourceUrl": "bundled:ai-a13",
+        "sourceRecordId": "ai-a13",
+        "verifiedAt": "2026-10-21",
+        "reviewState": "demo-unreviewed",
+        "reviewer": ""
+      },
+      {
+        "id": "tail-ai-a15",
+        "photoId": "ai-a15",
+        "correctOptionId": "virgin-atlantic",
+        "options": [
+          {
+            "id": "virgin-atlantic",
+            "label": "Virgin Atlantic"
+          },
+          {
+            "id": "british-airways",
+            "label": "British Airways"
+          },
+          {
+            "id": "aer-lingus",
+            "label": "Aer Lingus"
+          },
+          {
+            "id": "icelandair",
+            "label": "Icelandair"
+          }
+        ],
+        "crop": {
+          "x": 0.72,
+          "y": 0.26,
+          "width": 0.16,
+          "height": 0.19
+        },
+        "credit": "Josh M · @iamjoshmark",
+        "sourceUrl": "bundled:ai-a15",
+        "sourceRecordId": "ai-a15",
+        "verifiedAt": "2026-10-21",
+        "reviewState": "demo-unreviewed",
+        "reviewer": ""
+      },
+      {
+        "id": "tail-ai-a19",
+        "photoId": "ai-a19",
+        "correctOptionId": "spirit",
+        "options": [
+          {
+            "id": "spirit",
+            "label": "Spirit Airlines"
+          },
+          {
+            "id": "frontier",
+            "label": "Frontier Airlines"
+          },
+          {
+            "id": "allegiant",
+            "label": "Allegiant Air"
+          },
+          {
+            "id": "sun-country",
+            "label": "Sun Country Airlines"
+          }
+        ],
+        "crop": {
+          "x": 0.69,
+          "y": 0.42,
+          "width": 0.14,
+          "height": 0.19
+        },
+        "credit": "Josh M · @iamjoshmark",
+        "sourceUrl": "bundled:ai-a19",
+        "sourceRecordId": "ai-a19",
+        "verifiedAt": "2026-10-21",
+        "reviewState": "demo-unreviewed",
+        "reviewer": ""
+      },
+      {
+        "id": "tail-ai-a21",
+        "photoId": "ai-a21",
+        "correctOptionId": "southwest",
+        "options": [
+          {
+            "id": "southwest",
+            "label": "Southwest Airlines"
+          },
+          {
+            "id": "jetblue",
+            "label": "JetBlue"
+          },
+          {
+            "id": "alaska",
+            "label": "Alaska Airlines"
+          },
+          {
+            "id": "frontier",
+            "label": "Frontier Airlines"
+          }
+        ],
+        "crop": {
+          "x": 0.68,
+          "y": 0.15,
+          "width": 0.14,
+          "height": 0.23
+        },
+        "credit": "Josh M · @iamjoshmark",
+        "sourceUrl": "bundled:ai-a21",
+        "sourceRecordId": "ai-a21",
+        "verifiedAt": "2026-10-21",
+        "reviewState": "demo-unreviewed",
+        "reviewer": ""
+      },
+      {
+        "id": "tail-ai-a23",
+        "photoId": "ai-a23",
+        "correctOptionId": "norse-atlantic",
+        "options": [
+          {
+            "id": "norse-atlantic",
+            "label": "Norse Atlantic Airways"
+          },
+          {
+            "id": "icelandair",
+            "label": "Icelandair"
+          },
+          {
+            "id": "finnair",
+            "label": "Finnair"
+          },
+          {
+            "id": "sas",
+            "label": "SAS Scandinavian Airlines"
+          }
+        ],
+        "crop": {
+          "x": 0.09,
+          "y": 0.35,
+          "width": 0.17,
+          "height": 0.19
+        },
+        "credit": "Josh M · @iamjoshmark",
+        "sourceUrl": "bundled:ai-a23",
+        "sourceRecordId": "ai-a23",
+        "verifiedAt": "2026-10-21",
+        "reviewState": "demo-unreviewed",
+        "reviewer": ""
+      },
+      {
+        "id": "tail-ai-a24",
+        "photoId": "ai-a24",
+        "correctOptionId": "ana",
+        "options": [
+          {
+            "id": "ana",
+            "label": "All Nippon Airways"
+          },
+          {
+            "id": "japan-airlines",
+            "label": "Japan Airlines"
+          },
+          {
+            "id": "korean-air",
+            "label": "Korean Air"
+          },
+          {
+            "id": "eva-air",
+            "label": "EVA Air"
+          }
+        ],
+        "crop": {
+          "x": 0.71,
+          "y": 0.44,
+          "width": 0.14,
+          "height": 0.14
+        },
+        "credit": "Josh M · @iamjoshmark",
+        "sourceUrl": "bundled:ai-a24",
+        "sourceRecordId": "ai-a24",
+        "verifiedAt": "2026-10-21",
+        "reviewState": "demo-unreviewed",
+        "reviewer": ""
+      },
+      {
+        "id": "tail-ai-a29",
+        "photoId": "ai-a29",
+        "correctOptionId": "united",
+        "options": [
+          {
+            "id": "united",
+            "label": "United Airlines"
+          },
+          {
+            "id": "american",
+            "label": "American Airlines"
+          },
+          {
+            "id": "delta",
+            "label": "Delta Air Lines"
+          },
+          {
+            "id": "air-canada",
+            "label": "Air Canada"
+          }
+        ],
+        "crop": {
+          "x": 0.17,
+          "y": 0.35,
+          "width": 0.15,
+          "height": 0.17
+        },
+        "credit": "Josh M · @iamjoshmark",
+        "sourceUrl": "bundled:ai-a29",
+        "sourceRecordId": "ai-a29",
+        "verifiedAt": "2026-10-21",
+        "reviewState": "demo-unreviewed",
+        "reviewer": ""
+      }
+    ]
+  },
+  "provenance": [
+    {
+      "path": "Assets/_Project/Resources/ClientContent/identifier_questions.json",
+      "sha256": "568aa694274afde4dc4d8145b270e849a02d93a32906c7f471b6c4f25f4e08a6"
+    },
+    {
+      "path": "Assets/_Project/Resources/ClientContent/potd.json",
+      "sha256": "dcb8bd5995a6f094651ec05c5c21ef51182aa26136663b85ed080eeeee2f0b6a"
+    },
+    {
+      "path": "Assets/_Project/Resources/ClientContent/Arcade/atc_airports.json",
+      "sha256": "f88b43d6e7c8be951a22baa636341f5d629139fc680ad471f3e7b7c133b6a021"
+    },
+    {
+      "path": "Assets/_Project/Resources/ClientContent/Arcade/callsign_airlines.json",
+      "sha256": "a535c1d83ff557a88f3f260d0ab9388c442c87b870926cdfcb54ea6bc86fe893"
+    },
+    {
+      "path": "Assets/_Project/Resources/ClientContent/Arcade/code_search_puzzles.json",
+      "sha256": "c4d268c8f5090738d24a530c621670099ae4c6a2db957c46c7d118e9508f66db"
+    },
+    {
+      "path": "Assets/_Project/Resources/ClientContent/Arcade/tail_questions.json",
+      "sha256": "4b62a93e37b86c087901991db1043a483b6a9bdea6b90b021466603b3c8b0b88"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Gameplay/Modules/ModuleRegistry.cs",
+      "sha256": "df79b785c6881f02b0a425a6044945679cd137a1f0e35207a1c6a04388d8a4a8"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Gameplay/Progression/FlightRankThresholds.cs",
+      "sha256": "114c8e52b06ea3ecdf3bbd89f390a2ea1e5d64b88875d92a1636294b3cbe938a"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Gameplay/Economy/HintBank.cs",
+      "sha256": "330eebbac41024ec1875ec84c8ee063e40a723685153f78580f0107b13ba0327"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Infrastructure/Persistence/PlayerPrefsSettingsRepository.cs",
+      "sha256": "36577c9b5dc943b78bc699a33492d075f251c5e52643bbec956e27834c610547"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Presentation/UI/FeedbackCues.cs",
+      "sha256": "67670a4f7551e6bb747e92eaf371395382b814dcd923b72ffad9652a8960c657"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Presentation/UI/Theming/ThemeManager.cs",
+      "sha256": "506e77c08d69f51bf804117c399c2300e7ec0142aed0163980f98d60e300516d"
+    },
+    {
+      "path": "Assets/_Project/Scripts/Infrastructure/DevMock/InProcessMockBackend.cs",
+      "sha256": "6cd6b961e623498b5751de6e1d5bbbe24c31931867867f89df124a164c1d22f1"
+    }
+  ]
+}

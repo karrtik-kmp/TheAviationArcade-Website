@@ -10,6 +10,13 @@ const target = await json("config/cloudflare-prototype.json");
 const built = await json("dist/server/wrangler.json");
 const keys = ["FIREBASE_PROJECT_ID", "FIREBASE_WEB_API_KEY", "FIREBASE_AUTH_DOMAIN", "FIREBASE_APP_ID"];
 const local = await readCloudflareLocalSettings();
+const demoUid = local.DEMO_ACCOUNT_UID?.trim();
+const demoEmail = local.DEMO_LOGIN_EMAIL?.trim();
+const demoPassword = local.DEMO_LOGIN_PASSWORD;
+if ((demoEmail || demoPassword) && (!demoUid || !demoEmail || !demoPassword))
+  throw new Error("Demo login requires DEMO_ACCOUNT_UID, DEMO_LOGIN_EMAIL and DEMO_LOGIN_PASSWORD together.");
+if (demoEmail && (local.STAFF_EMAILS ?? "").split(",").some((email) => email.trim().toLowerCase() === demoEmail.toLowerCase()))
+  throw new Error("The shared demo login must not be on the staff allowlist.");
 let provisioned = {};
 try {
   provisioned = (await json("outputs/firebase-web-config.json")).runtimeBindings ?? {};
@@ -48,6 +55,7 @@ const config = {
   preview_urls: false,
   observability: { enabled: true },
   vars: {
+    ...(demoUid ? { DEMO_ACCOUNT_UID: demoUid } : {}),
     ...Object.fromEntries(keys.map((key) => [key, firebase[key]])),
     PHOTO_STORAGE_PROVIDER: "bunny",
     BUNNY_STORAGE_ZONE: target.photoStorage.zone,
@@ -63,6 +71,7 @@ const secretsPath = path.join(root, "outputs/cloudflare-secrets.json");
 await writeFile(secretsPath, JSON.stringify({
   BUNNY_STORAGE_PASSWORD: local.BUNNY_STORAGE_PASSWORD ?? "",
   STAFF_EMAILS: local.STAFF_EMAILS ?? "",
+  ...(demoEmail && demoPassword ? { DEMO_LOGIN_EMAIL: demoEmail, DEMO_LOGIN_PASSWORD: demoPassword } : {}),
 }, null, 2) + "\n", { mode: 0o600 });
 // A plain `wrangler deploy` must use the same Bunny target as `npm run deploy`.
 // The framework replaces this pointer on every build, so the portable build

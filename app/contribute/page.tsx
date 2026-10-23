@@ -2,6 +2,8 @@ import { PublicShell } from "@/components/PublicShell";
 import SubmissionForm from "@/components/SubmissionForm";
 import { getProductUser } from "@/lib/product-auth";
 import { accountSessionKey } from "@/lib/account-server";
+import { isDemoPrincipal } from "@/lib/demo-server";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,7 @@ type PageProps = {
 
 export default async function ContributePage({ searchParams }: PageProps) {
   const [user, params] = await Promise.all([getProductUser(), searchParams]);
+  if (isDemoPrincipal(user)) redirect("/demo");
   const category = Array.isArray(params.category)
     ? params.category[0]
     : params.category;

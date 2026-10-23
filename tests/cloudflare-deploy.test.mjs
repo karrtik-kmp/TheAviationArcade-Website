@@ -89,6 +89,28 @@ test("preparation enables workers.dev when the source target explicitly enables 
   await assertBunnyDefault(f, { workersDev: true });
 });
 
+test("demo credentials stay out of public Wrangler vars and partial/staff configuration fails closed", async (t) => {
+  const f = await fixture(t);
+  const settings = "BUNNY_STORAGE_PASSWORD=test-only-secret\nSTAFF_EMAILS=editor@example.test\n";
+  await f.put(".dev.vars.cloudflare", settings + "DEMO_ACCOUNT_UID=sample-uid\nDEMO_LOGIN_EMAIL=demo@example.test\nDEMO_LOGIN_PASSWORD=sample-only-password\n");
+  let result = f.run("scripts/prepare-cloudflare-deploy.mjs");
+  assert.equal(result.status, 0, result.stderr);
+  const config = await f.json("outputs/cloudflare-deploy/wrangler.json");
+  assert.equal(config.vars.DEMO_ACCOUNT_UID, "sample-uid");
+  assert.equal(config.vars.DEMO_LOGIN_PASSWORD, undefined);
+  assert.equal((await f.json("outputs/cloudflare-secrets.json")).DEMO_LOGIN_PASSWORD, "sample-only-password");
+  assert.ok(!result.stdout.includes("sample-only-password"));
+  for (const extra of ["DEMO_LOGIN_EMAIL=demo@example.test\n", "DEMO_ACCOUNT_UID=sample-uid\nDEMO_LOGIN_EMAIL=editor@example.test\nDEMO_LOGIN_PASSWORD=sample-only-password\n"]) {
+    await f.put(".dev.vars.cloudflare", settings + extra);
+    result = f.run("scripts/prepare-cloudflare-deploy.mjs");
+    assert.notEqual(result.status, 0);
+  }
+  // Hiding the login retains the UID restriction without advertising credentials.
+  await f.put(".dev.vars.cloudflare", settings + "DEMO_ACCOUNT_UID=sample-uid\n");
+  assert.equal(f.run("scripts/prepare-cloudflare-deploy.mjs").status, 0);
+  assert.equal((await f.json("outputs/cloudflare-deploy/wrangler.json")).vars.DEMO_ACCOUNT_UID, "sample-uid");
+});
+
 test("a completed portable build restores Bunny as the default after the framework resets it", async (t) => {
   const f = await fixture(t);
   const result = f.run("scripts/run-framework.mjs", ["build"]);

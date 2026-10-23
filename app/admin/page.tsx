@@ -4,6 +4,9 @@ import { isStaff } from "@/lib/server";
 import { PublicShell, Brand } from "@/components/PublicShell";
 import { accountSessionKey } from "@/lib/account-server";
 import { accountSignInPath, accountSignOutPath } from "@/lib/account";
+import { isDemoPrincipal } from "@/lib/demo-server";
+import { redirect } from "next/navigation";
+import { SiteLink } from "@/components/SiteLink";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +34,7 @@ export default async function AdminPage() {
   }
 
   const displayName = user.fullName?.trim() || "Account";
+  if (isDemoPrincipal(user)) redirect("/demo");
   if (!(await isStaff())) {
     return (
       <PublicShell>
@@ -44,9 +48,9 @@ export default async function AdminPage() {
             </p>
             <p>Signed in as {displayName}.</p>
             <div className="admin-gate-actions">
-              <a className="btn secondary" href="/account">
+              <SiteLink className="btn secondary" href="/account">
                 Account options
-              </a>
+              </SiteLink>
               <a className="btn" href={accountSignOutPath()} target="_top">
                 Sign out
               </a>

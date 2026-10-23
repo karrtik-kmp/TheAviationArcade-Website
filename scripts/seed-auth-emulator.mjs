@@ -5,6 +5,7 @@ export const demoAuthUsers = [
   { email: "seedy@sites.test", displayName: "Local QA Editor" },
   { email: "photographer-a@sites.test", displayName: "Photographer A" },
   { email: "photographer-b@sites.test", displayName: "Photographer B" },
+  { email: "demo-pilot@sites.test", displayName: "Demo Pilot" },
 ];
 const emulator = "http://127.0.0.1:9099",
   project = "demo-airplane-games";

@@ -8,6 +8,17 @@ Product login uses **Firebase email/password and Google only**. Account controls
 My submissions, staff-only editorial access, email verification, password reset and logout. The
 Cloudflare preview is publicly viewable; account and editorial actions still require product login.
 
+## Demo workspace
+
+With the Auth Emulator running, use `npm run demo:preview` and open
+http://127.0.0.1:5186/sign-in?return_to=%2Fdemo. Select **Fill demo login**, then **Sign in**.
+The local-only account is `demo-pilot@sites.test`, password `LocalPreview-2026!`.
+This dedicated profile leaves `.dev.vars` and other local servers alone.
+
+The resettable workspace imports the game's settings, 31 aircraft questions, five Plane of the Day
+entries and current game registry. Changes stay in the browser. Hosted demo-account provisioning
+and publication are pending approval; see [demo setup and boundaries](docs/DEMO_PREVIEW.md).
+
 ## First-time local setup
 
 Use Node.js 24 (minimum 22.13). Install the locked dependencies and create local settings:

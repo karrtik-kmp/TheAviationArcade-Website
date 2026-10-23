@@ -49,6 +49,9 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [demo, setDemo] = useState<{ email: string; password: string } | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -63,6 +66,7 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
         const result = (await response.json()) as {
           configured?: boolean;
           emulatorUrl?: string | null;
+          demoLogin?: { email: string; password: string } | null;
         };
         if (!active) return;
         if (!result.configured || !firebaseAuth) {
@@ -70,6 +74,8 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
           return;
         }
         setAuth(firebaseAuth);
+        if (typeof result.demoLogin?.email === "string" && typeof result.demoLogin.password === "string")
+          setDemo(result.demoLogin);
         setEmulator(Boolean(result.emulatorUrl));
         setConfigState("ready");
       } catch {
@@ -81,10 +87,10 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
     };
   }, []);
 
-  async function finishSignIn(user: User, signup = false) {
+  async function finishSignIn(user: User, signup = false, demoAccount = false) {
     await syncFirebaseSession(user);
     const destination =
-      signup || !user.emailVerified
+      demoAccount ? "/demo" : signup || !user.emailVerified
         ? `/account?verify_email=1&return_to=${encodeURIComponent(safeAccountReturn(returnTo))}`
         : safeAccountReturn(returnTo);
     if (window.top && window.top !== window)
@@ -137,7 +143,7 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
           email,
           password,
         );
-        await finishSignIn(credential.user);
+        await finishSignIn(credential.user, false, !!demo && email.toLowerCase() === demo.email.toLowerCase());
       }
     } catch (requestError) {
       if (
@@ -197,6 +203,17 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
           Google sign-in is simulated.
         </p>
       )}
+      {demo && mode === "signin" && (
+        <aside className="auth-setup-notice">
+          <strong>Explore the demo</strong>
+          <p>Inspect prefilled game settings and sample content. Changes stay in your browser.</p>
+          <p>Email: <code>{demo.email}</code><br />Password: <code>{demo.password}</code></p>
+          <button className="btn secondary" type="button" disabled={!configured || busy}
+            onClick={() => { setEmail(demo.email); setPassword(demo.password); setError(""); setNotice("Demo credentials filled. Select Sign in to open the workspace."); }}>
+            Fill demo login
+          </button>
+        </aside>
+      )}
       {configState === "missing" && (
         <p className="auth-setup-notice" role="status">
           Sign-in is unavailable because Firebase is not configured for this
@@ -238,6 +255,8 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
           <input
             type="email"
             name="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
             autoComplete="email"
             required
             disabled={!configured || busy}
@@ -263,6 +282,8 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
             <input
               type="password"
               name="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
               autoComplete={
                 mode === "signup" ? "new-password" : "current-password"
               }
@@ -288,6 +309,7 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
               type="button"
               onClick={() => {
                 setMode("signup");
+                setPassword("");
                 setError("");
                 setNotice("");
               }}
@@ -298,6 +320,7 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
               type="button"
               onClick={() => {
                 setMode("reset");
+                setPassword("");
                 setError("");
                 setNotice("");
               }}

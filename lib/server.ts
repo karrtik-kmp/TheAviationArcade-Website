@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { getProductUser } from "@/lib/product-auth";
+import { isDemoPrincipal } from "@/lib/demo-server";
 import { BunnyPhotoStorage } from "@/lib/bunny-storage";
 import type { PhotoStorage } from "@/lib/photo-storage";
 export class HttpError extends Error {
@@ -41,6 +42,8 @@ export function bucket(): PhotoStorage {
 export async function identity() {
   const user = await getProductUser();
   if (!user) throw new HttpError(401, "Sign in to continue.");
+  if (isDemoPrincipal(user))
+    throw new HttpError(403, "Use the demo workspace to inspect sample data. Live content is unavailable to the shared demo account.", "DEMO_ACCOUNT");
   return user;
 }
 export async function isStaff() {
@@ -50,7 +53,7 @@ export async function isStaff() {
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
   return (
-    !!user && user.emailVerified && emails.includes(user.email.toLowerCase())
+    !!user && !isDemoPrincipal(user) && user.emailVerified && emails.includes(user.email.toLowerCase())
   );
 }
 export async function staff() {

@@ -152,6 +152,35 @@ Cloudflare access-setting change. Signed-in upload/editorial regression remains 
 The five existing deployment regression tests and `git diff --check` pass after the source
 target update.
 
+## Resettable demo workspace (2026-10-23)
+
+Added `/demo`, a Firebase-backed preview with general preferences, service scenarios, imported
+game content, daily-feature drafts, illustrative submission-review states and website/service
+status. The importer records metadata provenance and hashes from the Unity project: 31 client
+Identifier questions, five POTD entries and all eight registry entries including the gated
+Commercial/Military split. Game preferences, hints, rank thresholds, local-midnight rules and
+deferred monetization retain the current source values. Photos and publication rights are not copied.
+
+The demo sign-in can prefill explicitly configured sample credentials. Its actual namespaced
+Firebase UID is blocked from live contributor/editorial APIs and staff access; `/admin` and
+`/contribute` lead it to the demo instead. Browser drafts are validated, scoped to the account,
+saved explicitly and resettable. Real account/session verification remains Firebase.
+
+Local `npm run demo:preview` uses a separate emulator profile on port 5186 and does not alter
+`.dev.vars` or provision a hosted account. All **36/36 unit tests**, TypeScript, focused lint
+and production build pass. **8/8 Chrome checks** pass with no page errors: demo prefill/login,
+server live-data denial, save/reload/reset, catalog/filtering, POTD/review draft persistence,
+no content API writes, distinct-account isolation, and all sections at 320/390/768/1440px in
+light/dark themes. Screenshots were visually reviewed. The pre-existing AccountPage effect
+lint error and AuthForm navigation warning were observed and left out of scope.
+
+Hosted provisioning and deployment remain pending explicit approval after automatic approval
+review rejected adding a persistent Firebase account with public sample credentials. The public
+preview's Firebase project was read-verified as `airplane-games-auth-20261022`; its existing
+audience, staff allowlist and content were not changed. See [demo setup](DEMO_PREVIEW.md) and
+[local evidence](evidence/demo-workspace/qa.json). No new shared game identity or browser play
+was introduced.
+
 ## Contributor refresh and spacing fix (2026-10-23)
 
 Runtime checkpoint `6562e35` stops same-account focus/visibility/token checks from
