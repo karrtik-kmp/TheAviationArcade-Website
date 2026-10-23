@@ -73,3 +73,12 @@ retain their owner-private audience. No product domain or public launch was chan
 Public navigation retains native anchors because an earlier production audit reproduced a
 Vinext beta prefetch issue. Historical Lighthouse/production-smoke artifacts predate the
 Firebase integration unless their evidence explicitly records a later source checkpoint.
+
+## Direct Cloudflare preparation (2026-10-23)
+
+The user chose Cloudflare hosting first; Vercel bootstrap is saved separately in
+commit `590a271` on `codex/vercel-setup`. TypeScript, 20 unit tests and the
+existing Workers production build pass. Direct deployment is pending the photo
+storage decision and account provisioning; Bunny Storage was proposed by the user.
+No direct Worker, D1 database, R2/Bunny store or public URL has been created.
+See [Cloudflare setup](CLOUDFLARE_SETUP.md) for verified account state and next steps.
