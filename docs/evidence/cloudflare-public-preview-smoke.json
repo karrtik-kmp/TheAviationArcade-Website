@@ -1,0 +1,104 @@
+{
+  "checkedAt": "2026-10-23T05:22:49.240Z",
+  "origin": "https://aviation-arcade-website.karrtik-kmphitech.workers.dev",
+  "accessMode": "public",
+  "removedAccessApplicationId": "77c80c6f-1612-4726-bb7e-4c354202ac57",
+  "requests": [
+    {
+      "path": "/",
+      "status": 200,
+      "redirect": null,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": null
+    },
+    {
+      "path": "/contribute",
+      "status": 200,
+      "redirect": null,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "no-store, must-revalidate"
+    },
+    {
+      "path": "/admin",
+      "status": 200,
+      "redirect": null,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "no-store, must-revalidate"
+    },
+    {
+      "path": "/account",
+      "status": 200,
+      "redirect": null,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "no-store, must-revalidate"
+    },
+    {
+      "path": "/sign-in",
+      "status": 200,
+      "redirect": null,
+      "contentType": "text/html; charset=utf-8",
+      "cacheControl": "no-store, must-revalidate"
+    },
+    {
+      "path": "/media/aircraft.jpg",
+      "status": 200,
+      "redirect": null,
+      "contentType": "image/jpeg",
+      "cacheControl": "public, max-age=0, must-revalidate"
+    },
+    {
+      "path": "/api/account",
+      "status": 200,
+      "redirect": null,
+      "contentType": "application/json",
+      "cacheControl": "private, no-store",
+      "anonymousAccount": true
+    },
+    {
+      "path": "/api/submissions",
+      "status": 401,
+      "redirect": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/admin/submissions",
+      "status": 401,
+      "redirect": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/admin/content",
+      "status": 401,
+      "redirect": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/admin/audit",
+      "status": 401,
+      "redirect": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/admin/references",
+      "status": 401,
+      "redirect": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store"
+    },
+    {
+      "path": "/api/submissions/00000000-0000-0000-0000-000000000000/photo",
+      "status": 401,
+      "redirect": null,
+      "contentType": "application/json",
+      "cacheControl": "no-store"
+    }
+  ],
+  "limitations": [
+    "Read-only unauthenticated HTTP smoke; no signed-in upload or editorial workflow was exercised."
+  ],
+  "passed": true
+}

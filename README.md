@@ -6,7 +6,7 @@ photographer submissions and admin tools for Aircraft Identifier and Plane of th
 
 Product login uses **Firebase email/password and Google only**. Account controls include My account,
 My submissions, staff-only editorial access, email verification, password reset and logout. The
-private review host has its own outer access gate; hosting identity does not grant product access.
+Cloudflare preview is publicly viewable; account and editorial actions still require product login.
 
 ## First-time local setup
 
@@ -172,7 +172,7 @@ locally. The existing `.dev.vars` local emulator workflow remains separate.
 
 Run `npm run bunny:check` for a private upload/read/delete probe, then `npm run build` and
 `npm run cloudflare:prepare`. Direct configuration uses the new D1 database and Bunny with no
-R2 binding. The direct hostname is protected by Cloudflare Access. Follow
+R2 binding. The direct hostname is a public preview. Follow
 [Bunny setup](docs/BUNNY_STORAGE_SETUP.md) and [Cloudflare setup](docs/CLOUDFLARE_SETUP.md).
 
 Use `npm run deploy -- --dry-run` to verify, then `npm run deploy` to rebuild and upload with the
@@ -181,7 +181,10 @@ Wrangler's default deployment target and require the production Firebase Web set
 above. Local `npm run start` continues using the emulator config.
 
 The live Bunny probe passed. The [Cloudflare prototype](https://aviation-arcade-website.karrtik-kmphitech.workers.dev)
-is enabled behind the approved Access email-code gate; preview URLs remain disabled.
-Use the real email selected for the private reviewer allowlist, then sign in through Firebase
-inside the website. The user confirmed both sign-ins worked. Full upload/editorial browser
-regression remains to be checked on this host. The original owner-private Site remains available.
+is public to anyone with the link after the user approved removing its Cloudflare Access gate.
+Firebase sign-in and staff permissions still protect account, submission and editorial actions.
+Cloudflare's version-specific preview URLs remain disabled. Public pages/assets return 200;
+six private API probes return 401 without sign-in. See the
+[public preview evidence](docs/evidence/cloudflare-public-preview-smoke.json).
+Full upload/editorial browser regression remains to be checked on this host.
+The original owner-private Site remains available.

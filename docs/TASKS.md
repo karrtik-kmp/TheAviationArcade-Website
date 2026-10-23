@@ -8,8 +8,8 @@ folder there. Read README.md and actual Git status when resuming.
 
 - Homepage, seven-game catalog, photographer photo proposals, and admin for Aircraft
   Identifier and Plane of the Day, preserving the existing branding.
-- Product authentication: Firebase email/password and Google only. The private host
-  access gate is separate and must not grant product permissions.
+- Product authentication: Firebase email/password and Google only. The Cloudflare preview
+  is public; hosting identity must not grant product permissions.
 - Callsign is the existing community player name tag. Game-account linkage and an
   authoritative Callsign claim service remain future work; do not create another registry.
 - Luna handles scoped implementation; 6.1 Sol low/medium handles complex planning/review.
@@ -93,7 +93,7 @@ Worker `aviation-arcade-website` is live with D1/Bunny, production Firebase and 
 password/staff bindings. The user replaced the saved test staff address with a real email;
 that deployed-secret update created deployment `9b99864e-c961-4d62-86d0-536bdefe6966`,
 version `3685f364-23a2-45b2-8e1f-8ea8b60cc21b` at 100%. App code is checkpoint `55bf91b`.
-The protected hostname is enabled, previews are disabled, and there are no custom domains
+At that checkpoint, the protected hostname was enabled, previews were disabled, and there were no custom domains
 or R2 bindings. Firebase authorized the exact host
 `aviation-arcade-website.karrtik-kmphitech.workers.dev`, preserving live existing domains.
 
@@ -114,3 +114,20 @@ Cloudflare MCP, and a verified read of the intended account. The user retained W
 instead of the optional beta `cf` CLI. Progress was synchronized with the parallel
 default-deployment chat: it completed the five build/deploy files, while this chat handled
 host/access setup and these deployment records. See [Cloudflare setup](CLOUDFLARE_SETUP.md).
+
+## Public Cloudflare preview (2026-10-23)
+
+The user explicitly approved removing the Cloudflare email-code gate and making
+[Airplane Games Preview](https://aviation-arcade-website.karrtik-kmphitech.workers.dev)
+public to anyone with the link. Deleted exact-host Access application
+`77c80c6f-1612-4726-bb7e-4c354202ac57`; API read-back confirmed it is absent.
+This supersedes the private-host access state above. The original managed Site remains private.
+
+The Worker route remains enabled; version-specific preview URLs remain disabled. Removed the
+deleted app metadata from the source target. Firebase account and staff authorization remain
+active: five public page shells and an image return 200 without the Access gate, anonymous
+account state has no user/staff session, and six private API probes return 401. Evidence:
+`docs/evidence/cloudflare-public-preview-smoke.json`. No runtime upload was needed for this
+Cloudflare access-setting change. Signed-in upload/editorial regression remains pending.
+The five existing deployment regression tests and `git diff --check` pass after the source
+target update.

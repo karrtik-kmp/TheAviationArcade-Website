@@ -32,12 +32,13 @@ host has not been automated; its workflow evidence remains the earlier local sui
   created deployment `9b99864e-c961-4d62-86d0-536bdefe6966`, version
   `3685f364-23a2-45b2-8e1f-8ea8b60cc21b` at 100%, created at `2026-10-23T05:09:22.931789Z`.
   This supersedes the earlier direct uploads; application code is still checkpoint `55bf91b`.
-- The protected `workers.dev` hostname is enabled; preview URLs remain disabled.
+- The public `workers.dev` hostname is enabled; version-specific preview URLs remain disabled.
   The Worker has no custom domains. No product domain or R2 bucket was created.
 
-The direct [private prototype](https://aviation-arcade-website.karrtik-kmphitech.workers.dev)
-is reachable through Cloudflare Access. The original owner-private Sites deployment remains
-available. Firebase product login and staff permissions remain separate from the Access gate.
+The direct [public preview](https://aviation-arcade-website.karrtik-kmphitech.workers.dev)
+is viewable by anyone with the link. The user approved removing its Cloudflare Access gate.
+Firebase product login and staff permissions still protect private product actions.
+The original owner-private Sites deployment remains available.
 
 ## Bunny storage selected
 
@@ -61,32 +62,29 @@ first and preserved every existing entry. `firebase.json` records the hostname l
 The user confirmed successful live Firebase sign-in after passing Access. Verification/reset
 email delivery and every provider variant have not been separately checked.
 
-## Private Access enabled
+## Public preview access (2026-10-23)
 
-The user explicitly approved the proposed organization, application, reviewer policy and enabling
-the protected hostname. The prior local staff setting was a reserved test address; the user
-selected a real receiving email for both Access and product staff. The ignored deployment env,
-generated secrets file and deployed `STAFF_EMAILS` secret now contain that selection.
+The user explicitly approved deleting `Airplane Games prototype review`, application
+`77c80c6f-1612-4726-bb7e-4c354202ac57`, to make the exact Worker hostname public.
+The deletion succeeded and API read-back confirmed the app is absent. The enabled Worker route
+and deployed Firebase/staff settings were preserved. The earlier Access login verification in
+[cloudflare-access-smoke.json](evidence/cloudflare-access-smoke.json) is historical.
 
-- Organization: `Airplane Games prototype`, domain `misty-mud-b554.cloudflareaccess.com`.
-- Application: `Airplane Games prototype review`, ID `77c80c6f-1612-4726-bb7e-4c354202ac57`,
-  restricted to the exact Worker hostname above.
-- Login: email verification code, IdP `c1da79a5-13a3-4b93-b0da-201ec568138e`;
-  a 24-hour session and HTTP-only cookie.
-- Reusable policy: `Prototype reviewers`, ID `605b8157-ec0c-41ed-bd33-6567050c29e5`,
-  allowing only the user-selected real email. Product staff verification still applies separately.
-- Preview URLs are disabled; unrelated applications and policies were not changed.
+Anonymous requests to the homepage, contributor portal, admin/account/sign-in page shells and
+a public image return 200 without an Access redirect. The account API reports no user or staff
+session with `private, no-store`; six submission, staff and private-photo API probes return 401.
+See [public preview evidence](evidence/cloudflare-public-preview-smoke.json).
+These checks do not exercise signed-in uploads or editorial workflows.
 
-Application/policy read-back matched before enabling the hostname. Six unauthenticated routes
-(homepage, admin, contributor portal, API, account and asset path) returned 302 redirects to
-the Access organization. The email form returned HTTP 200 with the expected application name.
-The user then confirmed both sign-ins worked. See
-[credential-free smoke evidence](evidence/cloudflare-access-smoke.json).
+`config/cloudflare-prototype.json` retains `workersDev: true` and removes the deleted Access
+application metadata. Preparation defaults the flag to false if absent and always disables
+version-specific previews. It controls routing and does not provision an Access policy.
 
-`config/cloudflare-prototype.json` records `workersDev: true` and the Access app/host metadata.
-Preparation defaults the flag to false if absent and always disables previews. The flag controls
-routing; it does not create or verify an Access policy. Keep the approved Access app intact.
-To withdraw the direct host, disable `workers.dev` remotely and set the source flag to false.
+A rollback copy of the removed app is in ignored `outputs/cloudflare-deploy/access-before-public.json`.
+The Access organization, email-code IdP and reusable reviewer policy remain available if the user
+later requests a private preview. Restoring that gate requires recreating the exact-host app with
+its original provider/policy attachments and verifying redirects. To withdraw the direct host,
+disable `workers.dev` remotely and set the source flag to false.
 
 ## Cloudflare agent environment
 
@@ -105,10 +103,10 @@ available on a subsequent turn; restart Codex to fully reload the agent environm
 ## Next deployment steps
 
 1. For further live QA, exercise uploads, contributor isolation, revisions and editorial workflows
-   at the protected URL. Record passes, failures and human-only checks honestly.
+   at the public preview URL. Record passes, failures and human-only checks honestly.
 2. For later uploads, run `npm run build` and `npm run cloudflare:prepare` to generate an ignored direct Wrangler
    configuration using the real account/database and Bunny metadata. The source target preserves
-   the approved protected hostname; previews stay disabled. Do not deploy the Sites placeholder config.
+   the approved public hostname; version-specific previews stay disabled. Do not deploy the Sites placeholder config.
    Use `--config outputs/cloudflare-deploy/wrangler.json` and
    `--secrets-file outputs/cloudflare-secrets.json` with Wrangler. Wrangler is authenticated;
    no new login is required unless the stored authorization expires.
@@ -126,7 +124,7 @@ npm run deploy
 The deploy command requires the Bunny password and staff allowlist before starting, rebuilds,
 prepares the Bunny target and supplies the ignored secrets file to the project-local Wrangler.
 Only `--dry-run` is accepted as a command override. It preserves the source target's approved
-protected hostname and keeps preview URLs disabled.
+public hostname and keeps version-specific preview URLs disabled.
 
 Portable `npm run build` waits for Vinext to finish, then prepares Bunny configuration and updates
 `.wrangler/deploy/config.json`. This prevents a bare Wrangler deploy from falling back to the
