@@ -7,7 +7,18 @@ import {
   useRef,
   useState,
 } from "react";
-import type { AccountSnapshot } from "@/lib/account";
+import { safeAccountReturn, type AccountSnapshot } from "@/lib/account";
+import { appPath, sitePath } from "@/lib/paths";
+
+/** The page being viewed, as a safe app path to come back to after an auth step. */
+export function currentReturnPath(pathname: string) {
+  if (typeof window === "undefined") return safeAccountReturn(pathname);
+  return safeAccountReturn(
+    appPath(window.location.pathname) +
+      window.location.search +
+      window.location.hash,
+  );
+}
 type AccountSession = {
   state: "loading" | "ready" | "error";
   account: AccountSnapshot | null;
@@ -65,7 +76,7 @@ export function AccountSessionProvider({
       }
       if (auth) await syncFirebaseSession(auth.currentUser);
       if (request !== serial.current || controller.signal.aborted) return;
-      const response = await fetch("/api/account", {
+      const response = await fetch(sitePath("/api/account"), {
         cache: "no-store",
         signal: controller.signal,
       });

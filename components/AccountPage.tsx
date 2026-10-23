@@ -12,9 +12,13 @@ import { useCallback, useEffect, useState } from "react";
 import {
   accountSignInPath,
   accountSignOutPath,
+  audiences,
   safeAccountReturn,
 } from "@/lib/account";
-import { useAccountSession } from "@/components/AccountSession";
+import {
+  currentReturnPath,
+  useAccountSession,
+} from "@/components/AccountSession";
 import { SiteLink } from "@/components/SiteLink";
 import { getFirebaseClient, syncFirebaseSession } from "@/lib/firebase-client";
 import { sendEmailVerification } from "firebase/auth";
@@ -25,13 +29,6 @@ type AccountPageProps = {
   verificationSendFailed?: boolean;
   returnTo?: string;
 };
-
-function returnPath(pathname: string) {
-  if (typeof window === "undefined") return safeAccountReturn(pathname);
-  return safeAccountReturn(
-    window.location.pathname + window.location.search + window.location.hash,
-  );
-}
 
 export function AccountPage({
   signedOutReturn = false,
@@ -45,7 +42,7 @@ export function AccountPage({
   const [verificationState, setVerificationState] = useState<
     "idle" | "working" | "sent" | "error"
   >("idle");
-  useEffect(() => setHere(returnPath(pathname)), [pathname]);
+  useEffect(() => setHere(currentReturnPath(pathname)), [pathname]);
   const stillSignedIn = state === "ready" && Boolean(account?.user);
   const refreshVerification = useCallback(async () => {
     setVerificationState("working");
@@ -108,9 +105,9 @@ export function AccountPage({
         account?.user?.emailVerified &&
         safeAccountReturn(returnTo) !== "/account" && (
           <p className="account-notice">
-            <a className="text-link" href={safeAccountReturn(returnTo)}>
+            <SiteLink className="text-link" href={safeAccountReturn(returnTo)}>
               Continue
-            </a>
+            </SiteLink>
           </p>
         )}
 
@@ -142,9 +139,13 @@ export function AccountPage({
             Use your account to view your submissions and, if you’re on the
             editorial team, open the editor workspace.
           </p>
-          <a className="btn" href={accountSignInPath(here)} target="_top">
+          <SiteLink
+            className="btn"
+            href={accountSignInPath(here)}
+            target="_top"
+          >
             Sign in <ArrowRight size={17} />
-          </a>
+          </SiteLink>
         </section>
       )}
       {state === "ready" && account?.user && (
@@ -154,8 +155,9 @@ export function AccountPage({
             <h2>{account.user.displayName}</h2>
             {account.user.emailVerified && <p role="status">Email verified.</p>}
             <p>
-              Your community name tag uses your existing Callsign. Linking a
-              Callsign to this website account is not available yet.
+              The player profile currently shows sample data. Linking it to your
+              Airplane Games app profile is coming soon; when available, we’ll
+              use your existing Callsign without creating a new one.
             </p>
             {!account.user.emailVerified && (
               <div className="account-verify">
@@ -198,15 +200,27 @@ export function AccountPage({
                 )}
               </div>
             )}
-            <a
+            <SiteLink
               className="account-signout"
               href={accountSignOutPath()}
               target="_top"
             >
               <SignOut size={18} /> Sign out
-            </a>
+            </SiteLink>
           </section>
           <div className="account-destinations">
+            <section className="account-destination">
+              <span className="eyebrow">Players</span>
+              <h2>Player profile</h2>
+              <p>
+                Preview sample player stats. App profile linking is coming soon;
+                your existing Callsign will be used without creating a new name
+                tag.
+              </p>
+              <SiteLink className="text-link" href={audiences.player.home}>
+                Open player profile <ArrowRight size={16} />
+              </SiteLink>
+            </section>
             <section className="account-destination">
               <span className="eyebrow">Photography community</span>
               <h2>My submissions</h2>
@@ -223,7 +237,7 @@ export function AccountPage({
                 <span className="eyebrow">For the editorial team</span>
                 <h2>Editorial workspace</h2>
                 <p>Review photo proposals and manage the public collection.</p>
-                <SiteLink className="text-link" href="/admin">
+                <SiteLink className="text-link" href={audiences.admin.home}>
                   Open editor <ArrowRight size={16} />
                 </SiteLink>
               </section>

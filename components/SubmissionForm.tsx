@@ -22,10 +22,10 @@ import {
 } from "@phosphor-icons/react";
 import { SiteLink as Link } from "@/components/SiteLink";
 import { useAccountSession } from "@/components/AccountSession";
+import { AccountActions } from "@/components/AccessGate";
 import {
   accountHeaders,
   accountSignInPath,
-  accountSignOutPath,
   contributorPath,
 } from "@/lib/account";
 import {
@@ -42,6 +42,7 @@ import type {
   SubmissionData,
 } from "@/lib/types";
 import "./contribute.css";
+import { sitePath } from "@/lib/paths";
 
 type Contributor = {
   displayName: string;
@@ -181,7 +182,7 @@ export default function SubmissionForm({
     const requestGeneration = ++generation.current;
     setLoadingList(true);
     try {
-      const response = await fetch("/api/submissions", {
+      const response = await fetch(sitePath("/api/submissions"), {
         cache: "no-store",
         headers: accountHeaders(sessionKey),
       });
@@ -375,9 +376,11 @@ export default function SubmissionForm({
       if (file) payload.set("photo", file);
       if (revision) payload.set("version", String(revision.version));
       const response = await fetch(
-        revision
-          ? `/api/submissions/${encodeURIComponent(revision.id)}`
-          : "/api/submissions",
+        sitePath(
+          revision
+            ? `/api/submissions/${encodeURIComponent(revision.id)}`
+            : "/api/submissions",
+        ),
         {
           method: revision ? "PUT" : "POST",
           headers: {
@@ -519,52 +522,29 @@ export default function SubmissionForm({
                   ? "Confirming your account before loading private proposals."
                   : "Private proposal lists and revision details were cleared. Unsent form values remain only in this page; navigating away or reloading will lose them."}
           </p>
-          <div className="actions account-session-actions">
-            {accountSession.state === "error" && (
-              <button
-                className="btn secondary"
-                type="button"
-                onClick={() => void accountSession.refresh()}
-              >
-                Retry account check
-              </button>
-            )}
-            {(!accountSession.account?.user ||
+          <AccountActions
+            className="actions account-session-actions"
+            onRetry={
+              accountSession.state === "error"
+                ? () => void accountSession.refresh()
+                : undefined
+            }
+            signInHref={
+              !accountSession.account?.user ||
               blockedAccess === 401 ||
               (accountSession.account?.sessionKey &&
-                accountSession.account.sessionKey !== user.sessionKey)) && (
-              <a
-                className="btn"
-                href={accountSignInPath(
-                  contributorPath(
-                    initialCategory,
-                    initialGame,
-                    tab === "mine" ? "mine" : undefined,
-                  ),
-                )}
-                target="_top"
-              >
-                Sign in
-              </a>
-            )}
-            <a className="btn secondary" href="/account">
-              Account options
-            </a>
-            <a
-              className="btn secondary"
-              href={accountSignOutPath()}
-              target="_top"
-            >
-              Sign out
-            </a>
-            <button
-              className="btn secondary"
-              type="button"
-              onClick={() => window.location.reload()}
-            >
-              Reload page
-            </button>
-          </div>
+                accountSession.account.sessionKey !== user.sessionKey)
+                ? accountSignInPath(
+                    contributorPath(
+                      initialCategory,
+                      initialGame,
+                      tab === "mine" ? "mine" : undefined,
+                    ),
+                  )
+                : null
+            }
+            reloadLabel="Reload page"
+          />
         </section>
       ) : !user ? (
         <section className="signin-panel" aria-labelledby="signin-heading">
@@ -574,7 +554,7 @@ export default function SubmissionForm({
             Your proposal and review notes are private to your account and our
             editorial team.
           </p>
-          <a
+          <Link
             className="btn"
             href={accountSignInPath(
               contributorPath(
@@ -586,7 +566,7 @@ export default function SubmissionForm({
             target="_top"
           >
             Sign in <ArrowLeft size={16} aria-hidden="true" />
-          </a>
+          </Link>
         </section>
       ) : (
         <>
@@ -661,7 +641,7 @@ export default function SubmissionForm({
                     {items.map((item) => (
                       <article className="submission-item" key={item.id}>
                         {item.photoUrl && (
-                          <img src={item.photoUrl} alt="" loading="lazy" />
+                          <img src={sitePath(item.photoUrl)} alt="" loading="lazy" />
                         )}
                         <div className="submission-item__body">
                           <div className="actions">
@@ -759,7 +739,7 @@ export default function SubmissionForm({
                       {preview || existingPhoto ? (
                         <div className="upload-preview">
                           <img
-                            src={preview ?? existingPhoto!}
+                            src={preview ?? sitePath(existingPhoto!)}
                             alt="Preview of your proposed photograph"
                           />
                           <div>
@@ -1222,7 +1202,7 @@ export default function SubmissionForm({
               <aside className="contribute-aside">
                 <figure>
                   <img
-                    src="/media/potd-5.jpg"
+                    src={sitePath("/media/potd-5.jpg")}
                     alt="Qantas Airbus A380 on approach"
                   />
                   <figcaption>

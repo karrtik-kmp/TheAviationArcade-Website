@@ -13,7 +13,8 @@ import {
   type User,
 } from "firebase/auth";
 import { getFirebaseClient, syncFirebaseSession } from "@/lib/firebase-client";
-import { safeAccountReturn } from "@/lib/account";
+import { audiences, safeAccountReturn, type Audience } from "@/lib/account";
+import { navigateTo, sitePath } from "@/lib/paths";
 import { SiteLink } from "@/components/SiteLink";
 
 type Mode = "signin" | "signup" | "reset";
@@ -41,7 +42,21 @@ function errorCopy(error: unknown) {
   return "We couldn’t complete that request. Please try again.";
 }
 
-export function AuthForm({ returnTo }: { returnTo: string }) {
+const intro: Record<Audience, string> = {
+  admin: "Editors sign in with an authorized staff account.",
+  photographer: "Sign in to propose photos and track their review.",
+  player:
+    "Player profile linking is coming soon. Sign in to preview sample player stats; your existing Callsign will be used when linking is available.",
+};
+
+/** One sign-in form for every audience. The server decides where each sign-in lands. */
+export function AuthForm({
+  audience,
+  returnTo,
+}: {
+  audience: Audience;
+  returnTo: string;
+}) {
   const [mode, setMode] = useState<Mode>("signin");
   const [configState, setConfigState] = useState<ConfigState>("checking");
   const [auth, setAuth] = useState<Auth | null>(null);
@@ -49,7 +64,9 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const [demo, setDemo] = useState<{ email: string; password: string } | null>(null);
+  const [demo, setDemo] = useState<{ email: string; password: string } | null>(
+    null,
+  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -58,7 +75,7 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
     void (async () => {
       try {
         const [response, firebaseAuth] = await Promise.all([
-          fetch("/api/auth/config", { cache: "no-store" }),
+          fetch(sitePath("/api/auth/config"), { cache: "no-store" }),
           getFirebaseClient(),
         ]);
         if (!response.ok)
@@ -74,7 +91,11 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
           return;
         }
         setAuth(firebaseAuth);
-        if (typeof result.demoLogin?.email === "string" && typeof result.demoLogin.password === "string")
+        if (
+          audience === "admin" &&
+          typeof result.demoLogin?.email === "string" &&
+          typeof result.demoLogin.password === "string"
+        )
           setDemo(result.demoLogin);
         setEmulator(Boolean(result.emulatorUrl));
         setConfigState("ready");
@@ -85,17 +106,15 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
     return () => {
       active = false;
     };
-  }, []);
+  }, [audience]);
 
-  async function finishSignIn(user: User, signup = false, demoAccount = false) {
-    await syncFirebaseSession(user);
-    const destination =
-      demoAccount ? "/admin" : signup || !user.emailVerified
-        ? `/account?verify_email=1&return_to=${encodeURIComponent(safeAccountReturn(returnTo))}`
-        : safeAccountReturn(returnTo);
-    if (window.top && window.top !== window)
-      window.top.location.assign(destination);
-    else window.location.assign(destination);
+  async function finishSignIn(user: User, signup = false, suffix = "") {
+    const destination = await syncFirebaseSession(user, {
+      audience,
+      returnTo: safeAccountReturn(returnTo),
+      signup,
+    });
+    navigateTo((destination ?? audiences[audience].home) + suffix);
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -128,22 +147,18 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
         } catch {
           verificationFailed = true;
         }
-        await syncFirebaseSession(credential.user);
-        const suffix = verificationFailed ? "&verification_error=1" : "";
-        const destination =
-          "/account?verify_email=1&return_to=" +
-          encodeURIComponent(safeAccountReturn(returnTo)) +
-          suffix;
-        if (window.top && window.top !== window)
-          window.top.location.assign(destination);
-        else window.location.assign(destination);
+        await finishSignIn(
+          credential.user,
+          true,
+          verificationFailed ? "&verification_error=1" : "",
+        );
       } else {
         const credential = await signInWithEmailAndPassword(
           auth,
           email,
           password,
         );
-        await finishSignIn(credential.user, false, !!demo && email.toLowerCase() === demo.email.toLowerCase());
+        await finishSignIn(credential.user);
       }
     } catch (requestError) {
       if (
@@ -192,10 +207,12 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
 
   return (
     <section className="auth-card">
-      <span className="eyebrow">Airplane Games account</span>
+      <span className="eyebrow">
+        Airplane Games · {audiences[audience].label}
+      </span>
       <h1>{title}</h1>
       <p className="auth-intro">
-        Use email and password or continue with Google.
+        {intro[audience]} Use email and password or continue with Google.
       </p>
       {emulator && (
         <p className="auth-setup-notice" role="status">
@@ -206,10 +223,27 @@ export function AuthForm({ returnTo }: { returnTo: string }) {
       {demo && mode === "signin" && (
         <aside className="auth-setup-notice">
           <strong>Explore the demo</strong>
-          <p>View the sample editorial content. The demo account is view only.</p>
-          <p>Email: <code>{demo.email}</code><br />Password: <code>{demo.password}</code></p>
-          <button className="btn secondary" type="button" disabled={!configured || busy}
-            onClick={() => { setEmail(demo.email); setPassword(demo.password); setError(""); setNotice("Demo credentials filled. Select Sign in to open the demo."); }}>
+          <p>
+            View the sample editorial content. The demo account is view only.
+          </p>
+          <p>
+            Email: <code>{demo.email}</code>
+            <br />
+            Password: <code>{demo.password}</code>
+          </p>
+          <button
+            className="btn secondary"
+            type="button"
+            disabled={!configured || busy}
+            onClick={() => {
+              setEmail(demo.email);
+              setPassword(demo.password);
+              setError("");
+              setNotice(
+                "Demo credentials filled. Select Sign in to open the demo.",
+              );
+            }}
+          >
             Fill demo login
           </button>
         </aside>

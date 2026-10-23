@@ -1,6 +1,9 @@
 import { firebaseSettings } from "@/lib/firebase-config";
 import { verifyFirebaseToken } from "@/lib/firebase-verifier";
 import { productCookieName, localAuthHost } from "@/lib/product-auth";
+import { isStaffUser } from "@/lib/server";
+import { isDemoPrincipal } from "@/lib/demo-server";
+import { afterSignIn, audiences, type Audience } from "@/lib/account";
 import { decodeJwt, decodeProtectedHeader } from "jose";
 export const dynamic = "force-dynamic";
 function reply(data: unknown, status = 200, cookie?: string) {
@@ -15,6 +18,24 @@ function reply(data: unknown, status = 200, cookie?: string) {
 }
 function originMatches(request: Request) {
   return request.headers.get("origin") === new URL(request.url).origin;
+}
+const intentKeys = new Set(["idToken", "audience", "returnTo", "signup"]);
+function validBody(body: unknown): body is {
+  idToken: string;
+  audience?: Audience;
+  returnTo?: string;
+  signup?: boolean;
+} {
+  if (!body || typeof body !== "object") return false;
+  const value = body as Record<string, unknown>;
+  return (
+    typeof value.idToken === "string" &&
+    Object.keys(value).every((key) => intentKeys.has(key)) &&
+    (value.audience === undefined ||
+      Object.hasOwn(audiences, value.audience as string)) &&
+    (value.returnTo === undefined || typeof value.returnTo === "string") &&
+    (value.signup === undefined || typeof value.signup === "boolean")
+  );
 }
 function cookie(value: string, host: string, maxAge: number) {
   return `${productCookieName(host)}=${value}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${localAuthHost(host) ? "" : "; Secure"}`;
@@ -53,11 +74,7 @@ export async function POST(request: Request) {
       offset += part.length;
     }
     const body = JSON.parse(new TextDecoder().decode(bytes));
-    if (
-      !body ||
-      typeof body.idToken !== "string" ||
-      Object.keys(body).some((key) => key !== "idToken")
-    )
+    if (!validBody(body))
       return reply({ error: "An ID token is required." }, 400);
     try {
       decodeProtectedHeader(body.idToken);
@@ -72,8 +89,27 @@ export async function POST(request: Request) {
       projectId: settings.config.projectId,
       emulator: !!settings.emulatorUrl,
     });
+    const productUser = {
+      ...user,
+      displayName: user.fullName?.trim().slice(0, 120) || "Account",
+    };
+    // Only a deliberate sign-in asks where to go; background cookie refreshes don't.
+    const destination = body.audience
+      ? afterSignIn({
+          audience: body.audience,
+          returnTo: body.returnTo,
+          signup: body.signup,
+          principal: {
+            signedIn: true,
+            displayName: productUser.displayName,
+            emailVerified: user.emailVerified,
+            staff: isStaffUser(productUser),
+            demo: isDemoPrincipal(productUser),
+          },
+        })
+      : undefined;
     return reply(
-      { signedIn: true },
+      { signedIn: true, ...(destination ? { destination } : {}) },
       200,
       cookie(
         body.idToken,

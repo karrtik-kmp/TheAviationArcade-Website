@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { getProductUser } from "@/lib/product-auth";
+import { getProductUser, type ProductUser } from "@/lib/product-auth";
 import { isDemoPrincipal } from "@/lib/demo-server";
 import { BunnyPhotoStorage } from "@/lib/bunny-storage";
 import type { PhotoStorage } from "@/lib/photo-storage";
@@ -46,8 +46,7 @@ export async function identity() {
     throw new HttpError(403, "The shared demo account can only view sample content.", "DEMO_ACCOUNT");
   return user;
 }
-export async function isStaff() {
-  const user = await getProductUser();
+export function isStaffUser(user: ProductUser | null) {
   const emails = (env.STAFF_EMAILS ?? "")
     .split(",")
     .map((s) => s.trim().toLowerCase())
@@ -55,6 +54,9 @@ export async function isStaff() {
   return (
     !!user && !isDemoPrincipal(user) && user.emailVerified && emails.includes(user.email.toLowerCase())
   );
+}
+export async function isStaff() {
+  return isStaffUser(await getProductUser());
 }
 export async function staff() {
   const user = await identity();

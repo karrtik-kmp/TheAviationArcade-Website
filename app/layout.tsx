@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/components/Providers";
+import { sitePath } from "@/lib/paths";
 
 export const metadata: Metadata = {
   title: {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
     "Discover seven aviation games, explore Plane of the Day, and share your aviation photography.",
   robots: { index: false, follow: false },
   icons: {
-    icon: "/media/favicon.png",
+    icon: sitePath("/media/favicon.png"),
   },
 };
 
@@ -27,14 +28,14 @@ export default function RootLayout({
           rel="preload"
           as="font"
           type="font/woff2"
-          href="/fonts/BarlowCondensed-SemiBold.woff2"
+          href={sitePath("/fonts/BarlowCondensed-SemiBold.woff2")}
           crossOrigin="anonymous"
         />
         <link
           rel="preload"
           as="font"
           type="font/woff2"
-          href="/fonts/Poppins-Regular.woff2"
+          href={sitePath("/fonts/Poppins-Regular.woff2")}
           crossOrigin="anonymous"
         />
       </head>

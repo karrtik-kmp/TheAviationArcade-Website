@@ -27,7 +27,7 @@ folder there. Read README.md and actual Git status when resuming.
 | Registration, sign-in, reset and verification    | Implemented and locally verified | Firebase browser/emulator suite; live Google consent and email delivery remain a human check                    |
 | Account controls and logout                      | Implemented and locally verified | Desktop/mobile menu, account page, safe return path, session-change/denial states                               |
 | Admin and photographer isolation                 | Implemented and locally verified | Verified staff allowlist, project/UID ownership, distinct-user list/photo/revision tests, stale-write rejection |
-| Focused rules, auth, storage and deploy tests    | Complete                         | 32 unit tests pass; TypeScript and focused deploy-tooling ESLint pass                                            |
+| Focused rules, auth, storage and deploy tests    | Complete                         | 32 unit tests pass; TypeScript and focused deploy-tooling ESLint pass                                           |
 | Core browser/API regression                      | Complete                         | Eight workflows, concurrent retry, photo retention and narrow/light layouts pass                                |
 | Locked production build                          | Complete                         | Final integrated source builds successfully                                                                     |
 | README and repo guidelines                       | Updated                          | Two-terminal setup, demo seeding, local routes, Windows fallback, auth/data boundaries                          |
@@ -228,4 +228,39 @@ The demo login remains and now opens a view-only `/admin` showing only the earli
 drafts (Aircraft Identifier and Plane of the Day). Submissions and Activity are hidden; server
 403 denial for the demo UID is unchanged. The phone editor overflow (warning bar forcing a wide
 grid column) is also fixed for staff. TypeScript, 35 unit tests, production build and six local
-browser checks pass; see [demo setup](DEMO_PREVIEW.md). Not yet committed or deployed.
+browser checks pass; see [demo setup](DEMO_PREVIEW.md). The view-only implementation
+was committed as `1a01cf5`; no hosted deployment is established by those local checks.
+
+## Role sign-in and base-path corrections (2026-10-23)
+
+Admin, photographer and player now enter through `/admin/sign-in`,
+`/contribute/sign-in` and `/play/sign-in`. The legacy `/sign-in` forwards to the
+appropriate audience, retaining safe return destinations. Only the admin entry
+advertises the configured read-only demo login. Server staff/ownership checks and
+account-change protections remain in force regardless of the selected entry point.
+
+`SITE_BASE_PATH` configures the build-time URL prefix. Native links, API calls,
+images and full-page navigation accept unprefixed app paths and add that prefix
+once at the URL boundary. The helper no longer guesses that a route matching the
+prefix has already been prefixed; `/play` as a prefix correctly produces
+`/play/play` and `/play/play/sign-in`. Browser pathnames are converted back with
+`appPath`; framework server redirects receive app paths.
+
+The new player screen is explicitly a sample. It no longer fabricates linked app
+accounts/dates or claims that website and game identities already match. App
+profile linking is coming soon and will use the existing Callsign. No new name
+registry or game-account integration was introduced.
+
+Verification: TypeScript, a production build with `/play`, and 43 unit tests pass, including regressions for
+`/admin`, `/contribute` and `/play` prefix collisions. Seven Chrome workflows pass
+against the dedicated loopback preview with the actual `/play` prefix: audience
+entry/demo visibility, anonymous and legacy redirects, signup/email verification,
+honest player preview/assets, photographer filter return/logout, non-staff admin
+denial, and read-only demo login. No page errors, failed assets, unprefixed
+fonts/media or external requests were recorded. The throwaway emulator account was
+deleted after the run. Evidence and screenshot: `docs/evidence/role-auth/`.
+
+Lint remains at the inherited 18 errors and 18 warnings; this checkpoint does not
+claim a clean lint baseline. Live Google consent and real game linkage remain
+untested. README.md documents the role URLs, prefix setting and reproducible test.
+This work is a local source checkpoint; it does not publish a hosted deployment.

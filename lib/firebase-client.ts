@@ -7,6 +7,8 @@ import {
   type Auth,
   type User,
 } from "firebase/auth";
+import type { Audience } from "@/lib/account";
+import { sitePath } from "@/lib/paths";
 
 let client: Promise<Auth | null> | null = null;
 let queue: Promise<unknown> = Promise.resolve();
@@ -29,7 +31,7 @@ export function getFirebaseClient(): Promise<Auth | null> {
   if (typeof window === "undefined") return Promise.resolve(null);
   if (!client)
     client = (async () => {
-      const response = await fetch("/api/auth/config", { cache: "no-store" });
+      const response = await fetch(sitePath("/api/auth/config"), { cache: "no-store" });
       if (!response.ok)
         throw new Error("Sign-in setup could not be loaded. Please retry.");
       const settings = (await response.json()) as {
@@ -85,14 +87,23 @@ function serialize<T>(run: () => Promise<T>): Promise<T> {
   queue = next.catch(() => undefined);
   return next;
 }
-async function exchange(user: User | null) {
+/** Sent with a deliberate sign-in so the server can choose where to land. */
+export type SignInIntent = {
+  audience: Audience;
+  returnTo: string;
+  signup?: boolean;
+};
+async function exchange(
+  user: User | null,
+  intent?: SignInIntent,
+): Promise<string | null> {
   const response = await fetch(
-    "/api/auth/session",
+    sitePath("/api/auth/session"),
     user
       ? {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idToken: await user.getIdToken() }),
+          body: JSON.stringify({ idToken: await user.getIdToken(), ...intent }),
         }
       : { method: "DELETE" },
   );
@@ -104,20 +115,28 @@ async function exchange(user: User | null) {
       body.error || "Your account session could not be updated. Please retry.",
     );
   }
+  const body = (await response.json().catch(() => ({}))) as {
+    destination?: string;
+  };
+  return typeof body.destination === "string" ? body.destination : null;
 }
-export async function syncFirebaseSession(user: User | null): Promise<void> {
-  if (signingOut) return;
+/** Mirrors the Firebase user into the session cookie. With an intent, resolves to the app path to land on. */
+export async function syncFirebaseSession(
+  user: User | null,
+  intent?: SignInIntent,
+): Promise<string | null> {
+  if (signingOut) return null;
   const uid = user?.uid ?? null;
   if (owner !== uid) {
     owner = uid;
     generation += 1;
   }
   const ticket = generation;
-  await serialize(async () => {
-    if (signingOut || ticket !== generation) return;
+  return serialize(async () => {
+    if (signingOut || ticket !== generation) return null;
     const auth = await getFirebaseClient();
-    if ((auth?.currentUser?.uid ?? null) !== uid) return;
-    await exchange(user);
+    if ((auth?.currentUser?.uid ?? null) !== uid) return null;
+    return exchange(user, intent);
   });
 }
 async function performLogout(broadcast: boolean): Promise<void> {

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { SiteLink as Link } from "@/components/SiteLink";
 import { ArrowUpRight } from "@phosphor-icons/react";
 import type { FeaturedPhoto } from "@/lib/types";
+import { sitePath } from "@/lib/paths";
 const sample: FeaturedPhoto = {
   id: "preview",
   title: "Threshold Geometry",
@@ -21,7 +22,7 @@ export function Featured({ compact = false }: { compact?: boolean }) {
   useEffect(() => {
     const abort = new AbortController();
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    fetch(`/api/featured?timeZone=${encodeURIComponent(zone)}`, {
+    fetch(sitePath(`/api/featured?timeZone=${encodeURIComponent(zone)}`), {
       signal: abort.signal,
     })
       .then((r) => {
@@ -45,7 +46,7 @@ export function Featured({ compact = false }: { compact?: boolean }) {
       <div className="feature-grid">
         <figure>
           <img
-            src={photo.imageUrl}
+            src={sitePath(photo.imageUrl)}
             alt={`${photo.aircraft || "Aircraft"}, photographed by ${photo.photographer}`}
             width="1280"
             height="960"
@@ -88,7 +89,7 @@ export function Featured({ compact = false }: { compact?: boolean }) {
               {archive.map((p) => (
                 <article key={p.id}>
                   <img
-                    src={p.imageUrl}
+                    src={sitePath(p.imageUrl)}
                     alt={p.aircraft || p.title}
                     width="640"
                     height="480"

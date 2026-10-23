@@ -29,11 +29,11 @@ import type { ReactNode } from "react";
 import { AccountControl } from "@/components/AccountControl";
 import { useAccountSession } from "@/components/AccountSession";
 import { Brand, ThemeToggle } from "@/components/PublicShell";
+import { AccountActions } from "@/components/AccessGate";
 import "@/components/admin.css";
 import {
   accountHeaders,
   accountSignInPath,
-  accountSignOutPath,
 } from "@/lib/account";
 import type {
   EditorialData,
@@ -49,6 +49,7 @@ import {
   reviewError,
 } from "@/lib/rules";
 import { sampleEditorialRecords } from "@/lib/demo-samples";
+import { sitePath } from "@/lib/paths";
 
 type AdminUser = { sessionKey: string };
 type Section =
@@ -227,9 +228,9 @@ export function AdminApp({
     try {
       const headers = accountHeaders(user.sessionKey);
       const [s, c, a] = await Promise.all([
-        fetch("/api/admin/submissions", { cache: "no-store", headers }),
-        fetch("/api/admin/content", { cache: "no-store", headers }),
-        fetch("/api/admin/audit", { cache: "no-store", headers }),
+        fetch(sitePath("/api/admin/submissions"), { cache: "no-store", headers }),
+        fetch(sitePath("/api/admin/content"), { cache: "no-store", headers }),
+        fetch(sitePath("/api/admin/audit"), { cache: "no-store", headers }),
       ]);
       const results = await Promise.all(
         [s, c, a].map(async (response) => ({
@@ -352,7 +353,7 @@ export function AdminApp({
         "Your account session is no longer active. Review was stopped.",
       );
     const requestGeneration = generation.current;
-    const response = await fetch(url, {
+    const response = await fetch(sitePath(url), {
       method,
       headers: {
         "Content-Type": "application/json",
@@ -634,43 +635,17 @@ export function AdminApp({
                     ? "Private editorial data was cleared and pending writes were stopped. Sign in again or reload after choosing the account you want to use."
                     : "Confirming your staff session before loading private editorial data."}
           </p>
-          <div className="admin-gate-actions">
-            {sessionError && (
-              <button
-                className="btn secondary"
-                type="button"
-                onClick={() => void accountSession.refresh()}
-              >
-                Retry account check
-              </button>
-            )}
-            {(signedOut || changed || blockedAccess === 401) && (
-              <a
-                className="btn"
-                href={accountSignInPath("/admin")}
-                target="_top"
-              >
-                Sign in
-              </a>
-            )}
-            <a className="btn secondary" href="/account">
-              Account options
-            </a>
-            <a
-              className="btn secondary"
-              href={accountSignOutPath()}
-              target="_top"
-            >
-              Sign out
-            </a>
-            <button
-              className="btn secondary"
-              type="button"
-              onClick={() => window.location.reload()}
-            >
-              Reload workspace
-            </button>
-          </div>
+          <AccountActions
+            onRetry={
+              sessionError ? () => void accountSession.refresh() : undefined
+            }
+            signInHref={
+              signedOut || changed || blockedAccess === 401
+                ? accountSignInPath("/admin")
+                : null
+            }
+            reloadLabel="Reload workspace"
+          />
         </section>
       </main>
     );
@@ -993,7 +968,7 @@ function Overview({
                     onOpen(item);
                   }}
                 >
-                  <img className="admin-row-photo" src={item.photoUrl} alt="" />
+                  <img className="admin-row-photo" src={sitePath(item.photoUrl)} alt="" />
                   <span className="queue-copy">
                     <b>{item.data.title}</b>
                     <small>
@@ -1223,7 +1198,7 @@ function Submissions({
                       <td>
                         <img
                           className="admin-row-photo"
-                          src={item.photoUrl}
+                          src={sitePath(item.photoUrl)}
                           alt=""
                         />
                       </td>
@@ -1313,13 +1288,13 @@ function SubmissionDetail({
       </div>
       <a
         className="admin-photo-link"
-        href={submission.photoUrl}
+        href={sitePath(submission.photoUrl)}
         target="_blank"
         rel="noreferrer"
       >
         <img
           className="admin-photo"
-          src={submission.photoUrl}
+          src={sitePath(submission.photoUrl)}
           alt={`Submitted photo: ${data.title}`}
         />
         <span>Open full photo ↗</span>
@@ -1617,7 +1592,7 @@ function ContentWorkspace({
                   className={`admin-record ${record.id === selected?.id ? "selected" : ""}`}
                   onClick={() => onOpen(record)}
                 >
-                  <img src={record.data.imageUrl} alt="" />
+                  <img src={sitePath(record.data.imageUrl)} alt="" />
                   <span>
                     <b>{record.data.title}</b>
                     <small>
@@ -1670,7 +1645,7 @@ function ContentWorkspace({
                 </MessageBar>
               )}
               <div className="editor-preview">
-                <img src={data.imageUrl} alt="" />
+                <img src={sitePath(data.imageUrl)} alt="" />
                 <span className="photo-preview-label">
                   PHOTO PREVIEW ·{" "}
                   {selected.sourceId ? "APPROVED SOURCE" : "SAMPLE"}

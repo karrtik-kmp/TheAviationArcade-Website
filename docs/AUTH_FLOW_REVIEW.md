@@ -1,6 +1,6 @@
 # Account and authentication flow review
 
-Updated 2026-10-22. The initial audit at `69176cd` found that hosting authentication
+Updated 2026-10-23. The initial audit at `69176cd` found that hosting authentication
 had been mistaken for a complete product account journey. Two Luna audits and a
 6.1 Sol medium review informed the correction. The user then selected Firebase
 email/password and Google, and confirmed Callsign as the community player name tag.
@@ -15,9 +15,21 @@ email/password and Google, and confirmed Callsign as the community player name t
 | Admin                   | Verified Firebase email plus server allowlist, explicit non-staff denial, account controls and logout           | Capability roles and enforced MFA                                          |
 | Community / players     | Existing Callsign is the agreed public player name tag; account page explains pending linkage                   | Shared game principal, linking/recovery and Callsign claim service         |
 
-The outer owner-private Site gate remains separate. Passing it does not authenticate
-a product user, and Firebase sign-in does not expand the Site audience. Product
-routes ignore hosting identity headers. No “Sign in with ChatGPT” product action remains.
+Product identity remains separate from any hosting access gate. The direct Cloudflare
+preview is publicly viewable; its private account and editorial actions still require
+Firebase authentication. Product routes ignore hosting identity headers. No
+“Sign in with ChatGPT” product action remains.
+
+Role entry points are `/admin/sign-in`, `/contribute/sign-in` and `/play/sign-in`;
+all use the same website Firebase identity. The legacy `/sign-in` forwards based on
+the safe return destination. Entry-point selection does not confer staff access.
+The player area has sample data only and always shows app profile linking as
+coming soon. It does not claim shared Unity identity or fabricate a linked date.
+
+`SITE_BASE_PATH` is the build-time prefix for these routes. The role browser suite
+passes seven workflows under the colliding `/play` prefix, including verification,
+filter returns, role denial and logout. See `docs/evidence/role-auth/qa.json` and
+README.md for commands and limits.
 
 ## Identity and session contract
 
@@ -52,7 +64,7 @@ not become public account identity. Staff privileges must never be self-selected
 
 ## Verification and limits
 
-The focused unit suite passes 20 checks. The Firebase browser/emulator suite has
+The complete unit suite passes 43 checks. The earlier full Firebase browser/emulator run recorded
 13 passes and one skipped Google provider check, including actual registration, verification, password reset and logout,
 plus distinct-contributor isolation and stale-account mutation rejection. Google
 SDK loading is blocked by the local harness; its popup did not complete. No live

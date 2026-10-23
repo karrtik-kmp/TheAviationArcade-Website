@@ -1,6 +1,6 @@
 # Demo account
 
-The shared demo account signs in with the existing Firebase email/password flow and lands on a
+The shared demo account signs in at `/admin/sign-in` with the existing Firebase email/password flow and lands on a
 view-only `/admin`. It shows only the earlier admin **Load demo data** sample drafts, defined once
 in `lib/demo-samples.ts`:
 
@@ -12,6 +12,8 @@ content desks. Submissions and Activity are hidden; the photographer submission 
 out of scope for the demo. Fields are disabled and there are no save, load, schedule, publish
 or archive controls. The page renders the bundled samples and never calls an admin API.
 `/contribute` sends the demo account to `/admin`.
+Photographer and player sign-in pages do not advertise demo credentials. Legacy
+`/sign-in?return_to=%2Fadmin` still forwards to the admin sign-in page.
 
 The earlier `/demo` workspace (browser-saved settings, the imported game snapshot and the
 sample review states) was removed on 2026-10-23 at the user's request. Demo edits and
@@ -39,6 +41,11 @@ Run `npm run auth:emulator`, then `npm run demo:preview` in a separate terminal.
 runs at http://127.0.0.1:5186 with ignored `.dev.vars.demo-preview` and the local account
 `demo-pilot@sites.test` / `LocalPreview-2026!`. Then run `node scripts/demo-admin-qa.mjs`
 with QA_ORIGIN set to that origin and PLAYWRIGHT_MODULE pointing to an installed module.
+
+`SITE_BASE_PATH` can be set before starting the preview. For example, `/play` puts
+admin sign-in at `/play/admin/sign-in`. Use `scripts/role-auth-qa.mjs` with the matching
+`QA_ORIGIN` and `QA_BASE_PATH` to verify prefixed role flows; see README.md. The player
+screen is a sample only: app profile linking is coming soon, with no real linked state.
 
 Evidence: `docs/evidence/demo-admin/`. Six local checks pass: `/demo` returns 404; prefilled
 login opens the view-only admin with only Overview and the two desks; both sample drafts open

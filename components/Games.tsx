@@ -12,6 +12,7 @@ import {
   Path,
 } from "@phosphor-icons/react";
 import { games, type Game } from "@/lib/catalog";
+import { sitePath } from "@/lib/paths";
 export function GameVisual({ game }: { game: Game }) {
   const tone =
     game.slug === "tail-identifier" || game.slug === "code-search"
@@ -33,7 +34,7 @@ export function GameVisual({ game }: { game: Game }) {
     <div className={`game-visual ${tone}`}>
       {game.image ? (
         <img
-          src={game.image}
+          src={sitePath(game.image)}
           alt={game.imageAlt}
           width="960"
           height="640"

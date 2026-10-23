@@ -9,6 +9,7 @@ import { PublicShell } from "@/components/PublicShell";
 import { GameCard } from "@/components/Games";
 import { Featured } from "@/components/Featured";
 import { games, photographer, photographerUrl } from "@/lib/catalog";
+import { sitePath } from "@/lib/paths";
 export default function Home() {
   return (
     <PublicShell>
@@ -32,8 +33,8 @@ export default function Home() {
           </div>
           <figure className="hero-photo reveal">
             <img
-              src="/media/hero.webp"
-              srcSet="/media/hero-640.webp 640w, /media/hero.webp 1440w"
+              src={sitePath("/media/hero.webp")}
+              srcSet={`${sitePath("/media/hero-640.webp")} 640w, ${sitePath("/media/hero.webp")} 1440w`}
               sizes="(max-width:767px) 100vw, 50vw"
               alt="A KLM aircraft on approach against an open blue sky"
               width="1440"
@@ -98,7 +99,7 @@ export default function Home() {
         <section className="wrap section">
           <div className="community">
             <img
-              src="/media/community.webp"
+              src={sitePath("/media/community.webp")}
               alt=""
               width="1800"
               height="600"

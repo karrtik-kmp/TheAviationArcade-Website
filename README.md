@@ -11,7 +11,7 @@ Cloudflare preview is publicly viewable; account and editorial actions still req
 ## Demo account
 
 With the Auth Emulator running, use `npm run demo:preview` and open
-http://127.0.0.1:5186/sign-in?return_to=%2Fadmin. Select **Fill demo login**, then **Sign in**.
+http://127.0.0.1:5186/admin/sign-in. Select **Fill demo login**, then **Sign in**.
 The local-only account is `demo-pilot@sites.test`, password `LocalPreview-2026!`.
 This dedicated profile leaves `.dev.vars` and other local servers alone.
 
@@ -73,6 +73,20 @@ Open:
 | Photographer portal         | http://127.0.0.1:5173/contribute |
 | Editorial workspace         | http://127.0.0.1:5173/admin      |
 
+Each audience has its own sign-in entry point, sharing the same Firebase account/session:
+
+| Audience       | Sign-in               | Area          |
+| -------------- | --------------------- | ------------- |
+| Admin / editor | `/admin/sign-in`      | `/admin`      |
+| Photographer   | `/contribute/sign-in` | `/contribute` |
+| Player         | `/play/sign-in`       | `/play`       |
+
+Only the admin sign-in advertises the configured view-only demo account. Choosing an
+entry point never grants a role: staff authorization remains a server check. Legacy
+`/sign-in?return_to=...` forwards to the appropriate audience and preserves safe destinations.
+The player area displays sample stats and a sample name tag. App profile linking is
+coming soon; it will use the existing Callsign. No app login, activity or linkage is claimed.
+
 The Auth Emulator runs at `127.0.0.1:9099`. Demo accounts share the **local-only** password
 `LocalPreview-2026!`:
 
@@ -106,6 +120,29 @@ node scripts/run-framework.mjs build
 `firebase-cli.mjs` reuses your Firebase CLI authorization and invokes `firebase-tools@latest` with
 an isolated cache. It does not require a global Firebase installation or store credentials in Git.
 
+### Serve under a URL prefix
+
+`SITE_BASE_PATH` is the single setting for the URL prefix. Set it in the shell before
+starting the server or building; it is compiled into the server and browser bundles.
+The default is an empty string (site root). Use a leading slash and no trailing slash:
+
+```powershell
+$env:SITE_BASE_PATH='/arcade'
+npm run dev
+# Homepage: http://127.0.0.1:5173/arcade
+# Admin sign-in: http://127.0.0.1:5173/arcade/admin/sign-in
+```
+
+Rebuild when changing this value for deployment. It is not a Cloudflare request-time
+binding. To return to the root in the current shell:
+`Remove-Item Env:SITE_BASE_PATH -ErrorAction SilentlyContinue`.
+
+Code keeps application paths unprefixed: pass `/admin` to `SiteLink`, `sitePath` or
+`navigateTo`. `sitePath` always adds the configured prefix, even when the app route
+starts with the same word. Convert a browser pathname back with `appPath` before
+using it as an application path. Next/Vinext server `redirect()` receives app paths
+and adds the prefix itself; do not pre-prefix those destinations.
+
 ## Verification commands
 
 Run the focused source checks:
@@ -126,12 +163,28 @@ node scripts/browser-qa.mjs
 node scripts/api-qa.mjs
 ```
 
+For the role-flow regression under a nonempty prefix, start the demo preview in its
+own terminal with `$env:SITE_BASE_PATH='/play'; npm run demo:preview` (Auth Emulator
+running, port 5186 available), then run:
+
+```powershell
+$env:QA_ORIGIN='http://127.0.0.1:5186'
+$env:QA_BASE_PATH='/play'
+node scripts/role-auth-qa.mjs
+```
+
+This deliberately uses an application-area name as the prefix: the player route is
+`/play/play` and player sign-in is `/play/play/sign-in`. The harness only contacts
+loopback services, creates/deletes a throwaway emulator user, checks all three
+sign-in routes, safe returns, permissions, assets and logout, and saves evidence in
+`docs/evidence/role-auth/`. Google consent is not exercised by this suite.
+
 The Firebase harness is restricted to loopback/demo services. Browser suites create local fixture
 records; they are not cloud tests. Results and screenshots are saved under `docs/evidence`.
-The unit suite covers 32 account-path, JWT-validation, private-storage, submission, editorial
-and deployment cases.
-The latest local run passes all eight core workflows and the API retry/layout checks.
-Authentication has 13 passes and one skipped Google provider flow: its external helper
+The unit suite passes 43 account-path, JWT-validation, private-storage, submission, editorial
+and deployment cases. The current prefixed role suite passes seven browser workflows.
+Earlier root-level runs passed eight core workflows and the API retry/layout checks.
+The earlier full authentication run had 13 passes and one skipped Google provider flow: its external helper
 script was blocked, and a recoverable error was shown. Local evidence does not prove live Google login.
 Historical Lighthouse results predate the Firebase change and are not a new performance measurement.
 

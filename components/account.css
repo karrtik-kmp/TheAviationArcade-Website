@@ -412,3 +412,46 @@
     scroll-behavior: auto;
   }
 }
+
+/* Player area (/play). Sample data until profiles are linked to the app. */
+.player-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin: 0 0 18px;
+}
+.player-stats > div {
+  padding: 22px 28px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.player-stats dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+.player-stats dd {
+  margin: 6px 0 0;
+  font-size: 28px;
+}
+.player-recent {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.player-recent li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.player-recent span {
+  color: var(--muted);
+  font-size: 13px;
+}
+@media (max-width: 767px) {
+  .player-stats {
+    grid-template-columns: 1fr;
+  }
+}

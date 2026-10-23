@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowClockwise, SignOut } from "@phosphor-icons/react";
 import { logoutFirebase } from "@/lib/firebase-client";
+import { navigateTo } from "@/lib/paths";
 import { SiteLink } from "@/components/SiteLink";
 
 export function SignOutPage() {
@@ -13,9 +14,7 @@ export function SignOutPage() {
     try {
       if (!attempt.current) attempt.current = logoutFirebase();
       await attempt.current;
-      if (window.top && window.top !== window)
-        window.top.location.replace("/account?signed_out=1");
-      else window.location.replace("/account?signed_out=1");
+      navigateTo("/account?signed_out=1", { replace: true });
     } catch {
       attempt.current = null;
       setState("error");

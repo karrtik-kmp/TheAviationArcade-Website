@@ -6,10 +6,11 @@ import { useEffect, useState } from "react";
 import { Sun, Moon, List, X, ArrowUpRight } from "@phosphor-icons/react";
 import { AccountControl } from "@/components/AccountControl";
 import "@/components/account.css";
+import { sitePath } from "@/lib/paths";
 export function Brand() {
   return (
     <Link href="/" className="brand" aria-label="Airplane Games home">
-      <img src="/media/logo-144.webp" alt="" width="48" height="48" />
+      <img src={sitePath("/media/logo-144.webp")} alt="" width="48" height="48" />
       <div className="brand-name">
         Airplane Games
         <span className="brand-descriptor">The Aviation Arcade</span>

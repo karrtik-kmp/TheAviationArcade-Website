@@ -11,18 +11,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   accountSignInPath,
   accountSignOutPath,
+  audiences,
   contributorPath,
   safeAccountReturn,
 } from "@/lib/account";
-import { useAccountSession } from "@/components/AccountSession";
+import {
+  currentReturnPath,
+  useAccountSession,
+} from "@/components/AccountSession";
 import { SiteLink } from "@/components/SiteLink";
-
-function currentReturn(pathname: string) {
-  if (typeof window === "undefined") return safeAccountReturn(pathname);
-  return safeAccountReturn(
-    window.location.pathname + window.location.search + window.location.hash,
-  );
-}
 
 export function AccountControl() {
   const pathname = usePathname() || "/";
@@ -62,7 +59,7 @@ export function AccountControl() {
 
   useEffect(() => close(), [pathname, close]);
   useEffect(() => close(), [state, account?.sessionKey, close]);
-  useEffect(() => setReturnTo(currentReturn(pathname)), [pathname]);
+  useEffect(() => setReturnTo(currentReturnPath(pathname)), [pathname]);
 
   if (state === "loading") {
     return (
@@ -135,18 +132,21 @@ export function AccountControl() {
           >
             My submissions
           </SiteLink>
+          <SiteLink href={audiences.player.home} onClick={() => close()}>
+            Player profile
+          </SiteLink>
           {account.isStaff && (
-            <SiteLink href="/admin" onClick={() => close()}>
+            <SiteLink href={audiences.admin.home} onClick={() => close()}>
               Editorial workspace
             </SiteLink>
           )}
-          <a
+          <SiteLink
             className="account-menu-signout"
             href={accountSignOutPath()}
             target="_top"
           >
             <SignOut size={18} /> Sign out
-          </a>
+          </SiteLink>
         </nav>
       )}
     </div>
