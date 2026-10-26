@@ -2,16 +2,16 @@ import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 
 const origin = new URL(process.env.QA_ORIGIN || "http://127.0.0.1:5188");
-const prefix = process.env.QA_BASE_PATH || "/play";
+const prefix = process.env.QA_BASE_PATH ?? "/play";
 assert.ok(["127.0.0.1", "localhost", "[::1]"].includes(origin.hostname));
 assert.equal(origin.protocol, "http:");
 assert.equal(origin.pathname, "/");
-assert.match(prefix, /^\/[a-z0-9-]+(?:\/[a-z0-9-]+)*$/);
+assert.match(prefix, /^(?:\/[a-z0-9-]+(?:\/[a-z0-9-]+)*)?$/);
 const url = (path) => `${origin.origin}${prefix}${path}`;
 const emulator = "http://127.0.0.1:9099";
 const email = `role-path-${Date.now()}@sites.test`;
 const password = "LocalRolePreview-2026!";
-const evidence = "docs/evidence/role-auth";
+const evidence = process.env.QA_EVIDENCE || "docs/evidence/role-auth";
 const results = [],
   pageErrors = [],
   blockedRequests = [],
@@ -42,7 +42,7 @@ page.on("pageerror", (error) => pageErrors.push(error.message));
 page.on("request", (request) => {
   const target = new URL(request.url());
   if (
-    target.origin === origin.origin &&
+    prefix && target.origin === origin.origin &&
     /^\/(fonts|media)\//.test(target.pathname)
   )
     unprefixedAssets.push(target.pathname);
@@ -128,26 +128,21 @@ try {
       ]) {
         await page.goto(url(path), { waitUntil: "domcontentloaded" });
         await page.getByRole("textbox", { name: "Email address" }).fill("");
-        assert.match(
-          await page.locator(".auth-card .eyebrow").innerText(),
-          new RegExp(label, "i"),
-        );
         const editor = label === "Staff access";
+        if (editor)
+          await page.getByRole("heading", { name: "Editor sign in" }).waitFor();
+        else
+          await page.getByRole("heading", { name: "Sign in", exact: true }).waitFor();
         assert.equal(
           await page.getByRole("button", { name: "Fill demo login" }).count(),
           editor ? 1 : 0,
         );
-        // Editors have their own page with no self-registration; the others pick a role.
+        // Editors cannot self-register. Public sign-in retains context without a role picker.
         assert.equal(
           await page.getByRole("button", { name: "Create an account" }).count(),
           editor ? 0 : 1,
         );
-        assert.equal(await page.getByRole("radio").count(), editor ? 0 : 2);
-        if (!editor)
-          assert.equal(
-            await page.getByRole("radio", { name: new RegExp(label) }).isChecked(),
-            true,
-          );
+        assert.equal(await page.getByRole("radio").count(), 0);
         const links = await page
           .locator('a[href^="/"]')
           .evaluateAll((nodes) =>
@@ -185,24 +180,87 @@ try {
         { waitUntil: "domcontentloaded" },
       );
       assert.equal(new URL(page.url()).pathname, `${prefix}/sign-in`);
-      assert.equal(
-        await page.getByRole("radio", { name: /Photographer/ }).isChecked(),
-        true,
-      );
-      // Switching role rewrites the address to that role's home.
-      await page.locator("label.auth-role", { hasText: "Player" }).click();
-      const switched = new URL(page.url());
-      assert.equal(switched.pathname, `${prefix}/sign-in`);
-      assert.equal(switched.searchParams.get("as"), "player");
-      assert.equal(switched.searchParams.get("return_to"), null);
+      assert.equal(new URL(page.url()).searchParams.get("return_to"), destination);
+      await page.getByText("Sign in to submit your aviation photos.", { exact: true }).waitFor();
+      assert.equal(await page.getByRole("radio").count(), 0);
       await page.goto(url("/sign-in?return_to=https%3A%2F%2Fevil.example"), {
         waitUntil: "domcontentloaded",
       });
       assert.equal(new URL(page.url()).pathname, `${prefix}/sign-in`);
-      assert.equal(
-        await page.getByRole("radio", { name: /Player/ }).isChecked(),
-        true,
-      );
+      await page.getByText("Sign in to your Airplane Games account.", { exact: true }).waitFor();
+    },
+  );
+  await check(
+    "Sign-in keeps its palette and fits desktop/mobile in both themes",
+    async () => {
+      for (const theme of ["light", "dark"]) {
+        for (const width of [320, 390, 768, 1440]) {
+          await page.setViewportSize({ width, height: 900 });
+          await page.goto(url("/sign-in"), { waitUntil: "domcontentloaded" });
+          // Wait for form hydration before reading a toggle label that changes on mount.
+          await page.getByRole("textbox", { name: "Email address" }).fill("");
+          const desiredSurface = theme === "light" ? "#fff9ee" : "#071724";
+          const currentSurface = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--surface").trim());
+          if (currentSurface !== desiredSurface)
+            await page.locator(".community-signin-header-actions .icon-button").click();
+          await page.waitForFunction(
+            (expected) => getComputedStyle(document.documentElement).getPropertyValue("--surface").trim() === expected,
+            desiredSurface,
+          );
+          await page.getByRole("textbox", { name: "Email address" }).fill("");
+          await page.evaluate(() => document.fonts.ready);
+          const layout = await page.evaluate(() => {
+            const form = document.querySelector(".community-auth-card");
+            const button = form.querySelector(".auth-submit");
+            const style = getComputedStyle(document.documentElement);
+            const box = button.getBoundingClientRect();
+            const card = getComputedStyle(form);
+            return {
+              surface: style.getPropertyValue("--surface").trim(),
+              action: style.getPropertyValue("--action").trim(),
+              overflow: document.documentElement.scrollWidth > innerWidth,
+              photo: getComputedStyle(document.querySelector(".community-signin-photo")).display,
+              buttonBottom: box.bottom,
+              formBorder: card.borderTopWidth,
+              formPadding: card.paddingTop,
+            };
+          });
+          assert.equal(layout.surface, theme === "light" ? "#fff9ee" : "#071724");
+          assert.equal(layout.action, theme === "light" ? "#a93825" : "#c64731");
+          assert.equal(layout.overflow, false, `${theme} ${width}px overflow`);
+          assert.equal(layout.photo === "none", width < 768);
+          assert.equal(layout.formBorder, "0px");
+          assert.equal(layout.formPadding, "0px");
+          assert.ok(layout.buttonBottom <= 900, `${theme} ${width}px submit below viewport`);
+          if ([390, 1440].includes(width))
+            await page.screenshot({ path: `${evidence}/signin-${theme}-${width}.png`, fullPage: true });
+        }
+      }
+      await page.setViewportSize({ width: 390, height: 844 });
+    },
+  );
+  await check(
+    "Password visibility and recovery preserve email and the intended action",
+    async () => {
+      const destination = "/contribute?game=aircraft-identifier&view=mine";
+      await page.goto(url(`/sign-in?return_to=${encodeURIComponent(destination)}`), { waitUntil: "domcontentloaded" });
+      await page.getByRole("textbox", { name: "Email address" }).fill(email);
+      await page.locator('input[name="password"]').fill("Example-only-password");
+      await page.getByRole("button", { name: "Show password", exact: true }).click();
+      assert.equal(await page.locator('input[name="password"]').getAttribute("type"), "text");
+      await page.getByRole("button", { name: "Hide password", exact: true }).click();
+      assert.equal(await page.locator('input[name="password"]').getAttribute("type"), "password");
+      await page.getByRole("button", { name: "Forgot password?", exact: true }).click();
+      await page.getByRole("heading", { name: "Reset your password", exact: true }).waitFor();
+      assert.equal(await page.getByRole("button", { name: "Continue with Google" }).count(), 0);
+      assert.equal(await page.locator('input[name="password"]').count(), 0);
+      assert.equal(await page.getByRole("textbox", { name: "Email address" }).inputValue(), email);
+      assert.equal(new URL(page.url()).searchParams.get("return_to"), destination);
+      await page.getByRole("button", { name: "Send reset link", exact: true }).click();
+      await page.getByRole("status").filter({ hasText: "If an account exists for that email" }).waitFor();
+      await page.getByRole("button", { name: "Back to sign in", exact: true }).click();
+      assert.equal(await page.getByRole("textbox", { name: "Email address" }).inputValue(), email);
+      assert.equal(new URL(page.url()).searchParams.get("return_to"), destination);
     },
   );
   await check(
@@ -313,6 +371,17 @@ try {
         .waitFor();
       assert.ok((await account()).user);
       await logout();
+    },
+  );
+  await check(
+    "Direct and unsafe public sign-in land at the homepage",
+    async () => {
+      for (const path of ["/sign-in", "/sign-in?return_to=https%3A%2F%2Fevil.example"]) {
+        await signIn(path);
+        await page.waitForURL(url("/"), { waitUntil: "domcontentloaded" });
+        assert.ok((await account()).user);
+        await logout();
+      }
     },
   );
   await check(

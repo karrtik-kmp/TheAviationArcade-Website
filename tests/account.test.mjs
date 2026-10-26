@@ -46,7 +46,7 @@ test("account return paths reject external, ambiguous, control, and auth destina
   assert.equal(safeAccountReturn("admin"), "/");
 });
 
-test("editors get their own sign-in page; photographers and players share one with the role preselected", () => {
+test("editors get their own sign-in page; public links retain action context", () => {
   assert.equal(
     accountSignInPath("/contribute?game=aircraft-identifier&view=mine"),
     "/sign-in?as=photographer&return_to=%2Fcontribute%3Fgame%3Daircraft-identifier%26view%3Dmine",
@@ -62,13 +62,14 @@ test("editors get their own sign-in page; photographers and players share one wi
     accountSignInPath("/account"),
     "/sign-in?as=player&return_to=%2Faccount",
   );
-  assert.equal(accountSignInPath("//evil.example"), "/sign-in?as=player");
+  assert.equal(accountSignInPath("//evil.example"), "/sign-in?as=player&return_to=%2F");
   assert.equal(signInPath("photographer"), "/sign-in?as=photographer");
-  assert.equal(signInPath("player", "/sign-in?as=player"), "/sign-in?as=player");
+  assert.equal(signInPath("player", "/sign-in?as=player"), "/sign-in?as=player&return_to=%2F");
+  assert.equal(accountSignInPath("/"), "/sign-in?as=player&return_to=%2F");
   assert.equal(accountSignOutPath(), "/sign-out");
 });
 
-test("only photographers and players can be chosen on the shared sign-in page", () => {
+test("legacy public audience hints cannot select admin", () => {
   assert.deepEqual([...communityRoles], ["photographer", "player"]);
   assert.equal(isCommunityRole("player"), true);
   assert.equal(isCommunityRole("admin"), false);
@@ -136,11 +137,11 @@ test("after sign-in lands on the return path, the area home, or email verificati
   );
   assert.equal(
     afterSignIn({ audience: "player", returnTo: "/", principal: signedIn() }),
-    "/play",
+    "/",
   );
   assert.equal(
     afterSignIn({ audience: "photographer", returnTo: "https://evil.example", principal: signedIn() }),
-    "/contribute",
+    "/",
   );
   assert.equal(
     afterSignIn({ audience: "player", returnTo: "/play", principal: signedIn({ demo: true }) }),
@@ -153,6 +154,21 @@ test("after sign-in lands on the return path, the area home, or email verificati
   assert.equal(
     afterSignIn({ audience: "player", principal: signedIn(), signup: true }),
     "/account?verify_email=1&return_to=%2Fplay",
+  );
+});
+
+test("direct public sign-in and verification retain the homepage destination", () => {
+  assert.equal(
+    afterSignIn({ audience: "player", returnTo: "/", principal: signedIn(), signup: true }),
+    "/account?verify_email=1&return_to=%2F",
+  );
+  assert.equal(
+    afterSignIn({ audience: "player", returnTo: "/games#military", principal: signedIn() }),
+    "/games#military",
+  );
+  assert.equal(
+    afterSignIn({ audience: "player", returnTo: "/sign-in", principal: signedIn() }),
+    "/",
   );
 });
 

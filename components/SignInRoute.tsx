@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { AuthForm } from "@/components/AuthForm";
-import { PublicShell, Brand } from "@/components/PublicShell";
+import { Brand, ThemeToggle } from "@/components/PublicShell";
 import { SiteLink } from "@/components/SiteLink";
+import { sitePath } from "@/lib/paths";
 import {
   audienceFor,
   audiences,
-  communityRoles,
   isCommunityRole,
   safeAccountReturn,
   signInPath,
@@ -14,6 +14,7 @@ import {
 import { redirectIfSignedIn } from "@/lib/access";
 import "@/components/account.css";
 import "@/components/admin-sign-in.css";
+import "@/components/community-sign-in.css";
 
 export type SignInSearchParams = Promise<{
   return_to?: string | string[];
@@ -62,8 +63,8 @@ export async function AdminSignInRoute({
 }
 
 /**
- * /sign-in: photographers and players share this page and choose their role.
- * The role comes from `as`, else from the area `return_to` belongs to.
+ * /sign-in: the public community account entry. Destination context is retained
+ * for legacy links, while the form never asks visitors to choose a role.
  */
 export async function CommunitySignInRoute({
   searchParams,
@@ -82,13 +83,34 @@ export async function CommunitySignInRoute({
     : owner === "admin"
       ? "player"
       : owner;
-  const returnTo = landing(role, value);
+  const returnTo = value !== undefined
+    ? safeAccountReturn(value)
+    : isCommunityRole(requested)
+      ? audiences[role].home
+      : "/";
   await redirectIfSignedIn(role, returnTo);
   return (
-    <PublicShell>
-      <main id="main" className="auth-page">
-        <AuthForm audience={role} returnTo={returnTo} roles={communityRoles} />
+    <div className="community-signin-page">
+      <a className="skip" href="#main">Skip to content</a>
+      <header className="community-signin-header">
+        <Brand />
+        <div className="community-signin-header-actions">
+          <ThemeToggle />
+          <SiteLink href="/">Back to website</SiteLink>
+        </div>
+      </header>
+      <main id="main" className="community-signin-main">
+        <figure className="community-signin-photo">
+          <img src={sitePath("/media/hero.webp")} srcSet={`${sitePath("/media/hero-640.webp")} 640w, ${sitePath("/media/hero.webp")} 1440w`} sizes="(max-width: 767px) 100vw, 54vw" alt="Aircraft photographed against the sky" fetchPriority="high" />
+        </figure>
+        <div className="community-signin-form">
+          <AuthForm audience={role} returnTo={returnTo} />
+          <nav className="community-signin-legal" aria-label="Legal">
+            <SiteLink href="/review-conditions">Review conditions</SiteLink>
+            <SiteLink href="/privacy">Privacy</SiteLink>
+          </nav>
+        </div>
       </main>
-    </PublicShell>
+    </div>
   );
 }

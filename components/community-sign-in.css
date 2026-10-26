@@ -1,0 +1,165 @@
+.community-signin-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+.community-signin-header {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 12px clamp(20px, 4vw, 56px);
+  border-bottom: 1px solid var(--line);
+}
+.community-signin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.community-signin-header-actions > a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: underline;
+  text-decoration-color: var(--brass);
+  text-underline-offset: 4px;
+}
+.community-signin-main {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 54fr 46fr;
+}
+.community-signin-photo {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--panel);
+}
+.community-signin-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 54% center;
+}
+.community-signin-form {
+  width: min(100%, 560px);
+  align-self: center;
+  justify-self: center;
+  padding: clamp(28px, 5vh, 56px) clamp(28px, 5vw, 72px);
+}
+.community-signin-form .community-auth-card {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  gap: 13px;
+}
+.community-auth-card > .eyebrow {
+  display: none;
+}
+.community-auth-card .auth-back-link {
+  display: none;
+}
+.community-auth-card h1 {
+  max-width: 460px;
+  font-size: clamp(38px, 4vw, 48px);
+}
+.community-auth-card .auth-intro {
+  max-width: 42ch;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.community-auth-card .auth-google,
+.community-auth-card .auth-submit {
+  min-height: 48px;
+}
+.community-auth-card .auth-form {
+  gap: 13px;
+}
+.community-auth-card .auth-form .field {
+  gap: 5px;
+}
+.community-auth-card .field input:where(:not([type="checkbox"], [type="radio"])) {
+  min-height: 48px;
+}
+.community-password-control {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+.community-password-control input {
+  padding-right: 54px !important;
+}
+.community-password-toggle {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: grid;
+  width: 44px;
+  height: calc(100% - 4px);
+  place-items: center;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+}
+.community-password-toggle:hover {
+  color: var(--ink);
+}
+.community-signin-legal {
+  display: flex;
+  gap: 20px;
+  margin-top: 16px;
+}
+.community-signin-legal a {
+  color: var(--muted);
+  font-size: 10px;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+.community-auth-card .auth-mode-links button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+@media (min-width: 768px) {
+  .community-signin-main { min-height: calc(100dvh - 76px); }
+}
+@media (max-width: 767px) {
+  .community-signin-header {
+    min-height: 68px;
+    padding: 10px 16px;
+    gap: 12px;
+  }
+  .community-signin-header .brand img { width: 38px; height: 38px; }
+  .community-signin-header .brand-name { font-size: 17px; }
+  .community-signin-header .brand-descriptor { font-size: 7px; }
+  .community-signin-header-actions { gap: 8px; }
+  .community-signin-header-actions > a { font-size: 10px; white-space: nowrap; }
+  .community-signin-main { display: flex; flex-direction: column; }
+  .community-signin-photo { display: none; }
+  .community-signin-form {
+    width: min(100%, 520px);
+    padding: 34px 22px 28px;
+  }
+  .community-auth-card .field input:where(:not([type="checkbox"], [type="radio"])) {
+    min-height: 48px;
+    font-size: 16px;
+  }
+}
+@media (max-width: 374px) {
+  .community-signin-header .brand img { width: 30px; height: 30px; }
+  .community-signin-header .brand { gap: 8px; }
+  .community-signin-header .brand-name { font-size: 15px; }
+  .community-signin-header .brand-descriptor { font-size: 6px; }
+  .community-signin-header-actions { gap: 4px; }
+  .community-signin-header-actions .icon-button { width: 36px; }
+}

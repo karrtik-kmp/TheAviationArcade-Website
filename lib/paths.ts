@@ -19,7 +19,8 @@ export const BASE_PATH = (process.env.__NEXT_ROUTER_BASEPATH ?? "").replace(
 export function sitePath(appPath: string): string {
   if (!appPath.startsWith("/") || appPath.startsWith("//")) return appPath;
   if (!BASE_PATH) return appPath;
-  return appPath === "/" ? BASE_PATH : `${BASE_PATH}${appPath}`;
+  // Vinext's prefixed root is /prefix/; /prefix alone may resolve as a 404.
+  return `${BASE_PATH}${appPath}`;
 }
 
 /** Browser URL path → app path. */

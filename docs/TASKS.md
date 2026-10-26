@@ -16,6 +16,12 @@ folder there. Read README.md and actual Git status when resuming.
 - Demo content/credentials remain local and nonpublishable. Browser gameplay,
   commerce and game-backend content delivery are outside this slice.
 
+The client-approved direction from 2026-10-26 is recorded in
+[Approved website and military launch direction](APPROVED_WEBSITE_DIRECTION.md).
+It adds admin-only community topics, member comments/reactions and admin moderation,
+a separate admin subdomain, and the approved 30-aircraft Military sourcing roster.
+These are implementation requirements, not a claim that those features have shipped.
+
 ## Jobs
 
 | Job                                              | State                            | Evidence / next action                                                                                          |
@@ -264,3 +270,46 @@ Lint remains at the inherited 18 errors and 18 warnings; this checkpoint does no
 claim a clean lint baseline. Live Google consent and real game linkage remain
 untested. README.md documents the role URLs, prefix setting and reproducible test.
 This work is a local source checkpoint; it does not publish a hosted deployment.
+
+## Public sign in layout and destination context (2026-10-26)
+
+Public sign-in now uses a compact brand header, the existing aircraft photograph beside
+the desktop form, and a form-first mobile layout with the photograph hidden. Existing
+cream/navy/brass/action tokens and Jost/Barlow/Poppins are unchanged in both themes.
+The form no longer asks visitors to choose a role. Legacy audience links keep their area;
+safe return paths keep the original action, query and fragment. Direct public sign-in
+returns home. Password reset retains email and destination, omits the Google control,
+and the password field has an accessible visibility toggle. Mode switches are disabled
+during requests. Staff entry and read-only demo permissions remain separate.
+
+The browser regression exposed that the prefixed homepage requires `/play/`, while
+`/play` returns 404 in this framework. `sitePath("/")` now keeps the trailing slash;
+unit tests cover root hosting and colliding `/admin`, `/contribute`, `/play` prefixes.
+
+Verification: TypeScript, 45 unit tests and the production build pass. Ten Chrome
+workflows pass under an actual `/play` prefix, covering audience context, anonymous
+guards, 320/390/768/1440px layouts in both themes, recovery, password visibility,
+signup/verification, player preview, contributor filter return, direct/unsafe homepage
+return, non-staff admin denial, and read-only demo permissions. No page exceptions,
+failed static assets, unprefixed assets or external requests were recorded.
+Focused runtime ESLint reports no errors and one existing-pattern `img` optimization warning.
+The focused code review found no actionable regressions.
+
+Evidence: [browser results](evidence/signin-refresh/qa.json),
+[desktop light](evidence/signin-refresh/signin-light-1440.png),
+[mobile dark](evidence/signin-refresh/signin-dark-390.png), and
+[Lighthouse summary](evidence/signin-refresh/lighthouse-summary.json).
+The local built-page mobile audit measured performance 82, accessibility 100 and best
+practices 100; LCP 4.1 seconds misses the 2.5-second target. That run used the
+auth-unconfigured state and does not establish hosted Core Web Vitals or live Google login.
+Full audit reports remain under ignored `outputs/signin-refresh/`.
+
+The local Auth Emulator restart required refreshing only the ignored demo profile's
+account reference. Final browser checks ran on an isolated source snapshot with the
+fresh fixture, preserving the user's running source servers. The isolated contributor
+database was empty; this auth/layout suite does not establish full submission-list or
+editorial regression. The throwaway browser account was deleted after testing.
+
+The approved future scope is in `APPROVED_WEBSITE_DIRECTION.md`. Shared game identity,
+app-return handoff, hostname separation, forum features and Military editing/delivery
+remain pending. This checkpoint does not publish or change domain configuration.

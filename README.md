@@ -73,8 +73,9 @@ Open:
 | Photographer portal         | http://127.0.0.1:5173/contribute |
 | Editorial workspace         | http://127.0.0.1:5173/admin      |
 
-Editors have their own sign-in page. Photographers and players share `/sign-in` and choose
-their role on it; all three use the same Firebase account/session:
+Editors have their own sign-in page. Photographers and players share `/sign-in`, which
+retains the destination from their action without asking them to choose a role. All three
+use the same website Firebase account/session:
 
 | Audience       | Sign-in                    | Area          |
 | -------------- | -------------------------- | ------------- |
@@ -82,10 +83,11 @@ their role on it; all three use the same Firebase account/session:
 | Photographer   | `/sign-in?as=photographer` | `/contribute` |
 | Player         | `/sign-in?as=player`       | `/play`       |
 
-The role is preselected from `as`, else from the area `return_to` belongs to; switching it
-sends the sign-in to that role's area. Only the admin sign-in advertises the configured
-view-only demo account, and it offers no self-registration. Choosing a role never grants
-one: staff authorization remains a server check. `/sign-in?return_to=/admin...` forwards to
+Legacy `as` links retain their destination area. A safe `return_to` retains the original
+action, including its query and fragment. Bare `/sign-in` returns to the public homepage.
+Only the admin sign-in advertises the configured
+view-only demo account, and it offers no self-registration. Audience hints never grant
+staff access: authorization remains a server check. `/sign-in?return_to=/admin...` forwards to
 the admin sign-in page.
 The player area displays sample stats and a sample name tag. App profile linking is
 coming soon; it will use the existing Callsign. No app login, activity or linkage is claimed.
@@ -179,7 +181,7 @@ node scripts/role-auth-qa.mjs
 This deliberately uses an application-area name as the prefix: the player route is
 `/play/play` and admin sign-in is `/play/admin/sign-in`. The harness only contacts
 loopback services, creates/deletes a throwaway emulator user, checks both
-sign-in pages and the role picker, safe returns, permissions, assets and logout, and saves evidence in
+sign-in pages, safe returns, recovery, permissions, themes, assets and logout, and saves evidence in
 `docs/evidence/role-auth/`. Google consent is not exercised by this suite.
 
 The Firebase harness is restricted to loopback/demo services. Browser suites create local fixture

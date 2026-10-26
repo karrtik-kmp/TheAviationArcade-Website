@@ -1,0 +1,52 @@
+{
+  "checkedAt": "2026-10-26T11:44:24.211Z",
+  "origin": "http://127.0.0.1:5191",
+  "basePath": "/play",
+  "scope": "Local browser + demo Auth Emulator only; no live Google or game linking tested.",
+  "results": [
+    {
+      "name": "Prefix uses the local emulator and all role pages retain their audience",
+      "passed": true
+    },
+    {
+      "name": "Anonymous guards and the shared sign-in page keep the prefix, role and safe query",
+      "passed": true
+    },
+    {
+      "name": "Sign-in keeps its palette and fits desktop/mobile in both themes",
+      "passed": true
+    },
+    {
+      "name": "Password visibility and recovery preserve email and the intended action",
+      "passed": true
+    },
+    {
+      "name": "Player signup and email verification preserve the prefixed player destination",
+      "passed": true
+    },
+    {
+      "name": "Player preview and assets are honest and work under a colliding prefix",
+      "passed": true
+    },
+    {
+      "name": "Photographer sign-in retains query filters and logout stays under the prefix",
+      "passed": true
+    },
+    {
+      "name": "Direct and unsafe public sign-in land at the homepage",
+      "passed": true
+    },
+    {
+      "name": "Admin sign-in does not grant staff access to a player/contributor account",
+      "passed": true
+    },
+    {
+      "name": "Demo login opens the prefixed read-only admin and remains denied live APIs",
+      "passed": true
+    }
+  ],
+  "pageErrors": [],
+  "assetFailures": [],
+  "unprefixedAssets": [],
+  "blockedRequests": []
+}

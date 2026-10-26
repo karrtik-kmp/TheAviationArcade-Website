@@ -6,8 +6,8 @@ export type AccountSnapshot = {
 
 /**
  * Who a sign-in is for. Each audience has its own area. Editors sign in on
- * their own page; photographers and players share one page and pick a role
- * there. All of them share one Firebase identity and one session cookie.
+ * their own page; public sign-in retains the audience from the requested action.
+ * All of them share one Firebase identity and one session cookie.
  */
 export type Audience = "admin" | "photographer" | "player";
 
@@ -20,7 +20,7 @@ export const audiences: Record<
   player: { home: "/play", signIn: "/sign-in", label: "Player" },
 };
 
-/** The roles offered on the shared sign-in page, in display order. */
+/** Legacy public audience hints retained for existing sign-in links. */
 export const communityRoles = ["photographer", "player"] as const;
 export type CommunityRole = (typeof communityRoles)[number];
 export function isCommunityRole(value: unknown): value is CommunityRole {
@@ -69,12 +69,12 @@ export function safeAccountReturn(value: string | null | undefined): string {
     return "/";
   }
 }
-/** The sign-in page for `audience`, with the role preselected on the shared page. */
+/** The sign-in page for `audience`, retaining the original action as context. */
 export function signInPath(audience: Audience, returnTo?: string | null) {
   const safe = safeAccountReturn(returnTo);
   const query = new URLSearchParams();
   if (audience !== "admin") query.set("as", audience);
-  if (safe !== "/" && safe !== audiences[audience].home)
+  if (returnTo != null && safe !== audiences[audience].home)
     query.set("return_to", safe);
   return `${audiences[audience].signIn}${query.size ? `?${query}` : ""}`;
 }
@@ -144,8 +144,9 @@ export function afterSignIn({
   signup?: boolean;
 }): string {
   if (principal.demo) return audiences.admin.home;
-  const safe = safeAccountReturn(returnTo);
-  const destination = safe === "/" ? audiences[audience].home : safe;
+  const destination = returnTo == null
+    ? audiences[audience].home
+    : safeAccountReturn(returnTo);
   if (signup || !principal.emailVerified)
     return `/account?verify_email=1&return_to=${encodeURIComponent(destination)}`;
   return destination;

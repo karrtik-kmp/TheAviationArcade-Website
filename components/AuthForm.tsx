@@ -22,6 +22,7 @@ import {
 } from "@/lib/account";
 import { navigateTo, sitePath } from "@/lib/paths";
 import { SiteLink } from "@/components/SiteLink";
+import { Eye, EyeSlash } from "@phosphor-icons/react";
 
 type Mode = "signin" | "signup" | "reset";
 type ConfigState = "checking" | "ready" | "missing" | "error";
@@ -52,7 +53,7 @@ const intro: Record<Audience, string> = {
   admin: "Editors sign in with an authorized staff account.",
   photographer: "Sign in to propose photos and track their review.",
   player:
-    "Player profile linking is coming soon. Sign in to preview sample player stats; your existing Callsign will be used when linking is available.",
+    "Sign in to your Airplane Games account.",
 };
 
 const roleHint: Record<CommunityRole, string> = {
@@ -89,6 +90,7 @@ export function AuthForm({
   );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -237,7 +239,7 @@ export function AuthForm({
   }
 
   return (
-    <section className={`auth-card${editor ? " auth-card-editor" : ""}`}>
+    <section className={`auth-card${editor ? " auth-card-editor" : ""}${!editor ? " community-auth-card" : ""}`}>
       <span className="eyebrow">
         {editor ? "Staff access" : `Airplane Games · ${audiences[role].label}`}
       </span>
@@ -264,7 +266,13 @@ export function AuthForm({
         </fieldset>
       )}
       <p className="auth-intro">
-        {intro[role]} Use email and password or continue with Google.
+        {mode === "reset"
+          ? "Enter the email address on your account and we’ll send a reset link if it exists."
+          : mode === "signup"
+            ? "Create an account to submit aviation photos and follow their review."
+            : role === "photographer"
+              ? "Sign in to submit your aviation photos."
+              : intro[role]}
       </p>
       {emulator && (
         <p className="auth-setup-notice" role="status">
@@ -321,7 +329,7 @@ export function AuthForm({
           {error}
         </p>
       )}
-      <button
+      {mode !== "reset" && <button
         className="btn secondary auth-google"
         type="button"
         disabled={!configured || busy}
@@ -331,10 +339,10 @@ export function AuthForm({
           G
         </span>{" "}
         Continue with Google
-      </button>
-      <div className="auth-divider">
+      </button>}
+      {mode !== "reset" && <div className="auth-divider">
         <span>or use email</span>
-      </div>
+      </div>}
       <form className="auth-form" onSubmit={(event) => void onSubmit(event)}>
         <label className="field">
           <span>Email address</span>
@@ -365,18 +373,23 @@ export function AuthForm({
         {mode !== "reset" && (
           <label className="field">
             <span>Password</span>
-            <input
-              type="password"
-              name="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete={
-                mode === "signup" ? "new-password" : "current-password"
-              }
-              minLength={mode === "signup" ? 8 : undefined}
-              required
-              disabled={!configured || busy}
-            />
+            <span className="community-password-control">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete={
+                  mode === "signup" ? "new-password" : "current-password"
+                }
+                minLength={mode === "signup" ? 8 : undefined}
+                required
+                disabled={!configured || busy}
+              />
+              <button className="community-password-toggle" type="button" aria-label={showPassword ? "Hide password" : "Show password"} aria-pressed={showPassword} onClick={() => setShowPassword((shown) => !shown)} disabled={!configured || busy}>
+                {showPassword ? <EyeSlash size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+              </button>
+            </span>
             {mode === "signup" && <small>Use at least 8 characters.</small>}
           </label>
         )}
@@ -394,6 +407,7 @@ export function AuthForm({
             {/* Editor accounts are invited by the team, never self-registered here. */}
             {!editor && <button
               type="button"
+              disabled={busy}
               onClick={() => {
                 setMode("signup");
                 setPassword("");
@@ -405,6 +419,7 @@ export function AuthForm({
             </button>}
             <button
               type="button"
+              disabled={busy}
               onClick={() => {
                 setMode("reset");
                 setPassword("");
@@ -419,6 +434,7 @@ export function AuthForm({
         {mode === "signup" && (
           <button
             type="button"
+            disabled={busy}
             onClick={() => {
               setMode("signin");
               setError("");
@@ -431,6 +447,7 @@ export function AuthForm({
         {mode === "reset" && (
           <button
             type="button"
+            disabled={busy}
             onClick={() => {
               setMode("signin");
               setError("");

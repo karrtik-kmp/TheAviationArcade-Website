@@ -21,7 +21,8 @@ test("under a base path, app paths gain the prefix exactly once", async () => {
     sitePath("/admin/sign-in?return_to=%2Fadmin"),
     "/arcade/admin/sign-in?return_to=%2Fadmin",
   );
-  assert.equal(sitePath("/"), "/arcade");
+  assert.equal(sitePath("/"), "/arcade/");
+  assert.equal(appPath(sitePath("/")), "/");
   assert.equal(sitePath("/media/a.jpg"), "/arcade/media/a.jpg");
   assert.equal(sitePath("/arcadeX"), "/arcade/arcadeX");
   assert.equal(appPath("/arcade/contribute"), "/contribute");
@@ -31,6 +32,7 @@ test("under a base path, app paths gain the prefix exactly once", async () => {
 test("an area name used as the base path still prefixes that area's routes", async () => {
   for (const basePath of ["/admin", "/contribute", "/play"]) {
     const { sitePath, appPath } = await load(basePath);
+    assert.equal(sitePath("/"), `${basePath}/`);
     assert.equal(sitePath(basePath), `${basePath}${basePath}`);
     assert.equal(
       sitePath(`${basePath}/sign-in`),

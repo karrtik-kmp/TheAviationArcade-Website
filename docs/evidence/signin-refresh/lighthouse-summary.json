@@ -1,0 +1,25 @@
+{
+  "checkedAt": "2026-10-26T11:28:31.387Z",
+  "url": "http://127.0.0.1:5192/sign-in",
+  "scope": "Local production build, mobile simulated throttling, auth-unconfigured state. Does not establish hosted Core Web Vitals or live sign-in.",
+  "scores": {
+    "performance": 82,
+    "accessibility": 100,
+    "best-practices": 100
+  },
+  "metrics": {
+    "largest-contentful-paint": {
+      "value": 4145.772999999999,
+      "display": "4.1 s"
+    },
+    "cumulative-layout-shift": {
+      "value": 0.045060950015406755,
+      "display": "0.045"
+    },
+    "total-blocking-time": {
+      "value": 0,
+      "display": "0 ms"
+    }
+  },
+  "followUp": "Mobile LCP exceeds 2.5 seconds. Audit the configured deployed sign-in flow and optimize before claiming the performance target."
+}
