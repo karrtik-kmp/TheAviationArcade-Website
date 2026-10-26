@@ -5,8 +5,9 @@ export type AccountSnapshot = {
 };
 
 /**
- * Who a sign-in is for. Each audience has its own area and its own sign-in
- * page; they all share one Firebase identity and one session cookie.
+ * Who a sign-in is for. Each audience has its own area. Editors sign in on
+ * their own page; photographers and players share one page and pick a role
+ * there. All of them share one Firebase identity and one session cookie.
  */
 export type Audience = "admin" | "photographer" | "player";
 
@@ -15,13 +16,16 @@ export const audiences: Record<
   { home: string; signIn: string; label: string }
 > = {
   admin: { home: "/admin", signIn: "/admin/sign-in", label: "Editor" },
-  photographer: {
-    home: "/contribute",
-    signIn: "/contribute/sign-in",
-    label: "Photographer",
-  },
-  player: { home: "/play", signIn: "/play/sign-in", label: "Player" },
+  photographer: { home: "/contribute", signIn: "/sign-in", label: "Photographer" },
+  player: { home: "/play", signIn: "/sign-in", label: "Player" },
 };
+
+/** The roles offered on the shared sign-in page, in display order. */
+export const communityRoles = ["photographer", "player"] as const;
+export type CommunityRole = (typeof communityRoles)[number];
+export function isCommunityRole(value: unknown): value is CommunityRole {
+  return communityRoles.includes(value as CommunityRole);
+}
 
 /** The audience whose area owns an app path. Anything outside a staff or photographer area is the player's. */
 export function audienceFor(path: string): Audience {
@@ -65,13 +69,19 @@ export function safeAccountReturn(value: string | null | undefined): string {
     return "/";
   }
 }
+/** The sign-in page for `audience`, with the role preselected on the shared page. */
+export function signInPath(audience: Audience, returnTo?: string | null) {
+  const safe = safeAccountReturn(returnTo);
+  const query = new URLSearchParams();
+  if (audience !== "admin") query.set("as", audience);
+  if (safe !== "/" && safe !== audiences[audience].home)
+    query.set("return_to", safe);
+  return `${audiences[audience].signIn}${query.size ? `?${query}` : ""}`;
+}
 /** The sign-in page for whichever area `returnTo` belongs to. */
 export function accountSignInPath(returnTo = "/account") {
   const safe = safeAccountReturn(returnTo);
-  const { signIn, home } = audiences[audienceFor(safe)];
-  return safe === home
-    ? signIn
-    : `${signIn}?return_to=${encodeURIComponent(safe)}`;
+  return signInPath(audienceFor(safe), safe);
 }
 export function accountSignOutPath() {
   return "/sign-out";

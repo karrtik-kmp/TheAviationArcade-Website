@@ -455,3 +455,52 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Role picker on the shared photographer/player sign-in page. */
+.auth-roles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.auth-roles legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-size: 11px;
+  font-weight: 500;
+}
+.auth-role {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  min-height: 64px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+}
+.auth-role input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.auth-role strong {
+  font-size: 13px;
+}
+.auth-role small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.auth-role.active {
+  border-color: var(--brass);
+  box-shadow: inset 0 0 0 1px var(--brass);
+  background: var(--raised);
+}
+.auth-role:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}

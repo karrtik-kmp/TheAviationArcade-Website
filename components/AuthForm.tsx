@@ -13,7 +13,13 @@ import {
   type User,
 } from "firebase/auth";
 import { getFirebaseClient, syncFirebaseSession } from "@/lib/firebase-client";
-import { audiences, safeAccountReturn, type Audience } from "@/lib/account";
+import {
+  audiences,
+  safeAccountReturn,
+  signInPath,
+  type Audience,
+  type CommunityRole,
+} from "@/lib/account";
 import { navigateTo, sitePath } from "@/lib/paths";
 import { SiteLink } from "@/components/SiteLink";
 
@@ -49,15 +55,29 @@ const intro: Record<Audience, string> = {
     "Player profile linking is coming soon. Sign in to preview sample player stats; your existing Callsign will be used when linking is available.",
 };
 
-/** One sign-in form for every audience. The server decides where each sign-in lands. */
+const roleHint: Record<CommunityRole, string> = {
+  photographer: "Share aviation photos",
+  player: "Play and track progress",
+};
+
+/**
+ * One sign-in form for every audience. The server decides where each sign-in
+ * lands. With `roles`, the visitor picks which of them they're signing in as.
+ */
 export function AuthForm({
   audience,
   returnTo,
+  roles,
 }: {
   audience: Audience;
+  /** Where to go for the initial `audience`; switching role goes to that role's home. */
   returnTo: string;
+  roles?: readonly CommunityRole[];
 }) {
+  const [role, setRole] = useState<Audience>(audience);
   const [mode, setMode] = useState<Mode>("signin");
+  const editor = audience === "admin";
+  const destination = role === audience ? returnTo : audiences[role].home;
   const [configState, setConfigState] = useState<ConfigState>("checking");
   const [auth, setAuth] = useState<Auth | null>(null);
   const [emulator, setEmulator] = useState(false);
@@ -109,12 +129,12 @@ export function AuthForm({
   }, [audience]);
 
   async function finishSignIn(user: User, signup = false, suffix = "") {
-    const destination = await syncFirebaseSession(user, {
-      audience,
-      returnTo: safeAccountReturn(returnTo),
+    const landing = await syncFirebaseSession(user, {
+      audience: role,
+      returnTo: safeAccountReturn(destination),
       signup,
     });
-    navigateTo((destination ?? audiences[audience].home) + suffix);
+    navigateTo((landing ?? audiences[role].home) + suffix);
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -205,14 +225,46 @@ export function AuthForm({
         ? "Send reset link"
         : "Sign in";
 
+  function chooseRole(next: CommunityRole) {
+    setRole(next);
+    setError("");
+    // Keep the address shareable and correct on reload.
+    window.history.replaceState(
+      null,
+      "",
+      sitePath(signInPath(next, next === audience ? returnTo : null)),
+    );
+  }
+
   return (
-    <section className="auth-card">
+    <section className={`auth-card${editor ? " auth-card-editor" : ""}`}>
       <span className="eyebrow">
-        Airplane Games · {audiences[audience].label}
+        {editor ? "Staff access" : `Airplane Games · ${audiences[role].label}`}
       </span>
-      <h1>{title}</h1>
+      <h1>{editor && mode === "signin" ? "Editor sign in" : title}</h1>
+      {roles && mode !== "reset" && (
+        <fieldset className="auth-roles" disabled={busy}>
+          <legend>I’m signing in as</legend>
+          {roles.map((option) => (
+            <label
+              key={option}
+              className={`auth-role${role === option ? " active" : ""}`}
+            >
+              <input
+                type="radio"
+                name="role"
+                value={option}
+                checked={role === option}
+                onChange={() => chooseRole(option)}
+              />
+              <strong>{audiences[option].label}</strong>
+              <small>{roleHint[option]}</small>
+            </label>
+          ))}
+        </fieldset>
+      )}
       <p className="auth-intro">
-        {intro[audience]} Use email and password or continue with Google.
+        {intro[role]} Use email and password or continue with Google.
       </p>
       {emulator && (
         <p className="auth-setup-notice" role="status">
@@ -339,7 +391,8 @@ export function AuthForm({
       <div className="auth-mode-links">
         {mode === "signin" && (
           <>
-            <button
+            {/* Editor accounts are invited by the team, never self-registered here. */}
+            {!editor && <button
               type="button"
               onClick={() => {
                 setMode("signup");
@@ -349,7 +402,7 @@ export function AuthForm({
               }}
             >
               Create an account
-            </button>
+            </button>}
             <button
               type="button"
               onClick={() => {
@@ -388,9 +441,11 @@ export function AuthForm({
           </button>
         )}
       </div>
-      <SiteLink className="auth-back-link" href="/account">
-        Back to my account
-      </SiteLink>
+      {!editor && (
+        <SiteLink className="auth-back-link" href="/account">
+          Back to my account
+        </SiteLink>
+      )}
     </section>
   );
 }

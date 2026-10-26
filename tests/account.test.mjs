@@ -7,9 +7,12 @@ import {
   afterSignIn,
   audienceFor,
   audiences,
+  communityRoles,
   contributorPath,
   decideAccess,
+  isCommunityRole,
   safeAccountReturn,
+  signInPath,
 } from "../lib/account.ts";
 
 test("account return paths keep same-site paths, queries, and fragments", () => {
@@ -43,23 +46,33 @@ test("account return paths reject external, ambiguous, control, and auth destina
   assert.equal(safeAccountReturn("admin"), "/");
 });
 
-test("sign-in paths go to the sign-in page of the area being returned to", () => {
+test("editors get their own sign-in page; photographers and players share one with the role preselected", () => {
   assert.equal(
     accountSignInPath("/contribute?game=aircraft-identifier&view=mine"),
-    "/contribute/sign-in?return_to=%2Fcontribute%3Fgame%3Daircraft-identifier%26view%3Dmine",
+    "/sign-in?as=photographer&return_to=%2Fcontribute%3Fgame%3Daircraft-identifier%26view%3Dmine",
   );
+  assert.equal(accountSignInPath("/contribute"), "/sign-in?as=photographer");
   assert.equal(accountSignInPath("/admin"), "/admin/sign-in");
   assert.equal(
     accountSignInPath("/admin?tab=review"),
     "/admin/sign-in?return_to=%2Fadmin%3Ftab%3Dreview",
   );
-  assert.equal(accountSignInPath("/play"), "/play/sign-in");
+  assert.equal(accountSignInPath("/play"), "/sign-in?as=player");
   assert.equal(
     accountSignInPath("/account"),
-    "/play/sign-in?return_to=%2Faccount",
+    "/sign-in?as=player&return_to=%2Faccount",
   );
-  assert.equal(accountSignInPath("//evil.example"), "/play/sign-in?return_to=%2F");
+  assert.equal(accountSignInPath("//evil.example"), "/sign-in?as=player");
+  assert.equal(signInPath("photographer"), "/sign-in?as=photographer");
+  assert.equal(signInPath("player", "/sign-in?as=player"), "/sign-in?as=player");
   assert.equal(accountSignOutPath(), "/sign-out");
+});
+
+test("only photographers and players can be chosen on the shared sign-in page", () => {
+  assert.deepEqual([...communityRoles], ["photographer", "player"]);
+  assert.equal(isCommunityRole("player"), true);
+  assert.equal(isCommunityRole("admin"), false);
+  assert.equal(isCommunityRole(undefined), false);
 });
 
 test("every audience sign-in page is a reserved return destination", () => {

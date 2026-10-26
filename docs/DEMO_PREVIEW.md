@@ -12,7 +12,7 @@ content desks. Submissions and Activity are hidden; the photographer submission 
 out of scope for the demo. Fields are disabled and there are no save, load, schedule, publish
 or archive controls. The page renders the bundled samples and never calls an admin API.
 `/contribute` sends the demo account to `/admin`.
-Photographer and player sign-in pages do not advertise demo credentials. Legacy
+The shared photographer/player sign-in page does not advertise demo credentials. Legacy
 `/sign-in?return_to=%2Fadmin` still forwards to the admin sign-in page.
 
 The earlier `/demo` workspace (browser-saved settings, the imported game snapshot and the

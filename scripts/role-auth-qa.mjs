@@ -122,9 +122,9 @@ try {
       assert.equal(config.config.projectId, "demo-airplane-games");
       assert.equal(config.emulatorUrl, emulator);
       for (const [path, label] of [
-        ["/admin/sign-in", "Editor"],
-        ["/contribute/sign-in", "Photographer"],
-        ["/play/sign-in", "Player"],
+        ["/admin/sign-in", "Staff access"],
+        ["/sign-in?as=photographer", "Photographer"],
+        ["/sign-in?as=player", "Player"],
       ]) {
         await page.goto(url(path), { waitUntil: "domcontentloaded" });
         await page.getByRole("textbox", { name: "Email address" }).fill("");
@@ -132,10 +132,22 @@ try {
           await page.locator(".auth-card .eyebrow").innerText(),
           new RegExp(label, "i"),
         );
+        const editor = label === "Staff access";
         assert.equal(
           await page.getByRole("button", { name: "Fill demo login" }).count(),
-          label === "Editor" ? 1 : 0,
+          editor ? 1 : 0,
         );
+        // Editors have their own page with no self-registration; the others pick a role.
+        assert.equal(
+          await page.getByRole("button", { name: "Create an account" }).count(),
+          editor ? 0 : 1,
+        );
+        assert.equal(await page.getByRole("radio").count(), editor ? 0 : 2);
+        if (!editor)
+          assert.equal(
+            await page.getByRole("radio", { name: new RegExp(label) }).isChecked(),
+            true,
+          );
         const links = await page
           .locator('a[href^="/"]')
           .evaluateAll((nodes) =>
@@ -157,35 +169,48 @@ try {
     },
   );
   await check(
-    "Anonymous guards and legacy sign-in redirects retain the prefix and safe query",
+    "Anonymous guards and the shared sign-in page keep the prefix, role and safe query",
     async () => {
-      for (const area of ["/admin", "/play"]) {
-        await page.goto(url(area), { waitUntil: "domcontentloaded" });
-        await page.waitForURL(url(`${area}/sign-in`));
-      }
+      await page.goto(url("/admin"), { waitUntil: "domcontentloaded" });
+      await page.waitForURL(url("/admin/sign-in"));
+      await page.goto(url("/play"), { waitUntil: "domcontentloaded" });
+      await page.waitForURL(url("/sign-in?as=player"));
+      await page.goto(url("/sign-in?return_to=%2Fadmin"), {
+        waitUntil: "domcontentloaded",
+      });
+      await page.waitForURL(url("/admin/sign-in"));
       const destination = "/contribute?game=aircraft-identifier&view=mine";
       await page.goto(
         url(`/sign-in?return_to=${encodeURIComponent(destination)}`),
         { waitUntil: "domcontentloaded" },
       );
+      assert.equal(new URL(page.url()).pathname, `${prefix}/sign-in`);
       assert.equal(
-        new URL(page.url()).pathname,
-        `${prefix}/contribute/sign-in`,
+        await page.getByRole("radio", { name: /Photographer/ }).isChecked(),
+        true,
       );
-      assert.equal(
-        new URL(page.url()).searchParams.get("return_to"),
-        destination,
-      );
+      // Switching role rewrites the address to that role's home.
+      await page.locator("label.auth-role", { hasText: "Player" }).click();
+      const switched = new URL(page.url());
+      assert.equal(switched.pathname, `${prefix}/sign-in`);
+      assert.equal(switched.searchParams.get("as"), "player");
+      assert.equal(switched.searchParams.get("return_to"), null);
       await page.goto(url("/sign-in?return_to=https%3A%2F%2Fevil.example"), {
         waitUntil: "domcontentloaded",
       });
-      assert.equal(new URL(page.url()).pathname, `${prefix}/play/sign-in`);
+      assert.equal(new URL(page.url()).pathname, `${prefix}/sign-in`);
+      assert.equal(
+        await page.getByRole("radio", { name: /Player/ }).isChecked(),
+        true,
+      );
     },
   );
   await check(
     "Player signup and email verification preserve the prefixed player destination",
     async () => {
-      await page.goto(url("/play/sign-in"), { waitUntil: "domcontentloaded" });
+      await page.goto(url("/sign-in?as=player"), {
+        waitUntil: "domcontentloaded",
+      });
       await page.getByRole("textbox", { name: "Email address" }).fill(email);
       await page
         .getByRole("button", { name: "Create an account", exact: true })
@@ -271,7 +296,7 @@ try {
     async () => {
       const destination = "/contribute?game=aircraft-identifier&view=mine";
       await signIn(
-        `/contribute/sign-in?return_to=${encodeURIComponent(destination)}`,
+        `/sign-in?as=photographer&return_to=${encodeURIComponent(destination)}`,
       );
       await page.waitForURL(
         (target) =>

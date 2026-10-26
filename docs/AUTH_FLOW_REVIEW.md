@@ -20,9 +20,10 @@ preview is publicly viewable; its private account and editorial actions still re
 Firebase authentication. Product routes ignore hosting identity headers. No
 “Sign in with ChatGPT” product action remains.
 
-Role entry points are `/admin/sign-in`, `/contribute/sign-in` and `/play/sign-in`;
-all use the same website Firebase identity. The legacy `/sign-in` forwards based on
-the safe return destination. Entry-point selection does not confer staff access.
+Editors sign in at `/admin/sign-in`; photographers and players share `/sign-in` and
+pick their role there (preselected from `as` or the safe return destination). All use
+the same website Firebase identity. `/sign-in?return_to=/admin` forwards to the admin
+page. Neither the page nor the chosen role confers staff access.
 The player area has sample data only and always shows app profile linking as
 coming soon. It does not claim shared Unity identity or fabricate a linked date.
 
