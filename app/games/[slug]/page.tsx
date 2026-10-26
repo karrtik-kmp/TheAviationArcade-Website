@@ -42,15 +42,12 @@ export default async function GamePage({
             </div>
           </div>
           <div className="detail-copy">
-            <h2>How it works</h2>
-            <ol>
-              {game.guide.map((step) => (
-                <li key={step}>{step}</li>
-              ))}
-            </ol>
-            <p className="muted" style={{ fontSize: 12, marginTop: 24 }}>
-              One question or board is a Flight. Ten Flights make a Trip,
-              followed by your debrief.
+            <h2>About this game</h2>
+            <p>
+              {game.name} is one of the Airplane Games arcade titles. It is
+              played in the mobile app, not on this website, which is where you
+              can learn about the games, share photography and follow the
+              community.
             </p>
             <div className="actions">
               <Link className="btn" href="/get-the-app">

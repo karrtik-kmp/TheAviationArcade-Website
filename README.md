@@ -1,7 +1,7 @@
 # Airplane Games — website and admin
 
 The standalone website repository is **`H:\Work\TheAviationArcade\website`**.
-Run every command below from this directory. It contains the branded homepage, seven-game catalog,
+Run every command below from this directory. It contains the branded homepage, eight-game catalog,
 photographer submissions and admin tools for Aircraft Identifier and Plane of the Day.
 
 Product login uses **Firebase email/password and Google only**. Account controls include My account,

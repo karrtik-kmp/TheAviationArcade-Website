@@ -58,7 +58,7 @@ const intro: Record<Audience, string> = {
 
 const roleHint: Record<CommunityRole, string> = {
   photographer: "Share aviation photos",
-  player: "Play and track progress",
+  player: "Review progress and join the community",
 };
 
 /**

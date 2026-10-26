@@ -116,7 +116,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
             <Brand />
             <nav className="footer-links" aria-label="Footer navigation">
               <Link href="/games">The games</Link>
-              <Link href="/how-to-play">How to play</Link>
+              <Link href="/how-to-play">Ranks and community</Link>
               <Link href="/contribute">Share a photo</Link>
               <Link href="/about">About</Link>
               <Link href="/admin">Editor workspace</Link>

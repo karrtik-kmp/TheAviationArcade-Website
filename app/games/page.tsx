@@ -6,7 +6,7 @@ export default function GamesPage() {
     <PublicShell>
       <main id="main">
         <header className="wrap page-intro">
-          <h1>Seven games. One aviation obsession.</h1>
+          <h1>Eight games. One aviation obsession.</h1>
           <p>
             From the aircraft overhead to the airport below. Explore the arcade
             and find the challenge that speaks your language.

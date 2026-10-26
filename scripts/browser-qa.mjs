@@ -57,7 +57,7 @@ try {
     });
   });
   await check(
-    "Seven-game catalog, category filters, search and detail",
+    "Eight-game catalog, category filters, search and detail",
     async () => {
       await page.goto(origin + "/games", { waitUntil: "domcontentloaded" });
       await page.getByRole("link", { name: "Sign in", exact: true }).waitFor();
@@ -101,7 +101,7 @@ try {
       .getByRole("link", { name: "Games", exact: true })
       .click();
     await page
-      .getByRole("heading", { name: "Seven games. One aviation obsession." })
+      .getByRole("heading", { name: "Eight games. One aviation obsession." })
       .waitFor();
     assert.equal(
       await page.evaluate(

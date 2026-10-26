@@ -19,8 +19,9 @@ export default function Home() {
             <span className="eyebrow">For the love of aviation</span>
             <h1>Think you know airplanes?</h1>
             <p>
-              Seven aviation games. Test your recognition, knowledge and speed,
-              from the window seat to the captain&apos;s chair.
+              Eight aviation games, coming to mobile. Read about them, join the
+              community and share your photography, from the window seat to the
+              captain&apos;s chair.
             </p>
             <div className="actions">
               <Link href="/games" className="btn">
@@ -53,15 +54,15 @@ export default function Home() {
           <div>
             <AirplaneTilt size={29} />
             <div>
-              <strong>Seven ways to test your knowledge</strong>
+              <strong>Eight aviation games</strong>
               <small>Recognition, matching and word games</small>
             </div>
           </div>
           <div>
             <Medal size={29} />
             <div>
-              <strong>Every Flight is a new challenge</strong>
-              <small>Ten Flights make one Trip</small>
+              <strong>Five ranks, one ladder</strong>
+              <small>From Trainee to Chief Pilot</small>
             </div>
           </div>
           <div>
@@ -75,14 +76,14 @@ export default function Home() {
         <section className="wrap section">
           <div className="section-top">
             <div>
-              <h2>Find your kind of challenge.</h2>
+              <h2>Meet the games.</h2>
               <p>
-                Know the shape of a 747? The code for Heathrow? There&apos;s a
-                game for that.
+                From the shape of a 747 to the code for Heathrow, a quick look
+                at what&apos;s coming to the app.
               </p>
             </div>
             <Link href="/games" className="text-link">
-              All seven games <ArrowUpRight size={18} />
+              All eight games <ArrowUpRight size={18} />
             </Link>
           </div>
           <div className="game-grid home-games">

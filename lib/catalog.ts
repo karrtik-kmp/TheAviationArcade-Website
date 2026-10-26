@@ -8,7 +8,6 @@ export type Game = {
   image: string;
   imageAlt: string;
   status: string;
-  guide: string[];
 };
 
 export const photographer = "Josh M";
@@ -29,11 +28,20 @@ export const games: Game[] = [
     imageAlt:
       "KLM twin-engine airliner approaching with its landing gear lowered.",
     status: "In development",
-    guide: [
-      "Study a real aircraft photograph.",
-      "Choose the aircraft from the answer options.",
-      "Complete ten Flights to finish a Trip and review your debrief.",
-    ],
+  },
+  // Working title: the client has confirmed an eighth game, a military variant
+  // of Aircraft Identifier, but its final name and backend ID are not yet set.
+  {
+    id: "military-identifier",
+    slug: "military-aircraft-identifier",
+    name: "Military Aircraft Identifier",
+    subtitle: "What jet is that?",
+    description:
+      "The Aircraft Identifier challenge, flown with military types. Tell fighters, transports and trainers apart by silhouette, engines and finer details.",
+    category: "Recognition",
+    image: "",
+    imageAlt: "",
+    status: "In development",
   },
   {
     id: "tail-identifier",
@@ -47,11 +55,6 @@ export const games: Game[] = [
     imageAlt:
       "KLM aircraft with its blue crown tail livery visible; contextual photography, not a cropped game question.",
     status: "In development",
-    guide: [
-      "Look closely at the tail livery in the game photograph.",
-      "Choose the airline that matches the design.",
-      "Progress toward less familiar carriers and historic liveries.",
-    ],
   },
   {
     id: "airport-spotter",
@@ -64,11 +67,6 @@ export const games: Game[] = [
     image: "",
     imageAlt: "",
     status: "In development",
-    guide: [
-      "Study the airport photograph and its visible landmarks.",
-      "Choose the airport supported by the image.",
-      "Take on tighter views and subtler clues as the challenge grows.",
-    ],
   },
   {
     id: "atc-match",
@@ -81,11 +79,6 @@ export const games: Game[] = [
     image: "",
     imageAlt: "",
     status: "In development",
-    guide: [
-      "Read the airport names and available IATA codes.",
-      "Connect each airport to its matching code.",
-      "Complete the board before the countdown ends.",
-    ],
   },
   {
     id: "call-sign-match",
@@ -98,11 +91,6 @@ export const games: Game[] = [
     image: "",
     imageAlt: "",
     status: "In development",
-    guide: [
-      "Read the callsigns and airline names.",
-      "Connect each callsign to its airline.",
-      "Finish the matching board before time runs out.",
-    ],
   },
   {
     id: "code-search",
@@ -115,11 +103,6 @@ export const games: Game[] = [
     image: "",
     imageAlt: "",
     status: "In development",
-    guide: [
-      "Read the list of target airport codes or city clues.",
-      "Find and trace each matching code in the letter grid.",
-      "Complete the puzzle by finding every target.",
-    ],
   },
   {
     id: "runway-identifier",
@@ -132,10 +115,5 @@ export const games: Game[] = [
     image: "",
     imageAlt: "",
     status: "In development",
-    guide: [
-      "Study the airport runway diagram.",
-      "Compare the layout and any provided geography clues.",
-      "Choose the airport that matches the diagram.",
-    ],
   },
 ];

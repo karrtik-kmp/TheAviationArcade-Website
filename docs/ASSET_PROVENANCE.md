@@ -37,7 +37,7 @@ The POTD text is client-supplied metadata, not independently verified website pu
 
 No verified airport-identification photograph or runway diagram was found in the focused content sources. Airport Spotter and Runway Identifier therefore have no photo entry. ATC Match, Call Sign Match and Code Search also use nonphoto interface treatments. An unrelated aircraft photograph must not be presented as evidence of an airport, runway layout, ATC facility or actual game screenshot.
 
-The seven catalog identities and order come from `Scripts/Gameplay/Modules/ModuleRegistry.cs`; gameplay descriptions use the loops in `CONCEPT.md`. Aircraft Identifier has backend ID `identifier` and public slug `aircraft-identifier`. Every catalog game is labelled "In development", because no production store release has been verified.
+Seven catalog identities and their order come from `Scripts/Gameplay/Modules/ModuleRegistry.cs`; the eighth, Military Aircraft Identifier, is a client-confirmed variant of Aircraft Identifier whose working title and ID are not yet in the registry; gameplay descriptions use the loops in `CONCEPT.md`. Aircraft Identifier has backend ID `identifier` and public slug `aircraft-identifier`. Every catalog game is labelled "In development", because no production store release has been verified.
 
 ## Generated community illustration
 

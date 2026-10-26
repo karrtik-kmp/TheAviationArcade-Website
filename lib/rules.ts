@@ -7,7 +7,7 @@ import type {
 } from "./types";
 export const MAX_UPLOAD_BYTES = 12 * 1024 * 1024;
 export const categoryNames = {
-  aircraft: "Aircraft",
+  aircraft: "Aircraft (civil & military)",
   tail: "Airline & tail",
   airport: "Airport",
   atc: "ATC & airport operations",
@@ -49,6 +49,7 @@ export const submissionSchema = z
       .array(
         z.enum([
           "aircraft-identifier",
+          "military-aircraft-identifier",
           "tail-identifier",
           "airport-spotter",
           "atc-match",
@@ -57,7 +58,7 @@ export const submissionSchema = z
           "runway-identifier",
         ]),
       )
-      .max(7),
+      .max(8),
     aircraft: shortText,
     airline: shortText,
     registration: z.string().trim().max(40),

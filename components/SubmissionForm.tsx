@@ -67,6 +67,7 @@ type ApiResponse = {
 
 const gameCategory: Record<string, Category> = {
   "aircraft-identifier": "aircraft",
+  "military-aircraft-identifier": "aircraft",
   "tail-identifier": "tail",
   "airport-spotter": "airport",
   "atc-match": "atc",
@@ -488,8 +489,11 @@ export default function SubmissionForm({
         <p className="eyebrow">COMMUNITY PHOTOGRAPHY</p>
         <h1>Bring your view of aviation.</h1>
         <p>
-          Propose a photograph for editorial review. Tell us what it shows and
-          where you think it could fit.
+          Help build the photo collection behind Airplane Games, from airliners
+          and airports to military aircraft. Propose a photograph for editorial
+          review and tell us what it shows. Nothing is played or sold here: the
+          games live in the mobile app, and every proposal is checked before
+          any use.
         </p>
       </section>
       {user && !sessionMatches && !canShowContentDuringRevalidation ? (
@@ -1136,7 +1140,10 @@ export default function SubmissionForm({
                         : undefined
                     }
                   >
-                    <legend>Games this photograph could support</legend>
+                    <legend>
+                      Games this photograph could feature in (including the
+                      military edition of Aircraft Identifier)
+                    </legend>
                     <div className="check-list check-list--games">
                       {games.map((game, index) => (
                         <label className="check-label" key={game.slug}>
@@ -1221,7 +1228,9 @@ export default function SubmissionForm({
                 <p>
                   A useful submission pairs a sharp, original photograph with
                   clear details: what’s shown, where it was taken, and a source
-                  editors can check.
+                  editors can check. For military aircraft, name the type and
+                  variant, and where and when you shot it, such as an airshow
+                  or open day.
                 </p>
                 <div className="notice">
                   <strong>How review works</strong>

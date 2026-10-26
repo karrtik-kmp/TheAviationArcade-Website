@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     template: "%s | Airplane Games",
   },
   description:
-    "Discover seven aviation games, explore Plane of the Day, and share your aviation photography.",
+    "Discover eight aviation games, explore Plane of the Day, and share your aviation photography.",
   robots: { index: false, follow: false },
   icons: {
     icon: sitePath("/media/favicon.png"),

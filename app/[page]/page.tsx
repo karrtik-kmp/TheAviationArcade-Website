@@ -16,7 +16,7 @@ const pages: Record<
       },
       {
         title: "Explore while we build",
-        body: "Get to know the seven planned games, or share aviation photography for the collection. We'll show each game's availability clearly.",
+        body: "Get to know the eight planned games, or share aviation photography for the collection. We'll show each game's availability clearly.",
       },
     ],
   },
@@ -27,7 +27,7 @@ const pages: Record<
     sections: [
       {
         title: "An arcade with a common thread",
-        body: "Seven games explore aircraft, airline tails, airports, runway layouts, callsigns and airport codes. Miles and Status Points connect the experience as you progress.",
+        body: "Eight games explore civil and military aircraft, airline tails, airports, runway layouts, callsigns and airport codes. Status Points and a shared rank ladder connect them as you progress in the app.",
       },
       {
         title: "A community behind the collection",
@@ -38,19 +38,19 @@ const pages: Record<
   "how-to-play": {
     title: "A little knowledge. A new perspective.",
     intro:
-      "Every game has its own challenge. A shared vocabulary keeps the arcade familiar.",
+      "The games are played in the mobile app. This website is where you read about them, review your progress and join the community.",
     sections: [
       {
-        title: "A Flight is one challenge",
-        body: "Identify a photograph, complete a matching board or solve a word-search grid. One question or board is a Flight. Ten Flights make a Trip, followed by a debrief.",
+        title: "Ranks and Status Points",
+        body: "Status Points measure lifetime progress through Trainee, First Officer, Captain, Check Airman and Chief Pilot. Every game, including the military edition of Aircraft Identifier, uses the same five ranks. The app remains the source of truth for awards and rank rules.",
       },
       {
-        title: "Miles and Status Points",
-        body: "Miles are the spendable currency. Status Points measure lifetime progress through Trainee, First Officer, Captain, Check Airman and Chief Pilot. The game remains the source of truth for awards and rank rules.",
+        title: "Review your progress",
+        body: "Signed-in players will be able to review their profile and stats here once app profile linking is available. Nothing on this website is played or purchased.",
       },
       {
-        title: "Difficulty follows your experience",
-        body: "The games build from recognizable subjects toward finer details and more demanding recall. Explore each game's page for its core loop. Browser gameplay is outside this website release.",
+        title: "Join the community",
+        body: "A community forum is planned for players and photographers to talk aviation. Details will appear here when it opens.",
       },
     ],
   },
