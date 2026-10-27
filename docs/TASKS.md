@@ -6,7 +6,7 @@ folder there. Read README.md and actual Git status when resuming.
 
 ## Accepted scope and decisions
 
-- Homepage, seven-game catalog, photographer photo proposals, and admin for Aircraft
+- Homepage, eight-game catalog, photographer photo proposals, and admin for Aircraft
   Identifier and Plane of the Day, preserving the existing branding.
 - Product authentication: Firebase email/password and Google only. The Cloudflare preview
   is public; hosting identity must not grant product permissions.
@@ -26,7 +26,7 @@ These are implementation requirements, not a claim that those features have ship
 
 | Job                                              | State                            | Evidence / next action                                                                                          |
 | ------------------------------------------------ | -------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| Existing brand, homepage and seven-game catalog  | Complete                         | Original logo/fonts, optimized preview assets, responsive layouts, search/filter/theme                          |
+| Existing brand, homepage and eight-game catalog  | Complete                         | Original logo/fonts, optimized preview assets, responsive layouts, search/filter/theme                          |
 | Photographer proposals                           | Complete for private prototype   | Metadata, rights evidence, proposed channels, private uploads, own list and revisions                           |
 | Editorial review and content prototypes          | Complete for private prototype   | Five-check approval, versioned records, audit, separate publish/schedule action and usage checks                |
 | Firebase project and providers                   | Complete                         | `airplane-games-auth-20261022`; email/password + Google configured; runtime bindings configured                 |
