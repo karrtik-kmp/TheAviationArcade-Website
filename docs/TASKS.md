@@ -313,3 +313,32 @@ editorial regression. The throwaway browser account was deleted after testing.
 The approved future scope is in `APPROVED_WEBSITE_DIRECTION.md`. Shared game identity,
 app-return handoff, hostname separation, forum features and Military editing/delivery
 remain pending. This checkpoint does not publish or change domain configuration.
+
+## Tab return keeps the page; role-based editorial entry (2026-10-26)
+
+Switching back to a tab used to set the account state to loading for every focus,
+`visibilitychange` and `pageshow`. `/admin` unmounted into "Checking account…", lost focus
+and input, then refetched submissions, content and audit; each switch also re-sent the ID
+token. Now a same-user re-check runs in the background and the page stays. Focus and
+visibility count as one return, at most one check per 60 seconds (`shouldRecheckOnReturn`);
+a back/forward-cache restore always checks. An unchanged ID token is not re-sent; if the
+server reports no session while Firebase still has the user, the token is mirrored once more.
+A different Firebase user, sign-in/out events and any 401/403/409 still block and clear private
+data immediately. The server remains the only authority: `/admin` layout runs
+`requireArea("admin")` and every `/api/admin/*` handler calls `staff()`.
+
+Editorial entry points follow the server's `isStaff`: the footer "Editor workspace" link and the
+account-page editorial wording are staff-only (the account menu and destination card already were;
+the demo login box was already editor-page-only). Removed the submission form's now-unused
+revalidation workaround.
+
+Verification: TypeScript, 46 unit tests and the production build pass. New
+`scripts/session-return-qa.mjs` passes 6 Chrome checks on the emulator-backed demo preview
+(port 5186): repeated tab switches send no account/session/admin requests and keep the mounted
+workspace; a forced re-check is one `GET /api/account`; a cleared cookie is restored without
+blanking; staff see the footer link; sign-out in another tab clears the workspace; a photographer
+sees no editorial link or wording. The same script fails 4 of 6 on the previous code.
+`role-auth-qa.mjs` (unprefixed, port 5186) passed 9 workflows, then failed the read-only demo
+check: the running preview denies the demo account on the previous code too (stale demo account
+reference after an emulator restart), so it is environmental. `test:auth` was not run: it requires
+port 5173, which was serving the cloud project. No live Google login or cloud behavior was tested.

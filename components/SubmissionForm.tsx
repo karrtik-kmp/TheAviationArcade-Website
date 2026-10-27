@@ -150,13 +150,6 @@ export default function SubmissionForm({
     !!accountSession.account?.user &&
     accountSession.account.sessionKey === user.sessionKey &&
     blockedAccess === null;
-  const canShowContentDuringRevalidation =
-    !!user &&
-    accountSession.state === "loading" &&
-    accountSession.sameUserRevalidating &&
-    accountSession.account?.sessionKey === user.sessionKey &&
-    (tab !== "mine" || loadedListSessionKey.current === user.sessionKey) &&
-    blockedAccess === null;
   const sessionMatchesRef = useRef(sessionMatches);
   sessionMatchesRef.current = sessionMatches;
 
@@ -250,7 +243,6 @@ export default function SubmissionForm({
   }, [
     sessionMatches,
     accountSession.state,
-    accountSession.sameUserRevalidating,
     user,
     refresh,
     revision,
@@ -496,7 +488,7 @@ export default function SubmissionForm({
           any use.
         </p>
       </section>
-      {user && !sessionMatches && !canShowContentDuringRevalidation ? (
+      {user && !sessionMatches ? (
         <section
           className="signin-panel account-session-gate"
           role={

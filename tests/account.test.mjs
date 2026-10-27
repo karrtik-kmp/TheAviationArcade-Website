@@ -12,6 +12,7 @@ import {
   decideAccess,
   isCommunityRole,
   safeAccountReturn,
+  shouldRecheckOnReturn,
   signInPath,
 } from "../lib/account.ts";
 
@@ -193,4 +194,21 @@ test("account request headers carry only a present session key", () => {
   });
   assert.deepEqual(accountHeaders(null), {});
   assert.deepEqual(accountHeaders(undefined), {});
+});
+
+test("returning to the tab re-checks the account once per window, and always after a restore", () => {
+  const now = 1_000_000;
+  assert.equal(shouldRecheckOnReturn({ now, lastConfirmed: null, checking: false }), true);
+  assert.equal(shouldRecheckOnReturn({ now, lastConfirmed: now - 59_999, checking: false }), false);
+  assert.equal(shouldRecheckOnReturn({ now, lastConfirmed: now - 60_000, checking: false }), true);
+  assert.equal(
+    shouldRecheckOnReturn({ now, lastConfirmed: now - 1_000, checking: false, restored: true }),
+    true,
+  );
+  // Focus and visibilitychange arrive together; the second finds the first still running.
+  assert.equal(shouldRecheckOnReturn({ now, lastConfirmed: null, checking: true }), false);
+  assert.equal(
+    shouldRecheckOnReturn({ now, lastConfirmed: null, checking: true, restored: true }),
+    false,
+  );
 });

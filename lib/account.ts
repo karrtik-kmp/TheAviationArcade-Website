@@ -4,6 +4,30 @@ export type AccountSnapshot = {
   sessionKey: string | null;
 };
 
+/** How long a confirmed account stays fresh before returning to the tab checks it again. */
+export const accountRecheckMs = 60_000;
+
+/**
+ * Whether coming back to the tab should re-check the account. Focus and
+ * visibility fire together, so a check already running covers both; a page
+ * restored from the back/forward cache is always checked.
+ */
+export function shouldRecheckOnReturn({
+  now,
+  lastConfirmed,
+  checking,
+  restored = false,
+}: {
+  now: number;
+  lastConfirmed: number | null;
+  checking: boolean;
+  restored?: boolean;
+}): boolean {
+  if (checking) return false;
+  if (restored || lastConfirmed === null) return true;
+  return now - lastConfirmed >= accountRecheckMs;
+}
+
 /**
  * Who a sign-in is for. Each audience has its own area. Editors sign in on
  * their own page; public sign-in retains the audience from the requested action.

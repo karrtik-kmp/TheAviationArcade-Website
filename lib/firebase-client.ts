@@ -15,6 +15,8 @@ let queue: Promise<unknown> = Promise.resolve();
 let generation = 0;
 let owner: string | null | undefined;
 let signingOut = false;
+/** The ID token this tab last put in the session cookie. The cookie lives no longer than the token. */
+let mirrored: string | null = null;
 const channel =
   typeof window !== "undefined" && typeof BroadcastChannel !== "undefined"
     ? new BroadcastChannel("airplane-games-product-auth")
@@ -96,14 +98,19 @@ export type SignInIntent = {
 async function exchange(
   user: User | null,
   intent?: SignInIntent,
+  force = false,
 ): Promise<string | null> {
+  const idToken = user ? await user.getIdToken() : null;
+  // Same token as the cookie already holds: nothing for the server to learn.
+  if (idToken && idToken === mirrored && !intent && !force) return null;
+  mirrored = null;
   const response = await fetch(
     sitePath("/api/auth/session"),
-    user
+    idToken
       ? {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idToken: await user.getIdToken(), ...intent }),
+          body: JSON.stringify({ idToken, ...intent }),
         }
       : { method: "DELETE" },
   );
@@ -115,15 +122,20 @@ async function exchange(
       body.error || "Your account session could not be updated. Please retry.",
     );
   }
+  mirrored = idToken;
   const body = (await response.json().catch(() => ({}))) as {
     destination?: string;
   };
   return typeof body.destination === "string" ? body.destination : null;
 }
-/** Mirrors the Firebase user into the session cookie. With an intent, resolves to the app path to land on. */
+/**
+ * Mirrors the Firebase user into the session cookie. With an intent, resolves to the app path to land on.
+ * Without one, an unchanged token is not sent again unless `force` is set.
+ */
 export async function syncFirebaseSession(
   user: User | null,
   intent?: SignInIntent,
+  force = false,
 ): Promise<string | null> {
   if (signingOut) return null;
   const uid = user?.uid ?? null;
@@ -136,7 +148,7 @@ export async function syncFirebaseSession(
     if (signingOut || ticket !== generation) return null;
     const auth = await getFirebaseClient();
     if ((auth?.currentUser?.uid ?? null) !== uid) return null;
-    return exchange(user, intent);
+    return exchange(user, intent, force);
   });
 }
 async function performLogout(broadcast: boolean): Promise<void> {

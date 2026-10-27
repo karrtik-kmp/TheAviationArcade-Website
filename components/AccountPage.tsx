@@ -78,8 +78,9 @@ export function AccountPage({
         <span className="eyebrow">Airplane Games · The Aviation Arcade</span>
         <h1>My account</h1>
         <p>
-          Manage your access to the photography community and editorial
-          workspace.
+          {account?.isStaff
+            ? "Manage your access to the photography community and editorial workspace."
+            : "Manage your access to the photography community and your player profile."}
         </p>
       </section>
 
@@ -136,8 +137,7 @@ export function AccountPage({
           </div>
           <h2>Sign in to continue</h2>
           <p>
-            Use your account to view your submissions and, if you’re on the
-            editorial team, open the editor workspace.
+            Use your account to view your photo submissions and player profile.
           </p>
           <SiteLink
             className="btn"

@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Sun, Moon, List, X, ArrowUpRight } from "@phosphor-icons/react";
 import { AccountControl } from "@/components/AccountControl";
+import { useAccountSession } from "@/components/AccountSession";
 import "@/components/account.css";
 import { sitePath } from "@/lib/paths";
 export function Brand() {
@@ -48,7 +49,8 @@ const nav = [
 ];
 export function PublicShell({ children }: { children: React.ReactNode }) {
   const current = usePathname(),
-    [open, setOpen] = useState(false);
+    [open, setOpen] = useState(false),
+    { account } = useAccountSession();
   useEffect(() => setOpen(false), [current]);
   useEffect(() => {
     if (!open) return;
@@ -119,7 +121,8 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
               <Link href="/how-to-play">Ranks and community</Link>
               <Link href="/contribute">Share a photo</Link>
               <Link href="/about">About</Link>
-              <Link href="/admin">Editor workspace</Link>
+              {/* Only the server's staff check shows the way in; /admin guards itself regardless. */}
+              {account?.isStaff && <Link href="/admin">Editor workspace</Link>}
             </nav>
           </div>
           <div className="footer-bottom">
