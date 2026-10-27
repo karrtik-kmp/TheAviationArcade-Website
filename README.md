@@ -184,6 +184,12 @@ loopback services, creates/deletes a throwaway emulator user, checks both
 sign-in pages, safe returns, recovery, permissions, themes, assets and logout, and saves evidence in
 `docs/evidence/role-auth/`. Google consent is not exercised by this suite.
 
+With an unprefixed `npm run demo:preview` (port 5186) and the seeded Auth Emulator,
+`node scripts/session-return-qa.mjs` checks tab-return behaviour and
+`node scripts/military-qa.mjs` checks the Military readiness desk. The military suite
+resets and rewrites the F-16/F-15 packages in the local D1 only, and saves screenshots to
+the ignored `outputs/military-qa/`.
+
 The Firebase harness is restricted to loopback/demo services. Browser suites create local fixture
 records; they are not cloud tests. Results and screenshots are saved under `docs/evidence`.
 The unit suite passes 43 account-path, JWT-validation, private-storage, submission, editorial

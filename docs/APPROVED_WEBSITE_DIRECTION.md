@@ -108,7 +108,8 @@ Military stays Coming Soon until all 30 packages and the playable integration pa
 - Shared app/web identity, authoritative Callsign linkage and app-return handoff.
 - Explicit provider linking and private support recovery workflow.
 - Community topics, reactions, comments, first-comment approval, reports and admin moderation.
-- Military-specific editing, content schema, readiness reports and delivery to the game.
+- Military delivery to the game, batch release, sample Trip previews and release restore. The per-aircraft
+  stage tracker, package fields and readiness report exist as the admin Military readiness desk (2026-10-27).
 - Gameplay selection by unique aircraft family rather than only photo ID, plus card/session mapping.
 - Final photography permission checks before a public launch.
 

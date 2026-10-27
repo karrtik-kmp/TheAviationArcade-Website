@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-27",
+  "source": "working tree on top of 6073e8d",
+  "environment": "npm run demo:preview (port 5186, local D1) + Firebase Auth Emulator, project demo-airplane-games",
+  "script": "scripts/military-qa.mjs",
+  "results": [
+    "PASS roster shows 30 aircraft grouped by the five ranks with coverage",
+    "PASS advancing is blocked until the stage's evidence is recorded",
+    "PASS a package moves through every stage to approval and locks",
+    "PASS server rejects skipped stages, stale versions, unknown aircraft and edits to approved packages",
+    "PASS military packages stay out of the Identifier/POTD desks and are audited",
+    "PASS stepping back unlocks an approved package",
+    "PASS phone width: no horizontal overflow, editor replaces the roster",
+    "PASS anonymous and non-staff accounts are refused"
+  ],
+  "pageErrors": 0,
+  "notes": [
+    "An earlier run reported 32px overflow at 320px; it was measured before layout settled after a resize and theme switch. With a 300ms settle the check passed on two consecutive runs, and a standalone probe at 320px measured no overflow.",
+    "Source checks: TypeScript, 53/53 unit tests, focused ESLint (no findings), production build.",
+    "Not tested: hosted Cloudflare D1, live Google sign-in. No deployment was made."
+  ]
+}

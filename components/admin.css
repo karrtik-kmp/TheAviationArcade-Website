@@ -1103,3 +1103,106 @@
 .admin-gate-card > p:not(.eyebrow) {
   line-height: 1.7;
 }
+/* Military readiness */
+.military-report {
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.military-report > .admin-panel-header {
+  padding: 16px;
+}
+.admin-table.military-table {
+  min-width: 720px;
+}
+.military-table th[scope="row"] {
+  white-space: nowrap;
+  text-align: left;
+}
+.military-table th[scope="row"] small {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted, #68757b);
+  font-size: 9px;
+  font-weight: 400;
+}
+.military-table td {
+  font-variant-numeric: tabular-nums;
+}
+.admin-record-list.military-roster .admin-record {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.military-roster .admin-record > span:first-child {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+.military-rank-head {
+  padding: 10px 14px 6px;
+  border-bottom: 1px solid var(--line, #e4dfd6);
+  color: var(--brass);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+.military-stepper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.military-stepper li {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 9px;
+  border: 1px solid var(--line, #e4dfd6);
+  border-radius: 99px;
+  color: var(--muted, #68757b);
+  font-size: 10px;
+}
+.military-stepper li.done {
+  color: var(--success);
+}
+.military-stepper li.current {
+  border-color: var(--brass);
+  color: var(--ink, #14242c);
+  font-weight: 600;
+}
+.admin-app .military-legend {
+  margin: 8px 0 0;
+  font-size: 17px;
+}
+.military-checklist {
+  display: grid;
+  gap: 2px;
+}
+.military-checklist .fui-Checkbox__label {
+  font-size: 11px;
+}
+.military-missing {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line, #e4dfd6);
+  border-radius: 9px;
+  background: var(--raised, #f2eee7);
+  font-size: 11px;
+}
+.military-missing svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--brass);
+}
+.military-missing ul {
+  margin: 6px 0 0;
+  padding-left: 16px;
+  line-height: 1.6;
+}
+@media (max-width: 1199px) {
+  .military-roster.mobile-hidden {
+    display: none;
+  }
+}

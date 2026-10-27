@@ -1,0 +1,490 @@
+"use client";
+
+import {
+  Button,
+  Checkbox,
+  Input,
+  MessageBar,
+  MessageBarBody,
+  Textarea,
+} from "@fluentui/react-components";
+import { ArrowLeft, CheckCircle, Target } from "@phosphor-icons/react";
+import { useMemo, useState } from "react";
+import {
+  checklistNames,
+  emptyPackageData,
+  militaryRanks,
+  militaryRoster,
+  militaryStages,
+  readiness,
+  stageErrors,
+  stageNames,
+  TRIP_SIZE,
+  type MilitaryAircraft,
+  type MilitaryPackage,
+  type MilitaryPackageData,
+  type MilitaryStage,
+} from "@/lib/military";
+import type { Submission } from "@/lib/types";
+
+const badge: Record<MilitaryStage, string> = {
+  missing_photo: "",
+  rights_checked: "status-changes-requested",
+  content_prepared: "status-pending",
+  previewed: "status-pending",
+  approved: "status-approved",
+};
+export function StageBadge({ stage }: { stage: MilitaryStage }) {
+  return <span className={`status-badge ${badge[stage]}`}>{stageNames[stage]}</span>;
+}
+
+/** The 30-aircraft Military launch roster: preparation stages, per-rank coverage and Trip readiness. */
+export function MilitaryWorkspace({
+  packages,
+  submissions,
+  busy,
+  onSave,
+}: {
+  packages: MilitaryPackage[];
+  submissions: Submission[];
+  busy: boolean;
+  onSave: (
+    aircraft: MilitaryAircraft,
+    stage: MilitaryStage,
+    data: MilitaryPackageData,
+    version: number,
+  ) => Promise<MilitaryPackage | null>;
+}) {
+  const byId = useMemo(
+    () => new Map(packages.map((p) => [p.aircraftId, p])),
+    [packages],
+  );
+  const report = useMemo(() => readiness(packages), [packages]);
+  const [filter, setFilter] = useState<"all" | MilitaryStage>("all");
+  const [openId, setOpenId] = useState("");
+  const [draft, setDraft] = useState<MilitaryPackageData | null>(null);
+  const [baseVersion, setBaseVersion] = useState(0);
+  // Only real contributions approved for game use can supply a photograph.
+  const usable = submissions.filter(
+    (s) =>
+      s.status === "approved" &&
+      s.data.channels.includes("games") &&
+      !s.id.startsWith("demo-"),
+  );
+  const open = militaryRoster.find((a) => a.id === openId) ?? null;
+  const saved = open ? byId.get(open.id) : undefined;
+  const stage: MilitaryStage = saved?.stage ?? "missing_photo";
+  function choose(aircraft: MilitaryAircraft) {
+    const existing = byId.get(aircraft.id);
+    setOpenId(aircraft.id);
+    setBaseVersion(existing?.version ?? 0);
+    setDraft(
+      existing
+        ? {
+            ...existing.data,
+            aliases: [...existing.data.aliases],
+            distractors: [...existing.data.distractors],
+            checklist: { ...existing.data.checklist },
+          }
+        : emptyPackageData(aircraft),
+    );
+  }
+  async function save(next: MilitaryStage) {
+    if (!open || !draft) return;
+    const updated = await onSave(open, next, draft, baseVersion);
+    if (updated) setBaseVersion(updated.version);
+  }
+  const set = <K extends keyof MilitaryPackageData>(key: K, value: MilitaryPackageData[K]) =>
+    draft && setDraft({ ...draft, [key]: value });
+  const at = militaryStages.indexOf(stage);
+  const next = militaryStages[at + 1] as MilitaryStage | undefined;
+  const missing = next && draft ? stageErrors(next, draft) : [];
+  const locked = stage === "approved";
+
+  return (
+    <>
+      <div className="admin-heading">
+        <div>
+          <p className="eyebrow">LAUNCH PREPARATION</p>
+          <h1>Military readiness</h1>
+          <p>
+            Prepare the 30 approved aircraft for Military Aircraft Identifier.
+            Approval records an editorial decision; nothing is published and the
+            game stays Coming Soon until all 30 packages and the playable
+            integration pass their checks.
+          </p>
+        </div>
+        <span className="admin-total">
+          {report.approved} / {report.total} approved
+        </span>
+      </div>
+
+      <section className="admin-panel military-report">
+        <div className="admin-panel-header">
+          <div>
+            <h2>Rank coverage</h2>
+            <p>
+              Higher ranks include earlier aircraft. A Trip needs {TRIP_SIZE}{" "}
+              different approved aircraft types.
+            </p>
+          </div>
+        </div>
+        <div className="admin-table-scroll">
+          <table className="admin-table military-table">
+            <thead>
+              <tr>
+                <th scope="col">Rank</th>
+                {militaryStages.map((s) => (
+                  <th scope="col" key={s}>
+                    {stageNames[s]}
+                  </th>
+                ))}
+                <th scope="col">Eligible approved</th>
+                <th scope="col">Trip</th>
+              </tr>
+            </thead>
+            <tbody>
+              {report.ranks.map((r) => (
+                <tr key={r.rank}>
+                  <th scope="row">
+                    {r.rank} <small>{r.slots} new</small>
+                  </th>
+                  {militaryStages.map((s) => (
+                    <td key={s}>{r.stages[s]}</td>
+                  ))}
+                  <td>
+                    {r.eligibleApproved} / {r.eligibleTotal}
+                  </td>
+                  <td>
+                    {r.tripReady ? (
+                      <span className="status-badge status-approved">Ready</span>
+                    ) : (
+                      <span className="status-badge">
+                        {TRIP_SIZE - r.eligibleApproved} short
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <div className="admin-toolbar content-toolbar">
+        <select
+          aria-label="Filter by stage"
+          value={filter}
+          onChange={(event) => setFilter(event.target.value as typeof filter)}
+        >
+          <option value="all">All stages</option>
+          {militaryStages.map((s) => (
+            <option key={s} value={s}>
+              {stageNames[s]}
+            </option>
+          ))}
+        </select>
+        <span>Replacing an aircraft needs client approval and keeps its rank slot.</span>
+      </div>
+
+      <div className="admin-split content-split">
+        <section
+          className={`admin-panel admin-record-list military-roster ${open ? "mobile-hidden" : ""}`}
+        >
+          {militaryRanks.map(({ rank }) => {
+            const rows = militaryRoster.filter(
+              (a) =>
+                a.rank === rank &&
+                (filter === "all" ||
+                  (byId.get(a.id)?.stage ?? "missing_photo") === filter),
+            );
+            if (!rows.length) return null;
+            return (
+              <div key={rank} role="group" aria-label={rank}>
+                <div className="military-rank-head">{rank}</div>
+                {rows.map((aircraft) => (
+                  <button
+                    key={aircraft.id}
+                    className={`admin-record ${aircraft.id === openId ? "selected" : ""}`}
+                    aria-current={aircraft.id === openId ? "true" : undefined}
+                    onClick={() => choose(aircraft)}
+                  >
+                    <span>
+                      <b>{aircraft.name}</b>
+                      <small>
+                        {byId.get(aircraft.id)
+                          ? `Version ${byId.get(aircraft.id)!.version}`
+                          : "Not started"}
+                      </small>
+                    </span>
+                    <StageBadge
+                      stage={byId.get(aircraft.id)?.stage ?? "missing_photo"}
+                    />
+                  </button>
+                ))}
+              </div>
+            );
+          })}
+        </section>
+
+        {open && draft ? (
+          <section className="admin-panel content-editor">
+            <div className="content-editor-head">
+              <div>
+                <button className="admin-back" onClick={() => setOpenId("")}>
+                  <ArrowLeft size={16} /> Close package
+                </button>
+                <p className="eyebrow">{open.rank.toUpperCase()} SLOT</p>
+                <h2>{open.name}</h2>
+                <StageBadge stage={stage} />
+              </div>
+              <span className="editor-version">
+                {saved ? `Version ${saved.version}` : "Not saved"}
+              </span>
+            </div>
+            <ol className="military-stepper" aria-label="Preparation stages">
+              {militaryStages.map((s, i) => (
+                <li
+                  key={s}
+                  className={i < at ? "done" : i === at ? "current" : ""}
+                  aria-current={i === at ? "step" : undefined}
+                >
+                  {i <= at && <CheckCircle size={14} weight="fill" />}
+                  {stageNames[s]}
+                </li>
+              ))}
+            </ol>
+            {locked && (
+              <MessageBar intent="success" layout="multiline">
+                <MessageBarBody>
+                  Approved. Step back to Previewed to change this package.
+                  Approval does not publish or release it to the game.
+                </MessageBarBody>
+              </MessageBar>
+            )}
+
+            <fieldset className="form-grid admin-fieldset" disabled={locked || busy}>
+              <h3 className="military-legend full">Photograph and rights</h3>
+              <label className="admin-field">
+                <span>Photograph source</span>
+                <select
+                  value={draft.photoSource}
+                  onChange={(event) =>
+                    set(
+                      "photoSource",
+                      event.target.value as MilitaryPackageData["photoSource"],
+                    )
+                  }
+                >
+                  <option value="">Not chosen</option>
+                  <option value="submission">Approved contribution</option>
+                  <option value="licensed">Separately licensed</option>
+                </select>
+              </label>
+              {draft.photoSource === "submission" ? (
+                <label className="admin-field">
+                  <span>Approved contribution</span>
+                  <select
+                    value={draft.submissionId}
+                    onChange={(event) => set("submissionId", event.target.value)}
+                  >
+                    <option value="">Choose a submission</option>
+                    {usable.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.data.title} · {s.data.aircraft || "Unidentified"}
+                      </option>
+                    ))}
+                    {draft.submissionId &&
+                      !usable.some((s) => s.id === draft.submissionId) && (
+                        <option value={draft.submissionId}>
+                          No longer approved for game use
+                        </option>
+                      )}
+                  </select>
+                  {!usable.length && (
+                    <small>No contributions are approved for game use yet.</small>
+                  )}
+                </label>
+              ) : draft.photoSource === "licensed" ? (
+                <Field
+                  label="License or source (https://)"
+                  value={draft.licenseUrl}
+                  onChange={(v) => set("licenseUrl", v)}
+                max={600}
+                />
+              ) : (
+                <span />
+              )}
+              <Field
+                label="Attribution"
+                value={draft.attribution}
+                onChange={(v) => set("attribution", v)}
+              />
+              <label className="admin-field full">
+                <span>Permission or license terms</span>
+                <Textarea
+                  rows={2}
+                  value={draft.permission}
+                  onChange={(_, item) => set("permission", item.value)}
+                />
+              </label>
+
+              <h3 className="military-legend full">Question content</h3>
+              <Field
+                label="Identity reference (https://)"
+                value={draft.referenceUrl}
+                onChange={(v) => set("referenceUrl", v)}
+                max={600}
+                full
+              />
+              <Field
+                label="Displayed answer"
+                value={draft.answer}
+                onChange={(v) => set("answer", v)}
+              />
+              <Field
+                label="Accepted aliases (comma separated)"
+                value={draft.aliases.join(",")}
+                onChange={(v) => set("aliases", v.split(","))}
+                max={600}
+              />
+              <div className="admin-field full">
+                <span>Wrong answers</span>
+                <p className="field-hint">
+                  Use the aircraft family, not a variant designation, and avoid
+                  answers that are also correct.
+                </p>
+                <div className="form-grid answer-grid">
+                  {draft.distractors.map((option, index) => (
+                    <Field
+                      key={index}
+                      label={`Wrong answer ${index + 1}`}
+                      value={option}
+                      onChange={(v) => {
+                        const distractors = [...draft.distractors];
+                        distractors[index] = v;
+                        set("distractors", distractors);
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+              <Field
+                label="Hint"
+                value={draft.hint}
+                onChange={(v) => set("hint", v)}
+                max={600}
+                full
+              />
+              <label className="admin-field full">
+                <span>Reveal explanation</span>
+                <Textarea
+                  rows={3}
+                  value={draft.reveal}
+                  onChange={(_, item) => set("reveal", item.value)}
+                />
+              </label>
+
+              <h3 className="military-legend full">Preview checklist</h3>
+              <div className="full military-checklist">
+                {checklistNames.map(({ key, label }) => (
+                  <Checkbox
+                    key={key}
+                    label={label}
+                    checked={draft.checklist[key]}
+                    onChange={(_, item) =>
+                      set("checklist", {
+                        ...draft.checklist,
+                        [key]: item.checked === true,
+                      })
+                    }
+                  />
+                ))}
+              </div>
+              <label className="admin-field full">
+                <span>Editorial notes</span>
+                <Textarea
+                  rows={2}
+                  value={draft.notes}
+                  onChange={(_, item) => set("notes", item.value)}
+                />
+              </label>
+            </fieldset>
+
+            {next && missing.length > 0 && (
+              <div className="military-missing" role="status">
+                <Target size={16} />
+                <div>
+                  <b>Before {stageNames[next]}</b>
+                  <ul>
+                    {missing.map((m) => (
+                      <li key={m}>{m}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            <div className="admin-actions editor-actions">
+              {!locked && (
+                <Button disabled={busy} onClick={() => void save(stage)}>
+                  {busy ? "Saving…" : "Save"}
+                </Button>
+              )}
+              {next && (
+                <Button
+                  appearance="primary"
+                  disabled={busy || missing.length > 0}
+                  onClick={() => void save(next)}
+                >
+                  {next === "approved" ? "Approve package" : `Mark ${stageNames[next]}`}
+                </Button>
+              )}
+              {at > 0 && (
+                <Button
+                  appearance="subtle"
+                  disabled={busy}
+                  onClick={() => void save(militaryStages[at - 1])}
+                >
+                  Step back to {stageNames[militaryStages[at - 1]]}
+                </Button>
+              )}
+            </div>
+            <p className="admin-demo-note">
+              Each save is versioned and recorded in Activity. Batch release,
+              sample Trip previews and delivery to the game are not built yet.
+            </p>
+          </section>
+        ) : (
+          <section className="admin-panel detail-placeholder">
+            <Target size={28} />
+            <b>Select an aircraft</b>
+            <p>Open a roster slot to prepare its photograph and question.</p>
+          </section>
+        )}
+      </div>
+    </>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  full = false,
+  max = 160,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  full?: boolean;
+  /** Matches the server limit for this field. */
+  max?: number;
+}) {
+  return (
+    <label className={`admin-field ${full ? "full" : ""}`}>
+      <span>{label}</span>
+      <Input value={value} maxLength={max} onChange={(_, data) => onChange(data.value)} />
+    </label>
+  );
+}

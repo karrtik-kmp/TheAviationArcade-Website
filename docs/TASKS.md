@@ -44,6 +44,7 @@ These are implementation requirements, not a claim that those features have ship
 | Production staff capabilities/MFA                | Open                             | Binary verified-email allowlist is not the complete capability matrix                                           |
 | Public-launch media and privacy hardening        | Open                             | Full decode/re-encode, abuse controls, approved rights and retention/deletion workflow                          |
 | Mobile loading optimization                      | Follow-up                        | Historical pre-Firebase Lighthouse: performance 82, accessibility 100, best practices 100, LCP 4.1s             |
+| Military readiness desk                          | Implemented and locally verified | 30-aircraft roster, five stages, rank/Trip coverage; batch release, Trip preview and game delivery still open   |
 
 ## Verification contract
 
@@ -342,3 +343,37 @@ sees no editorial link or wording. The same script fails 4 of 6 on the previous 
 check: the running preview denies the demo account on the previous code too (stale demo account
 reference after an emulator restart), so it is environmental. `test:auth` was not run: it requires
 port 5173, which was serving the cloud project. No live Google login or cloud behavior was tested.
+
+## Military readiness desk (2026-10-27)
+
+Staff now have **Military readiness** in `/admin`: the approved 30-aircraft roster in its
+14/6/4/3/3 rank slots, each tracked through Missing photo → Rights checked → Content prepared
+→ Previewed → Approved. A rank-coverage table counts each stage, inherits earlier ranks
+and shows whether ten different approved aircraft exist for a Trip. Packages advance one
+stage at a time and may step back; each stage needs its own evidence (photo source and
+permission/attribution; https identity reference, answer, aliases, three distinct wrong answers
+that never match an alias, hint, reveal; mobile crop; full preview checklist). An approved package
+is locked until stepped back. Approval records a decision only: nothing is published, and
+Military stays Coming Soon.
+
+Packages are `editorial_records` rows with `kind='military'`, so **no schema migration** is
+needed; the existing content list now selects only `identifier`/`potd`. Writes use the
+existing base-version check and batched audit row (`military_<stage>`), require `staff()` and
+same origin, and accept a contributed photograph only if it is a real submission approved for
+game use (guarded again inside the write). The roster is code (`lib/military.ts`): replacing an
+aircraft needs client approval and keeps its rank slot. The demo account does not see the desk.
+
+⚠️ "Military Clipper Card mapping" is required by the brief but is not defined in the design docs
+or the Unity project. It is a checklist confirmation only until its format is supplied.
+
+Verification: TypeScript, 53 unit tests (7 new in `tests/military.test.mjs`), focused ESLint and
+the production build pass. `scripts/military-qa.mjs` passes 8/8 Chrome checks on the
+emulator-backed demo preview (port 5186) with zero page errors; one earlier run's 320px overflow
+was a measurement before layout settled, and it passed on two later runs. Evidence:
+[results](evidence/military-readiness/qa.json), [desktop](evidence/military-readiness/military-desktop-light.png),
+[390 dark](evidence/military-readiness/military-dark-390.png), [320 roster](evidence/military-readiness/military-roster-320.png).
+Hosted D1 and live sign-in were not tested; nothing was deployed.
+
+Still open for Military: explicit batch release with asset validation, sample Trip previews and
+restore of the previous release; selecting Trips by unique aircraft family in the game; delivery
+to the game; final photograph permission checks.

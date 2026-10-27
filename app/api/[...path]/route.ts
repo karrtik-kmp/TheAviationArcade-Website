@@ -21,6 +21,14 @@ import {
   localDay,
   validDate,
 } from "@/lib/rules";
+import {
+  militaryRoster,
+  militaryStages,
+  parsePackageData,
+  transitionError,
+  type MilitaryPackage,
+  type MilitaryStage,
+} from "@/lib/military";
 import type {
   EditorialData,
   EditorialRecord,
@@ -578,6 +586,122 @@ async function saveContent(request: Request, id: string) {
   });
 }
 
+function militaryPackage(row: Row): MilitaryPackage {
+  return {
+    aircraftId: String(row.id).replace(/^military-/, ""),
+    stage: row.status as MilitaryStage,
+    data: JSON.parse(String(row.payload)),
+    version: Number(row.version),
+    updatedAt: String(row.updated_at),
+  };
+}
+
+/** Saves one roster aircraft's package. Version 0 creates it. Approval records a decision; it never publishes. */
+async function saveMilitary(request: Request, aircraftId: string) {
+  sameOrigin(request);
+  const user = await staff();
+  const aircraft = militaryRoster.find((a) => a.id === aircraftId);
+  if (!aircraft) throw new HttpError(404, "This aircraft is not on the approved roster.");
+  const body = await bodyJson(request);
+  const data = parsePackageData(body.data);
+  if (!data) throw new HttpError(422, "Check the package fields.");
+  if (!militaryStages.includes(body.stage))
+    throw new HttpError(422, "Unknown preparation stage.");
+  const id = `military-${aircraft.id}`;
+  const row = await database()
+    .prepare("SELECT * FROM editorial_records WHERE id=? AND kind='military'")
+    .bind(id)
+    .first<Row>();
+  if (body.version !== (row ? Number(row.version) : 0))
+    throw new HttpError(
+      409,
+      "Another editor changed this package. Refresh to see their changes.",
+    );
+  const from = (row?.status ?? "missing_photo") as MilitaryStage,
+    to = body.stage as MilitaryStage,
+    payload = JSON.stringify(data);
+  if (from === "approved" && to === "approved" && row?.payload !== payload)
+    throw new HttpError(
+      422,
+      "Step an approved package back to Previewed before changing it.",
+    );
+  const error = transitionError(from, to, data);
+  if (error) throw new HttpError(422, error);
+  // A contributed photograph must stay approved for game use; demo proposals carry no rights.
+  let source: Row | null = null;
+  if (data.photoSource === "submission" && data.submissionId) {
+    source = await findSubmission(data.submissionId);
+    const sd: SubmissionData = JSON.parse(String(source.payload));
+    if (
+      militaryStages.indexOf(to) >= 1 &&
+      (source.status !== "approved" ||
+        !sd.channels.includes("games") ||
+        String(source.digest).startsWith("demo:"))
+    )
+      throw new HttpError(
+        422,
+        "The linked submission must be a real contribution approved for game use.",
+      );
+  }
+  const mutation = crypto.randomUUID(),
+    now = new Date().toISOString(),
+    guard = source && militaryStages.indexOf(to) >= 1 ? source : null;
+  const write = row
+    ? database()
+        .prepare(
+          "UPDATE editorial_records SET source_id=?,payload=?,status=?,version=version+1,last_mutation=?,updated_at=? WHERE id=? AND kind='military' AND version=? AND (? IS NULL OR EXISTS (SELECT 1 FROM submissions WHERE id=? AND status='approved' AND version=?))",
+        )
+        .bind(
+          source?.id ?? null,
+          payload,
+          to,
+          mutation,
+          now,
+          id,
+          body.version,
+          guard?.id ?? null,
+          guard?.id ?? null,
+          guard?.version ?? 0,
+        )
+    : database()
+        .prepare(
+          "INSERT INTO editorial_records (id,kind,source_id,payload,status,date_key,version,last_mutation,updated_at) SELECT ?,'military',?,?,?,NULL,1,?,? WHERE NOT EXISTS (SELECT 1 FROM editorial_records WHERE id=?) AND (? IS NULL OR EXISTS (SELECT 1 FROM submissions WHERE id=? AND status='approved' AND version=?))",
+        )
+        .bind(
+          id,
+          source?.id ?? null,
+          payload,
+          to,
+          mutation,
+          now,
+          id,
+          guard?.id ?? null,
+          guard?.id ?? null,
+          guard?.version ?? 0,
+        );
+  const results = await database().batch([
+    write,
+    auditFor("editorial_records", user.userId, id, mutation, `military_${to}`, {
+      aircraft: aircraft.name,
+      from,
+      version: Number(body.version) + 1,
+    }),
+  ]);
+  if (!results[0].meta.changes)
+    throw new HttpError(
+      409,
+      "This package or its photograph changed. Refresh before saving.",
+    );
+  return respond({
+    package: militaryPackage(
+      (await database()
+        .prepare("SELECT * FROM editorial_records WHERE id=?")
+        .bind(id)
+        .first<Row>())!,
+    ),
+  });
+}
+
 async function featured(request: Request, photoId?: string) {
   const zone = new URL(request.url).searchParams.get("timeZone") ?? "UTC";
   let day;
@@ -783,11 +907,19 @@ async function handle(request: Request, context: Context) {
       if (route === "admin/content" && method === "GET") {
         const rows = await database()
           .prepare(
-            "SELECT * FROM editorial_records ORDER BY updated_at DESC LIMIT 200",
+            "SELECT * FROM editorial_records WHERE kind IN ('identifier','potd') ORDER BY updated_at DESC LIMIT 200",
           )
           .all<Row>();
         return respond({ records: rows.results.map(editorial) });
       }
+      if (route === "admin/military" && method === "GET") {
+        const rows = await database()
+          .prepare("SELECT * FROM editorial_records WHERE kind='military'")
+          .all<Row>();
+        return respond({ packages: rows.results.map(militaryPackage) });
+      }
+      if (path[1] === "military" && path.length === 3 && method === "PUT")
+        return await saveMilitary(request, path[2]);
       if (route === "admin/content" && method === "POST")
         return await createContent(request);
       if (path[1] === "content" && path.length === 3 && method === "PUT")

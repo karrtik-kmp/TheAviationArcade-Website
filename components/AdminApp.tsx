@@ -13,6 +13,7 @@ import {
 } from "@fluentui/react-components";
 import {
   AirplaneInFlight,
+  AirplaneTilt,
   ArrowClockwise,
   ArrowLeft,
   CheckCircle,
@@ -30,6 +31,7 @@ import { AccountControl } from "@/components/AccountControl";
 import { useAccountSession } from "@/components/AccountSession";
 import { Brand, ThemeToggle } from "@/components/PublicShell";
 import { AccountActions } from "@/components/AccessGate";
+import { MilitaryWorkspace } from "@/components/MilitaryWorkspace";
 import "@/components/admin.css";
 import {
   accountHeaders,
@@ -49,6 +51,12 @@ import {
   reviewError,
 } from "@/lib/rules";
 import { sampleEditorialRecords } from "@/lib/demo-samples";
+import type {
+  MilitaryAircraft,
+  MilitaryPackage,
+  MilitaryPackageData,
+  MilitaryStage,
+} from "@/lib/military";
 import { sitePath } from "@/lib/paths";
 
 type AdminUser = { sessionKey: string };
@@ -57,6 +65,7 @@ type Section =
   | "Submissions"
   | "Aircraft Identifier"
   | "Plane of the Day"
+  | "Military readiness"
   | "Activity";
 type AuditEvent = {
   entity_id: string;
@@ -72,6 +81,7 @@ const navItems: { label: Section; icon: typeof SquaresFour }[] = [
   { label: "Submissions", icon: ClipboardText },
   { label: "Aircraft Identifier", icon: AirplaneInFlight },
   { label: "Plane of the Day", icon: ImageSquare },
+  { label: "Military readiness", icon: AirplaneTilt },
   { label: "Activity", icon: ClockCounterClockwise },
 ];
 const checkNames: { key: keyof ReviewChecks; label: string }[] = [
@@ -157,6 +167,7 @@ export function AdminApp({
   const [section, setSection] = useState<Section>("Overview");
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [records, setRecords] = useState<EditorialRecord[]>([]);
+  const [packages, setPackages] = useState<MilitaryPackage[]>([]);
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [loadError, setLoadError] = useState("");
@@ -183,6 +194,7 @@ export function AdminApp({
     generation.current += 1;
     setSubmissions([]);
     setRecords([]);
+    setPackages([]);
     setEvents([]);
     setSelectedId("");
     setRecordId("");
@@ -227,13 +239,14 @@ export function AdminApp({
     setLoadError("");
     try {
       const headers = accountHeaders(user.sessionKey);
-      const [s, c, a] = await Promise.all([
+      const [s, c, a, m] = await Promise.all([
         fetch(sitePath("/api/admin/submissions"), { cache: "no-store", headers }),
         fetch(sitePath("/api/admin/content"), { cache: "no-store", headers }),
         fetch(sitePath("/api/admin/audit"), { cache: "no-store", headers }),
+        fetch(sitePath("/api/admin/military"), { cache: "no-store", headers }),
       ]);
       const results = await Promise.all(
-        [s, c, a].map(async (response) => ({
+        [s, c, a, m].map(async (response) => ({
           response,
           body: await response.json().catch(() => ({})),
         })),
@@ -256,7 +269,7 @@ export function AdminApp({
       }
       if (requestGeneration !== generation.current || !currentAccessRef.current)
         return;
-      const [submissionBody, contentBody, auditBody] = results.map(
+      const [submissionBody, contentBody, auditBody, militaryBody] = results.map(
         ({ body }) => body as Record<string, unknown>,
       );
       setSubmissions(
@@ -267,6 +280,11 @@ export function AdminApp({
       setRecords(
         Array.isArray(contentBody.records)
           ? (contentBody.records as EditorialRecord[])
+          : [],
+      );
+      setPackages(
+        Array.isArray(militaryBody.packages)
+          ? (militaryBody.packages as MilitaryPackage[])
           : [],
       );
       setEvents(
@@ -586,6 +604,41 @@ export function AdminApp({
     }
   }
 
+  async function saveMilitary(
+    aircraft: MilitaryAircraft,
+    stage: MilitaryStage,
+    data: MilitaryPackageData,
+    version: number,
+  ): Promise<MilitaryPackage | null> {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const body = await requestJson(
+        `/api/admin/military/${aircraft.id}`,
+        "PUT",
+        { stage, data, version },
+      );
+      const updated = body.package as MilitaryPackage;
+      setPackages((previous) => [
+        ...previous.filter((item) => item.aircraftId !== updated.aircraftId),
+        updated,
+      ]);
+      setNotice({
+        kind: "success",
+        text:
+          stage === "approved"
+            ? `${aircraft.name} approved. Nothing was published; Military stays Coming Soon.`
+            : `${aircraft.name} saved as ${stage.replaceAll("_", " ")}.`,
+      });
+      return updated;
+    } catch (error) {
+      handleMutationError(error, true);
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const contentKind = section === "Aircraft Identifier" ? "identifier" : "potd";
   const contentRecords = records.filter(
     (record) =>
@@ -688,7 +741,9 @@ export function AdminApp({
               {(readOnly
                 ? navItems.filter(
                     ({ label }) =>
-                      label !== "Submissions" && label !== "Activity",
+                      label !== "Submissions" &&
+                      label !== "Military readiness" &&
+                      label !== "Activity",
                   )
                 : navItems
               ).map(({ label, icon: Icon }) => (
@@ -831,6 +886,14 @@ export function AdminApp({
                       showArchived={showArchived}
                       setShowArchived={setShowArchived}
                       readOnly={readOnly}
+                    />
+                  )}
+                  {section === "Military readiness" && !readOnly && (
+                    <MilitaryWorkspace
+                      packages={packages}
+                      submissions={submissions}
+                      busy={busy}
+                      onSave={saveMilitary}
                     />
                   )}
                   {section === "Activity" && <Activity events={events} />}
