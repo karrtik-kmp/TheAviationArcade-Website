@@ -44,7 +44,7 @@ These are implementation requirements, not a claim that those features have ship
 | Production staff capabilities/MFA                | Open                             | Binary verified-email allowlist is not the complete capability matrix                                           |
 | Public-launch media and privacy hardening        | Open                             | Full decode/re-encode, abuse controls, approved rights and retention/deletion workflow                          |
 | Mobile loading optimization                      | Follow-up                        | Historical pre-Firebase Lighthouse: performance 82, accessibility 100, best practices 100, LCP 4.1s             |
-| Military readiness desk                          | Implemented and locally verified | 30-aircraft roster, five stages, rank/Trip coverage; batch release, Trip preview and game delivery still open   |
+| Military readiness desk and batch release        | Implemented and locally verified | Roster, stages, coverage, release checks, sample Trips, release/restore; game delivery and Clipper Card open    |
 
 ## Verification contract
 
@@ -374,6 +374,40 @@ was a measurement before layout settled, and it passed on two later runs. Eviden
 [390 dark](evidence/military-readiness/military-dark-390.png), [320 roster](evidence/military-readiness/military-roster-320.png).
 Hosted D1 and live sign-in were not tested; nothing was deployed.
 
-Still open for Military: explicit batch release with asset validation, sample Trip previews and
-restore of the previous release; selecting Trips by unique aircraft family in the game; delivery
-to the game; final photograph permission checks.
+## Military batch release (2026-10-27)
+
+The Military desk now ends in **Batch release**. A release is refused unless every roster slot
+is approved (rank coverage), every rank can form a Trip of ten different aircraft, and every
+aircraft has a stored photograph that is a real contribution still approved for game use and
+not reused for another aircraft (asset validation, checked by file digest on the server).
+Licensed photographs must therefore be added through Contribute and approved so the file is
+stored; a license link alone does not pass.
+
+Staff open **sample Trips**: one per rank, ten different approved aircraft (the rank's own new
+aircraft first, then earlier ranks), each showing the photograph, the four shuffled options and the hint.
+They can be reshuffled. This is a read-only staff preview, not a playable quiz. Releasing requires
+confirming the previews, and the server refuses a release whose package versions differ from the
+previewed ones (`basis`), a stale release pointer, or a batch identical to the current release.
+
+Each release is an immutable `editorial_records` row (`kind='military_release'`) snapshotting
+all 30 packages with their versions and photo digests. A pointer row (`kind='military_pointer'`)
+names the current release and the earlier ones; **Restore release N** makes the previous release
+current again without deleting the replaced one. Both writes are versioned, guarded in SQL
+against package or photograph changes since the checks, and audited (`military_released`,
+`military_release_restored`). No schema migration. A release is a record only: nothing is
+delivered to the game or published, and Military stays Coming Soon.
+
+Verification: TypeScript, 56 unit tests (3 new), production build. `scripts/military-release-qa.mjs`
+passes 7/7 Chrome checks on the emulator-backed demo preview, twice in a row and in either order with
+`military-qa.mjs` (8/8, now compared against stored state instead of an empty database), with zero
+page errors. Focused ESLint reports no new findings; the existing `AdminApp` effect lint error predates
+this change. Evidence: [results](evidence/military-release/qa.json),
+[desktop](evidence/military-release/military-release-desktop.png),
+[390 dark](evidence/military-release/military-release-dark-390.png),
+[320 light](evidence/military-release/military-release-light-320.png). Hosted D1 and live sign-in were
+not tested; nothing was deployed.
+
+Still open for Military: delivery of the current release to the game (format and endpoint are
+not defined by the Unity project); selecting Trips by unique aircraft family in the game; the
+⚠️ Clipper Card mapping definition; final photograph permission checks; real photographs for
+all 30 aircraft.

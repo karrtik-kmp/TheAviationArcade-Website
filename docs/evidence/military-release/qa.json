@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-27",
+  "source": "working tree on top of a0c9ae9",
+  "environment": "npm run demo:preview (port 5186, local D1) + Firebase Auth Emulator, project demo-airplane-games",
+  "script": "scripts/military-release-qa.mjs",
+  "results": [
+    "PASS all 30 approved with distinct photos: release checks pass",
+    "PASS sample Trips show ten different aircraft per rank with photographs",
+    "PASS releasing records a versioned snapshot; repeats and stale requests are refused",
+    "PASS a photograph withdrawn from game use blocks release on the server",
+    "PASS a second release, then restore makes the earlier release current again",
+    "PASS phone width: release panel and sample Trips fit without horizontal overflow",
+    "PASS anonymous and non-staff accounts cannot release or restore"
+  ],
+  "pageErrors": 0,
+  "notes": [
+    "Passed on three runs, including after scripts/military-qa.mjs (8/8) rewrote the F-16/F-15 packages.",
+    "Photographs are generated solid-colour QA fixtures, not real aircraft photography.",
+    "Source checks: TypeScript, 56/56 unit tests, production build. Focused ESLint: no new findings (pre-existing AdminApp effect error).",
+    "Not tested: hosted Cloudflare D1, live Google sign-in. No deployment was made."
+  ]
+}

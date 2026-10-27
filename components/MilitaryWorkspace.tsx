@@ -8,7 +8,14 @@ import {
   MessageBarBody,
   Textarea,
 } from "@fluentui/react-components";
-import { ArrowLeft, CheckCircle, Target } from "@phosphor-icons/react";
+import {
+  ArrowCounterClockwise,
+  ArrowLeft,
+  CheckCircle,
+  Package,
+  Shuffle,
+  Target,
+} from "@phosphor-icons/react";
 import { useMemo, useState } from "react";
 import {
   checklistNames,
@@ -17,14 +24,21 @@ import {
   militaryRoster,
   militaryStages,
   readiness,
+  releaseBasis,
+  releaseErrors,
+  sampleTrips,
   stageErrors,
   stageNames,
   TRIP_SIZE,
   type MilitaryAircraft,
   type MilitaryPackage,
   type MilitaryPackageData,
+  type MilitaryRelease,
   type MilitaryStage,
+  type ReleaseAsset,
+  type ReleasePointer,
 } from "@/lib/military";
+import { sitePath } from "@/lib/paths";
 import type { Submission } from "@/lib/types";
 
 const badge: Record<MilitaryStage, string> = {
@@ -41,13 +55,19 @@ export function StageBadge({ stage }: { stage: MilitaryStage }) {
 /** The 30-aircraft Military launch roster: preparation stages, per-rank coverage and Trip readiness. */
 export function MilitaryWorkspace({
   packages,
+  releases,
+  pointer,
   submissions,
   busy,
   onSave,
+  onRelease,
 }: {
   packages: MilitaryPackage[];
+  releases: MilitaryRelease[];
+  pointer: ReleasePointer & { version: number };
   submissions: Submission[];
   busy: boolean;
+  onRelease: (action: "release" | "restore", basis?: string) => Promise<boolean>;
   onSave: (
     aircraft: MilitaryAircraft,
     stage: MilitaryStage,
@@ -170,6 +190,15 @@ export function MilitaryWorkspace({
           </table>
         </div>
       </section>
+
+      <ReleasePanel
+        packages={packages}
+        releases={releases}
+        pointer={pointer}
+        submissions={submissions}
+        busy={busy}
+        onRelease={onRelease}
+      />
 
       <div className="admin-toolbar content-toolbar">
         <select
@@ -451,8 +480,9 @@ export function MilitaryWorkspace({
               )}
             </div>
             <p className="admin-demo-note">
-              Each save is versioned and recorded in Activity. Batch release,
-              sample Trip previews and delivery to the game are not built yet.
+              Each save is versioned and recorded in Activity. Approved packages
+              reach the game only through a batch release, and delivery to the
+              game is not built yet.
             </p>
           </section>
         ) : (
@@ -464,6 +494,199 @@ export function MilitaryWorkspace({
         )}
       </div>
     </>
+  );
+}
+
+/**
+ * Batch release: the server repeats every check, including the stored photographs,
+ * and refuses a release built on package versions other than the previewed ones.
+ */
+function ReleasePanel({
+  packages,
+  releases,
+  pointer,
+  submissions,
+  busy,
+  onRelease,
+}: {
+  packages: MilitaryPackage[];
+  releases: MilitaryRelease[];
+  pointer: ReleasePointer & { version: number };
+  submissions: Submission[];
+  busy: boolean;
+  onRelease: (action: "release" | "restore", basis?: string) => Promise<boolean>;
+}) {
+  const basis = releaseBasis(packages);
+  // The browser cannot see file digests; the submission id stands in for this pre-check.
+  const errors = useMemo(() => {
+    const assets = new Map<string, ReleaseAsset>(
+      submissions.map((s) => [
+        s.id,
+        {
+          status: s.status,
+          games: s.data.channels.includes("games"),
+          demo: s.id.startsWith("demo-"),
+          bytes: 1,
+          digest: s.id,
+        },
+      ]),
+    );
+    return releaseErrors(packages, assets);
+  }, [packages, submissions]);
+  const [seed, setSeed] = useState(1);
+  const [showTrips, setShowTrips] = useState(false);
+  const [reviewed, setReviewed] = useState("");
+  const trips = useMemo(
+    () => sampleTrips(packages, `${basis}#${seed}`),
+    [packages, basis, seed],
+  );
+  const current = releases.find((r) => r.number === pointer.current);
+  const previous = pointer.history[pointer.history.length - 1];
+  const confirmed = reviewed === basis && showTrips;
+  const unchanged = current?.basis === basis;
+
+  return (
+    <section className="admin-panel military-release" aria-labelledby="military-release-title">
+      <div className="admin-panel-header">
+        <div>
+          <h2 id="military-release-title">Batch release</h2>
+          <p>
+            A release records the approved batch the game will receive once
+            delivery is built. Nothing is published, and Military stays Coming Soon.
+          </p>
+        </div>
+        <span className="status-badge">
+          {current
+            ? `Release ${current.number} current`
+            : "No release yet"}
+        </span>
+      </div>
+      {current && (
+        <p className="military-release-current">
+          Release {current.number} · {current.aircraft} aircraft ·{" "}
+          {new Date(current.createdAt).toLocaleString()}
+          {unchanged ? " · matches the packages below" : " · packages changed since"}
+        </p>
+      )}
+
+      {errors.length > 0 ? (
+        <div className="military-missing" role="status">
+          <Target size={16} />
+          <div>
+            <b>Before release</b>
+            <ul>
+              {errors.slice(0, 6).map((m) => (
+                <li key={m}>{m}</li>
+              ))}
+              {errors.length > 6 && <li>and {errors.length - 6} more.</li>}
+            </ul>
+          </div>
+        </div>
+      ) : (
+        <p className="military-release-ready">
+          <CheckCircle size={16} weight="fill" /> All 30 packages are approved with
+          their own game-approved photographs.
+        </p>
+      )}
+
+      <div className="admin-actions">
+        <Button
+          icon={<Package size={16} />}
+          disabled={!trips.length}
+          aria-expanded={showTrips}
+          onClick={() => setShowTrips(!showTrips)}
+        >
+          {showTrips ? "Hide sample Trips" : "Preview sample Trips"}
+        </Button>
+        {showTrips && (
+          <Button
+            appearance="subtle"
+            icon={<Shuffle size={16} />}
+            onClick={() => {
+              setSeed(seed + 1);
+              setReviewed("");
+            }}
+          >
+            Shuffle samples
+          </Button>
+        )}
+        {previous !== undefined && (
+          <Button
+            appearance="subtle"
+            icon={<ArrowCounterClockwise size={16} />}
+            disabled={busy}
+            onClick={() => void onRelease("restore")}
+          >
+            Restore release {previous}
+          </Button>
+        )}
+      </div>
+      {!trips.length && (
+        <p className="field-hint">
+          Sample Trips appear once a rank has {TRIP_SIZE} different approved aircraft.
+        </p>
+      )}
+
+      {showTrips && (
+        <div className="military-trips">
+          {militaryRanks.map(({ rank }) => {
+            const trip = trips.find((t) => t.rank === rank);
+            return (
+              <details key={rank} className="military-trip">
+                <summary>
+                  {rank}{" "}
+                  <small>
+                    {trip
+                      ? `${trip.questions.length} different aircraft`
+                      : `Needs ${TRIP_SIZE} approved aircraft`}
+                  </small>
+                </summary>
+                {trip && (
+                  <ol>
+                    {trip.questions.map((q) => (
+                      <li key={q.aircraftId}>
+                        {q.submissionId ? (
+                          <img
+                            src={sitePath(`/api/submissions/${q.submissionId}/photo`)}
+                            alt={`Photograph for ${q.name}`}
+                            loading="lazy"
+                          />
+                        ) : (
+                          <span className="military-trip-nophoto">No photo</span>
+                        )}
+                        <span>
+                          <b>{q.name}</b>
+                          <small>{q.options.join(" · ")}</small>
+                          <small>Hint: {q.hint}</small>
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </details>
+            );
+          })}
+        </div>
+      )}
+
+      <div className="military-release-confirm">
+        <Checkbox
+          label="I reviewed the sample Trip for every rank"
+          checked={confirmed}
+          disabled={!showTrips || trips.length < militaryRanks.length}
+          onChange={(_, item) => setReviewed(item.checked === true ? basis : "")}
+        />
+        <Button
+          appearance="primary"
+          disabled={busy || errors.length > 0 || !confirmed || unchanged}
+          onClick={() =>
+            void onRelease("release", basis).then((ok) => ok && setReviewed(""))
+          }
+        >
+          {unchanged ? "Already released" : "Release batch"}
+        </Button>
+      </div>
+    </section>
   );
 }
 

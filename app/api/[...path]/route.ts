@@ -24,10 +24,15 @@ import {
 import {
   militaryRoster,
   militaryStages,
+  releaseBasis,
+  releaseErrors,
   parsePackageData,
   transitionError,
   type MilitaryPackage,
+  type MilitaryRelease,
   type MilitaryStage,
+  type ReleaseAsset,
+  type ReleasePointer,
 } from "@/lib/military";
 import type {
   EditorialData,
@@ -702,6 +707,177 @@ async function saveMilitary(request: Request, aircraftId: string) {
   });
 }
 
+const POINTER_ID = "military-release-current";
+async function militaryState() {
+  const [packages, releases, pointer] = await Promise.all([
+    database()
+      .prepare("SELECT * FROM editorial_records WHERE kind='military' ORDER BY id")
+      .all<Row>(),
+    database()
+      .prepare(
+        "SELECT id,payload FROM editorial_records WHERE kind='military_release' ORDER BY updated_at DESC LIMIT 50",
+      )
+      .all<Row>(),
+    database()
+      .prepare("SELECT * FROM editorial_records WHERE id=? AND kind='military_pointer'")
+      .bind(POINTER_ID)
+      .first<Row>(),
+  ]);
+  return {
+    rows: packages.results,
+    packages: packages.results.map(militaryPackage),
+    releases: releases.results.map((row): MilitaryRelease => {
+      const r = JSON.parse(String(row.payload));
+      return { number: r.number, basis: r.basis, aircraft: r.packages.length, createdAt: r.createdAt };
+    }),
+    pointerRow: pointer,
+    pointer: {
+      ...(pointer
+        ? (JSON.parse(String(pointer.payload)) as ReleasePointer)
+        : { current: null, history: [] }),
+      version: pointer ? Number(pointer.version) : 0,
+    },
+  };
+}
+/** The exact package versions, in the order the write guard's subquery reads them. */
+const packageGuard = (rows: Row[]) => rows.map((r) => `${r.id}:${r.version}`).join(",");
+const PACKAGES_UNCHANGED =
+  "(SELECT group_concat(id || ':' || version, ',') FROM (SELECT id,version FROM editorial_records WHERE kind='military' ORDER BY id)) IS ?";
+
+/** Records a batch release of every approved package. Nothing is delivered or published. */
+async function releaseMilitary(request: Request) {
+  sameOrigin(request);
+  const user = await staff();
+  const body = await bodyJson(request);
+  const state = await militaryState();
+  if (body.pointerVersion !== state.pointer.version)
+    throw new HttpError(409, "Another editor changed the release. Refresh to see it.");
+  if (body.basis !== releaseBasis(state.packages))
+    throw new HttpError(
+      409,
+      "Packages changed since this preview. Refresh and review the sample Trips again.",
+    );
+  if (body.previewed !== true)
+    throw new HttpError(422, "Review the sample Trips for every rank before releasing.");
+  if (state.releases.find((r) => r.number === state.pointer.current)?.basis === body.basis)
+    throw new HttpError(422, "These package versions are already the current release.");
+  const ids = [
+    ...new Set(
+      state.packages
+        .filter((p) => p.data.photoSource === "submission" && idPattern.test(p.data.submissionId))
+        .map((p) => p.data.submissionId),
+    ),
+  ];
+  const assets = new Map<string, ReleaseAsset>();
+  if (ids.length) {
+    const found = await database()
+      .prepare(
+        "SELECT id,status,payload,digest,image_bytes FROM submissions WHERE id IN (SELECT value FROM json_each(?))",
+      )
+      .bind(JSON.stringify(ids))
+      .all<Row>();
+    for (const row of found.results)
+      assets.set(String(row.id), {
+        status: String(row.status),
+        games: (JSON.parse(String(row.payload)) as SubmissionData).channels.includes("games"),
+        demo: String(row.digest).startsWith("demo:"),
+        bytes: Number(row.image_bytes),
+        digest: String(row.digest),
+      });
+  }
+  const errors = releaseErrors(state.packages, assets);
+  if (errors.length)
+    return respond({ error: "This batch cannot be released yet.", errors }, 422);
+  const number = Math.max(0, ...state.releases.map((r) => r.number)) + 1,
+    mutation = crypto.randomUUID(),
+    now = new Date().toISOString(),
+    pointer: ReleasePointer = {
+      current: number,
+      history:
+        state.pointer.current === null
+          ? state.pointer.history
+          : [...state.pointer.history, state.pointer.current],
+    };
+  const snapshot = {
+    number,
+    basis: body.basis,
+    createdAt: now,
+    packages: militaryRoster.map((a) => {
+      const p = state.packages.find((item) => item.aircraftId === a.id)!;
+      return {
+        aircraftId: a.id,
+        rank: a.rank,
+        version: p.version,
+        data: p.data,
+        digest: assets.get(p.data.submissionId)!.digest,
+      };
+    }),
+  };
+  // The pointer moves only if no package or linked photograph changed since the checks above.
+  const guards = `${PACKAGES_UNCHANGED} AND (SELECT COUNT(*) FROM submissions WHERE status='approved' AND id IN (SELECT value FROM json_each(?))) = ?`;
+  const guardValues = [packageGuard(state.rows), JSON.stringify(ids), ids.length];
+  const move = state.pointerRow
+    ? database()
+        .prepare(
+          `UPDATE editorial_records SET payload=?,version=version+1,last_mutation=?,updated_at=? WHERE id=? AND kind='military_pointer' AND version=? AND ${guards}`,
+        )
+        .bind(JSON.stringify(pointer), mutation, now, POINTER_ID, state.pointer.version, ...guardValues)
+    : database()
+        .prepare(
+          `INSERT INTO editorial_records (id,kind,source_id,payload,status,date_key,version,last_mutation,updated_at) SELECT ?,'military_pointer',NULL,?,'current',NULL,1,?,? WHERE NOT EXISTS (SELECT 1 FROM editorial_records WHERE id=?) AND ${guards}`,
+        )
+        .bind(POINTER_ID, JSON.stringify(pointer), mutation, now, POINTER_ID, ...guardValues);
+  const results = await database().batch([
+    move,
+    database()
+      .prepare(
+        "INSERT INTO editorial_records (id,kind,source_id,payload,status,date_key,version,last_mutation,updated_at) SELECT ?,'military_release',NULL,?,'released',NULL,1,?,? WHERE EXISTS (SELECT 1 FROM editorial_records WHERE id=? AND last_mutation=?)",
+      )
+      .bind(`military-release-${number}`, JSON.stringify(snapshot), mutation, now, POINTER_ID, mutation),
+    auditFor("editorial_records", user.userId, POINTER_ID, mutation, "military_released", {
+      release: number,
+      previous: state.pointer.current,
+      aircraft: snapshot.packages.length,
+    }),
+  ]);
+  if (!results[0].meta.changes)
+    throw new HttpError(409, "The packages or release changed. Refresh before releasing.");
+  const { packages, releases, pointer: latest } = await militaryState();
+  return respond({ packages, releases, pointer: latest });
+}
+
+/** Makes the release before the current one current again. */
+async function restoreMilitary(request: Request) {
+  sameOrigin(request);
+  const user = await staff();
+  const body = await bodyJson(request);
+  const state = await militaryState();
+  if (body.pointerVersion !== state.pointer.version)
+    throw new HttpError(409, "Another editor changed the release. Refresh to see it.");
+  const history = [...state.pointer.history],
+    previous = history.pop();
+  if (!state.pointerRow || previous === undefined)
+    throw new HttpError(422, "There is no earlier release to restore.");
+  const mutation = crypto.randomUUID(),
+    now = new Date().toISOString(),
+    pointer: ReleasePointer = { current: previous, history };
+  const results = await database().batch([
+    database()
+      .prepare(
+        "UPDATE editorial_records SET payload=?,version=version+1,last_mutation=?,updated_at=? WHERE id=? AND kind='military_pointer' AND version=?",
+      )
+      .bind(JSON.stringify(pointer), mutation, now, POINTER_ID, state.pointer.version),
+    auditFor("editorial_records", user.userId, POINTER_ID, mutation, "military_release_restored", {
+      release: previous,
+      replaced: state.pointer.current,
+    }),
+  ]);
+  if (!results[0].meta.changes)
+    throw new HttpError(409, "Another editor changed the release. Refresh to see it.");
+  const { packages, releases, pointer: latest } = await militaryState();
+  return respond({ packages, releases, pointer: latest });
+}
+
 async function featured(request: Request, photoId?: string) {
   const zone = new URL(request.url).searchParams.get("timeZone") ?? "UTC";
   let day;
@@ -913,11 +1089,13 @@ async function handle(request: Request, context: Context) {
         return respond({ records: rows.results.map(editorial) });
       }
       if (route === "admin/military" && method === "GET") {
-        const rows = await database()
-          .prepare("SELECT * FROM editorial_records WHERE kind='military'")
-          .all<Row>();
-        return respond({ packages: rows.results.map(militaryPackage) });
+        const { packages, releases, pointer } = await militaryState();
+        return respond({ packages, releases, pointer });
       }
+      if (route === "admin/military/releases" && method === "POST")
+        return await releaseMilitary(request);
+      if (route === "admin/military/releases/restore" && method === "POST")
+        return await restoreMilitary(request);
       if (path[1] === "military" && path.length === 3 && method === "PUT")
         return await saveMilitary(request, path[2]);
       if (route === "admin/content" && method === "POST")

@@ -55,7 +55,9 @@ import type {
   MilitaryAircraft,
   MilitaryPackage,
   MilitaryPackageData,
+  MilitaryRelease,
   MilitaryStage,
+  ReleasePointer,
 } from "@/lib/military";
 import { sitePath } from "@/lib/paths";
 
@@ -118,6 +120,8 @@ function emptyChecks(): ReviewChecks {
     category: false,
   };
 }
+const emptyPointer = { current: null, history: [], version: 0 };
+
 function responseError(body: unknown, fallback: string) {
   return body &&
     typeof body === "object" &&
@@ -168,6 +172,10 @@ export function AdminApp({
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [records, setRecords] = useState<EditorialRecord[]>([]);
   const [packages, setPackages] = useState<MilitaryPackage[]>([]);
+  const [releases, setReleases] = useState<MilitaryRelease[]>([]);
+  const [pointer, setPointer] = useState<ReleasePointer & { version: number }>(
+    emptyPointer,
+  );
   const [events, setEvents] = useState<AuditEvent[]>([]);
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [loadError, setLoadError] = useState("");
@@ -195,6 +203,8 @@ export function AdminApp({
     setSubmissions([]);
     setRecords([]);
     setPackages([]);
+    setReleases([]);
+    setPointer(emptyPointer);
     setEvents([]);
     setSelectedId("");
     setRecordId("");
@@ -282,11 +292,7 @@ export function AdminApp({
           ? (contentBody.records as EditorialRecord[])
           : [],
       );
-      setPackages(
-        Array.isArray(militaryBody.packages)
-          ? (militaryBody.packages as MilitaryPackage[])
-          : [],
-      );
+      applyMilitary(militaryBody);
       setEvents(
         Array.isArray(auditBody.events)
           ? (auditBody.events as AuditEvent[])
@@ -388,7 +394,13 @@ export function AdminApp({
     if (!response.ok)
       throw Object.assign(
         new Error(responseError(body, "The request could not be saved.")),
-        { status: response.status, code: responseCode(body) },
+        {
+          status: response.status,
+          code: responseCode(body),
+          errors: Array.isArray((body as { errors?: unknown }).errors)
+            ? (body as { errors: string[] }).errors
+            : [],
+        },
       );
     return body as Record<string, unknown>;
   }
@@ -599,6 +611,58 @@ export function AdminApp({
       });
     } catch (error) {
       handleMutationError(error, true);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function applyMilitary(body: Record<string, unknown>) {
+    setPackages(
+      Array.isArray(body.packages) ? (body.packages as MilitaryPackage[]) : [],
+    );
+    setReleases(
+      Array.isArray(body.releases) ? (body.releases as MilitaryRelease[]) : [],
+    );
+    setPointer(
+      body.pointer && typeof body.pointer === "object"
+        ? (body.pointer as ReleasePointer & { version: number })
+        : emptyPointer,
+    );
+  }
+
+  /** Records a batch release or restores the previous one. Neither delivers nor publishes. */
+  async function changeRelease(action: "release" | "restore", basis = "") {
+    setBusy(true);
+    setNotice(null);
+    try {
+      const body = await requestJson(
+        action === "release"
+          ? "/api/admin/military/releases"
+          : "/api/admin/military/releases/restore",
+        "POST",
+        action === "release"
+          ? { basis, previewed: true, pointerVersion: pointer.version }
+          : { pointerVersion: pointer.version },
+      );
+      applyMilitary(body);
+      const current = (body.pointer as ReleasePointer | undefined)?.current;
+      setNotice({
+        kind: "success",
+        text:
+          action === "release"
+            ? `Release ${current} recorded. Nothing was delivered or published; Military stays Coming Soon.`
+            : `Release ${current} is current again.`,
+      });
+      return true;
+    } catch (error) {
+      const errors =
+        typeof error === "object" && error && "errors" in error
+          ? (error.errors as string[])
+          : [];
+      if (errors.length && error instanceof Error)
+        setNotice({ kind: "error", text: `${error.message} ${errors.join(" ")}` });
+      else handleMutationError(error, true);
+      return false;
     } finally {
       setBusy(false);
     }
@@ -891,6 +955,9 @@ export function AdminApp({
                   {section === "Military readiness" && !readOnly && (
                     <MilitaryWorkspace
                       packages={packages}
+                      releases={releases}
+                      pointer={pointer}
+                      onRelease={changeRelease}
                       submissions={submissions}
                       busy={busy}
                       onSave={saveMilitary}

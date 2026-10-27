@@ -6,6 +6,9 @@ import {
   militaryRoster,
   parsePackageData,
   readiness,
+  releaseBasis,
+  releaseErrors,
+  sampleTrips,
   stageErrors,
   transitionError,
 } from "../lib/military.ts";
@@ -114,4 +117,75 @@ test("readiness counts each rank, inherits earlier ranks and gates Trips on ten 
   ]);
   assert.equal(all.approved, 30);
   assert.equal(all.allApproved, true);
+});
+
+const approvedAll = () =>
+  militaryRoster.map((a, i) => ({
+    aircraftId: a.id,
+    stage: "approved",
+    version: 4,
+    updatedAt: "",
+    data: {
+      ...complete(),
+      answer: a.name,
+      photoSource: "submission",
+      submissionId: `photo-${i}`,
+      distractors: ["Wrong one", "Wrong two", "Wrong three"],
+    },
+  }));
+const assetsFor = (packages, change = () => ({})) =>
+  new Map(
+    packages.map((p, i) => [
+      p.data.submissionId,
+      { status: "approved", games: true, demo: false, bytes: 1000, digest: `d${i}`, ...change(p, i) },
+    ]),
+  );
+
+test("release needs every slot approved with its own stored, game-approved photograph", () => {
+  const all = approvedAll();
+  assert.deepEqual(releaseErrors(all, assetsFor(all)), []);
+
+  const short = all.slice(1);
+  assert.ok(releaseErrors(short, assetsFor(short)).some((e) => /Trainee: 13 of 14/.test(e)));
+
+  const licensed = all.map((p, i) => (i ? p : { ...p, data: { ...p.data, photoSource: "licensed" } }));
+  assert.ok(releaseErrors(licensed, assetsFor(all)).some((e) => /F-16.*stored photograph/.test(e)));
+
+  const revoked = assetsFor(all, (_, i) => (i === 2 ? { status: "rejected" } : {}));
+  assert.ok(releaseErrors(all, revoked).some((e) => /F-22.*no longer/.test(e)));
+  const demo = assetsFor(all, (_, i) => (i === 2 ? { demo: true } : {}));
+  assert.ok(releaseErrors(all, demo).some((e) => /F-22.*no longer/.test(e)));
+
+  const reused = assetsFor(all, (_, i) => (i === 1 ? { digest: "d0" } : {}));
+  assert.ok(releaseErrors(all, reused).some((e) => /F-15 Eagle: uses the same photograph as F-16/.test(e)));
+});
+
+test("release basis names exact package versions regardless of order", () => {
+  const a = { aircraftId: "b", version: 2 }, b = { aircraftId: "a", version: 1 };
+  assert.equal(releaseBasis([a, b]), "a:1,b:2");
+  assert.equal(releaseBasis([b, a]), releaseBasis([a, b]));
+  assert.notEqual(releaseBasis([{ ...a, version: 3 }, b]), releaseBasis([a, b]));
+});
+
+test("sample Trips: ten different aircraft per rank, rank's own aircraft first, reproducible", () => {
+  const all = approvedAll();
+  const trips = sampleTrips(all, "seed");
+  assert.deepEqual(trips.map((t) => t.rank), militaryRanks.map((r) => r.rank));
+  for (const trip of trips) {
+    assert.equal(new Set(trip.questions.map((q) => q.aircraftId)).size, 10);
+    const order = militaryRanks.findIndex((r) => r.rank === trip.rank);
+    assert.ok(trip.questions.every((q) => militaryRanks.findIndex((r) => r.rank === q.rank) <= order));
+    const own = militaryRoster.filter((a) => a.rank === trip.rank).length;
+    assert.equal(trip.questions.filter((q) => q.rank === trip.rank).length, Math.min(own, 10));
+    for (const q of trip.questions) {
+      assert.equal(q.options.length, 4);
+      assert.ok(q.options.includes(q.name));
+    }
+  }
+  assert.deepEqual(sampleTrips(all, "seed"), trips);
+  assert.notDeepEqual(sampleTrips(all, "other"), trips);
+
+  // Unapproved packages never appear; a rank short of ten has no sample.
+  const nine = all.map((p, i) => (i >= 9 ? { ...p, stage: "previewed" } : p));
+  assert.equal(sampleTrips(nine, "seed").length, 0);
 });

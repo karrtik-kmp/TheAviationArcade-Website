@@ -2,6 +2,7 @@
 // Local only: run against `npm run demo:preview` with the Auth Emulator seeded. Writes only local D1.
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
+const { militaryRoster } = await import("../lib/military.ts");
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 const target = new URL(process.env.QA_ORIGIN || "http://127.0.0.1:5186");
 assert.ok(["127.0.0.1", "localhost", "[::1]"].includes(target.hostname), "QA_ORIGIN must use a loopback host");
@@ -58,6 +59,14 @@ for (const [id, name] of [["f-16-fighting-falcon", "F-16 Fighting Falcon"], ["f-
     assert.equal(r.status, 200, "fixture reset");
   }
 }
+// Other suites (military-release-qa) may leave the rest of the roster approved, so coverage is
+// compared with the stored state rather than an empty database.
+const trainee = militaryRoster.filter((a) => a.rank === "Trainee").map((a) => a.id);
+const traineeAt = async (stage) => {
+  const { packages } = (await api(admin, "GET", "/api/admin/military")).body;
+  return trainee.filter((id) => (packages.find((p) => p.aircraftId === id)?.stage ?? "missing_photo") === stage).length;
+};
+const missingAtStart = await traineeAt("missing_photo");
 await admin.reload();
 await admin.locator(".admin-app").waitFor({ timeout: 180000 });
 await admin.getByRole("button", { name: "Military readiness" }).click();
@@ -70,7 +79,7 @@ await check("roster shows 30 aircraft grouped by the five ranks with coverage", 
     ["Trainee", "First Officer", "Captain", "Check Airman", "Chief Pilot"],
   );
   const trainee = await admin.locator(".military-table tbody tr").first().locator("td").allTextContents();
-  assert.equal(trainee[0], "14", "Trainee starts with 14 missing photos");
+  assert.equal(trainee[0], String(missingAtStart), "Trainee missing-photo count matches stored packages");
 });
 
 await check("advancing is blocked until the stage's evidence is recorded", async () => {
@@ -113,9 +122,10 @@ await check("a package moves through every stage to approval and locks", async (
   await admin.getByRole("button", { name: "Approve package" }).click();
   await admin.getByText("F-16 Fighting Falcon approved. Nothing was published").waitFor();
   assert.equal(await admin.getByLabel("Hint").isDisabled(), true, "approved fields lock");
-  const trainee = await admin.locator(".military-table tbody tr").first().locator("td").allTextContents();
-  assert.equal(trainee[4], "1", "coverage shows one approved Trainee aircraft");
-  assert.equal(trainee[5], "1 / 14");
+  const approved = await traineeAt("approved");
+  const row = await admin.locator(".military-table tbody tr").first().locator("td").allTextContents();
+  assert.equal(row[4], String(approved), "coverage counts the newly approved Trainee aircraft");
+  assert.equal(row[5], `${approved} / 14`);
   await admin.screenshot({ path: `${shots}/military-desktop-light.png`, fullPage: true });
 });
 

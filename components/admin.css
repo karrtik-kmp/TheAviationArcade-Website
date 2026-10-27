@@ -1206,3 +1206,86 @@
     display: none;
   }
 }
+.military-release {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 16px;
+}
+.military-release > .admin-panel-header {
+  flex-wrap: wrap;
+  padding: 0;
+  border: 0;
+}
+.military-release-current,
+.military-release-ready {
+  margin: 0;
+  font-size: 12px;
+}
+.military-release-ready {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.military-release-ready svg {
+  color: var(--brass);
+}
+.military-release-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line, #e4dfd6);
+}
+.military-trips {
+  display: grid;
+  gap: 8px;
+}
+.military-trip {
+  border: 1px solid var(--line, #e4dfd6);
+  border-radius: 9px;
+}
+.military-trip summary {
+  padding: 10px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.military-trip summary small {
+  font-weight: 400;
+  opacity: 0.75;
+}
+.military-trip ol {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0 12px 12px;
+  list-style: none;
+}
+.military-trip li {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  font-size: 11px;
+}
+.military-trip li img,
+.military-trip-nophoto {
+  width: 72px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--raised, #f2eee7);
+}
+.military-trip-nophoto {
+  display: grid;
+  place-items: center;
+}
+.military-trip li > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

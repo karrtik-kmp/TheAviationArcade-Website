@@ -277,3 +277,132 @@ export function readiness(packages: Pick<MilitaryPackage, "aircraftId" | "stage"
     allApproved: approved === militaryRoster.length,
   };
 }
+
+/** The stored photograph behind a package, as the server sees it at release time. */
+export type ReleaseAsset = {
+  status: string;
+  games: boolean;
+  demo: boolean;
+  bytes: number;
+  digest: string;
+};
+
+/** Identifies the exact package versions a preview or release was built from. */
+export function releaseBasis(packages: Pick<MilitaryPackage, "aircraftId" | "version">[]) {
+  return packages
+    .map((p) => `${p.aircraftId}:${p.version}`)
+    .sort()
+    .join(",");
+}
+
+/**
+ * Everything that blocks a batch release: rank coverage (every roster slot approved),
+ * Trips of TRIP_SIZE different aircraft at every rank, and a stored, game-approved,
+ * real photograph per aircraft that no other aircraft reuses.
+ */
+export function releaseErrors(
+  packages: MilitaryPackage[],
+  assets: Map<string, ReleaseAsset>,
+): string[] {
+  const errors: string[] = [];
+  const report = readiness(packages);
+  for (const r of report.ranks)
+    if (r.approved < r.slots)
+      errors.push(`${r.rank}: ${r.approved} of ${r.slots} aircraft approved.`);
+  for (const r of report.ranks)
+    if (!r.tripReady)
+      errors.push(`${r.rank}: needs ${TRIP_SIZE} different approved aircraft for a Trip.`);
+  const byId = new Map(packages.map((p) => [p.aircraftId, p]));
+  const digests = new Map<string, string>();
+  for (const aircraft of militaryRoster) {
+    const p = byId.get(aircraft.id);
+    if (!p || p.stage !== "approved") continue;
+    const id = p.data.photoSource === "submission" ? p.data.submissionId : "";
+    const asset = id ? assets.get(id) : undefined;
+    if (!asset) {
+      errors.push(
+        `${aircraft.name}: link a stored photograph. Add licensed photos through Contribute and approve them so the file is kept.`,
+      );
+      continue;
+    }
+    if (asset.demo || asset.status !== "approved" || !asset.games || asset.bytes <= 0)
+      errors.push(`${aircraft.name}: the photograph is no longer a real contribution approved for game use.`);
+    const other = digests.get(asset.digest);
+    if (other) errors.push(`${aircraft.name}: uses the same photograph as ${other}.`);
+    else digests.set(asset.digest, aircraft.name);
+  }
+  return errors;
+}
+
+export type TripQuestion = {
+  aircraftId: string;
+  name: string;
+  rank: MilitaryRank;
+  submissionId: string;
+  options: string[];
+  hint: string;
+};
+export type SampleTrip = { rank: MilitaryRank; questions: TripQuestion[] };
+
+function seeded(seed: string) {
+  let h = 2166136261;
+  for (const c of seed) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+  return () => {
+    h = Math.imul(h ^ (h >>> 15), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    return ((h ^= h >>> 16) >>> 0) / 4294967296;
+  };
+}
+function shuffle<T>(items: T[], random: () => number) {
+  const out = [...items];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+/**
+ * One sample Trip per rank for staff review: TRIP_SIZE different approved aircraft
+ * types, preferring the rank's own new aircraft, each with its answer and three wrong
+ * answers in shuffled order. A rank without enough approved aircraft has no sample.
+ */
+export function sampleTrips(packages: MilitaryPackage[], seed: string): SampleTrip[] {
+  const approved = new Map(
+    packages.filter((p) => p.stage === "approved").map((p) => [p.aircraftId, p]),
+  );
+  const random = seeded(seed);
+  const trips: SampleTrip[] = [];
+  const earlier: MilitaryAircraft[] = [];
+  for (const { rank } of militaryRanks) {
+    const own = militaryRoster.filter((a) => a.rank === rank && approved.has(a.id));
+    const pool = earlier.filter((a) => approved.has(a.id));
+    const picked = [...shuffle(own, random), ...shuffle(pool, random)].slice(0, TRIP_SIZE);
+    earlier.push(...militaryRoster.filter((a) => a.rank === rank));
+    if (picked.length < TRIP_SIZE) continue;
+    trips.push({
+      rank,
+      questions: shuffle(picked, random).map((a) => {
+        const { data } = approved.get(a.id)!;
+        return {
+          aircraftId: a.id,
+          name: a.name,
+          rank: a.rank,
+          submissionId: data.submissionId,
+          options: shuffle([data.answer, ...data.distractors], random),
+          hint: data.hint,
+        };
+      }),
+    });
+  }
+  return trips;
+}
+
+/** Which release the game would receive, and the earlier releases restore steps back through. */
+export type ReleasePointer = { current: number | null; history: number[] };
+export type MilitaryRelease = {
+  number: number;
+  basis: string;
+  aircraft: number;
+  createdAt: string;
+};
