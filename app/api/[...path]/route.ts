@@ -23,6 +23,7 @@ import {
 } from "@/lib/rules";
 import {
   militaryRoster,
+  clientContent,
   militaryStages,
   releaseBasis,
   releaseErrors,
@@ -601,15 +602,19 @@ function militaryPackage(row: Row): MilitaryPackage {
   };
 }
 
-/** Saves one roster aircraft's package. Version 0 creates it. Approval records a decision; it never publishes. */
+/**
+ * Saves the package for one question in the client's Military sheet. Version 0 creates it.
+ * The answer and wrong answers always come from the sheet. Approval never publishes.
+ */
 async function saveMilitary(request: Request, aircraftId: string) {
   sameOrigin(request);
   const user = await staff();
   const aircraft = militaryRoster.find((a) => a.id === aircraftId);
-  if (!aircraft) throw new HttpError(404, "This aircraft is not on the approved roster.");
+  if (!aircraft) throw new HttpError(404, "This question is not in the client's Military sheet.");
   const body = await bodyJson(request);
-  const data = parsePackageData(body.data);
-  if (!data) throw new HttpError(422, "Check the package fields.");
+  const parsed = parsePackageData(body.data);
+  if (!parsed) throw new HttpError(422, "Check the package fields.");
+  const data = clientContent(aircraft, parsed);
   if (!militaryStages.includes(body.stage))
     throw new HttpError(422, "Unknown preparation stage.");
   const id = `military-${aircraft.id}`;
@@ -688,6 +693,7 @@ async function saveMilitary(request: Request, aircraftId: string) {
     write,
     auditFor("editorial_records", user.userId, id, mutation, `military_${to}`, {
       aircraft: aircraft.name,
+      rank: aircraft.rank,
       from,
       version: Number(body.version) + 1,
     }),

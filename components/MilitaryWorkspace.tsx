@@ -19,6 +19,7 @@ import {
 import { useMemo, useState } from "react";
 import {
   checklistNames,
+  clientContent,
   emptyPackageData,
   militaryRanks,
   militaryRoster,
@@ -52,7 +53,7 @@ export function StageBadge({ stage }: { stage: MilitaryStage }) {
   return <span className={`status-badge ${badge[stage]}`}>{stageNames[stage]}</span>;
 }
 
-/** The 30-aircraft Military launch roster: preparation stages, per-rank coverage and Trip readiness. */
+/** The client's Military question sheet: preparation stages, per-rank coverage and Trip readiness. */
 export function MilitaryWorkspace({
   packages,
   releases,
@@ -100,12 +101,10 @@ export function MilitaryWorkspace({
     setBaseVersion(existing?.version ?? 0);
     setDraft(
       existing
-        ? {
+        ? clientContent(aircraft, {
             ...existing.data,
-            aliases: [...existing.data.aliases],
-            distractors: [...existing.data.distractors],
             checklist: { ...existing.data.checklist },
-          }
+          })
         : emptyPackageData(aircraft),
     );
   }
@@ -128,10 +127,10 @@ export function MilitaryWorkspace({
           <p className="eyebrow">LAUNCH PREPARATION</p>
           <h1>Military readiness</h1>
           <p>
-            Prepare the 30 approved aircraft for Military Aircraft Identifier.
-            Approval records an editorial decision; nothing is published and the
-            game stays Coming Soon until all 30 packages and the playable
-            integration pass their checks.
+            Prepare the {report.total} questions in the client&apos;s Military
+            sheet (2026-10-26). Approval records an editorial decision; nothing
+            is published and the game stays Coming Soon until every package and
+            the playable integration pass their checks.
           </p>
         </div>
         <span className="admin-total">
@@ -144,8 +143,8 @@ export function MilitaryWorkspace({
           <div>
             <h2>Rank coverage</h2>
             <p>
-              Higher ranks include earlier aircraft. A Trip needs {TRIP_SIZE}{" "}
-              different approved aircraft types.
+              As in the game, a Trip draws on its own rank and the ranks below it
+              and needs {TRIP_SIZE} different approved questions.
             </p>
           </div>
         </div>
@@ -167,7 +166,7 @@ export function MilitaryWorkspace({
               {report.ranks.map((r) => (
                 <tr key={r.rank}>
                   <th scope="row">
-                    {r.rank} <small>{r.slots} new</small>
+                    {r.rank} <small>{r.slots} in sheet</small>
                   </th>
                   {militaryStages.map((s) => (
                     <td key={s}>{r.stages[s]}</td>
@@ -213,7 +212,7 @@ export function MilitaryWorkspace({
             </option>
           ))}
         </select>
-        <span>Replacing an aircraft needs client approval and keeps its rank slot.</span>
+        <span>Ranks, answers and wrong answers come from the client&apos;s sheet. Changes need a new sheet from Josh.</span>
       </div>
 
       <div className="admin-split content-split">
@@ -243,7 +242,9 @@ export function MilitaryWorkspace({
                       <small>
                         {byId.get(aircraft.id)
                           ? `Version ${byId.get(aircraft.id)!.version}`
-                          : "Not started"}
+                          : aircraft.file
+                            ? "Not started"
+                            : "Photo not supplied"}
                       </small>
                     </span>
                     <StageBadge
@@ -263,7 +264,7 @@ export function MilitaryWorkspace({
                 <button className="admin-back" onClick={() => setOpenId("")}>
                   <ArrowLeft size={16} /> Close package
                 </button>
-                <p className="eyebrow">{open.rank.toUpperCase()} SLOT</p>
+                <p className="eyebrow">{open.rank.toUpperCase()} · SHEET ROW {open.id.replace("mil-a", "")}</p>
                 <h2>{open.name}</h2>
                 <StageBadge stage={stage} />
               </div>
@@ -294,6 +295,11 @@ export function MilitaryWorkspace({
 
             <fieldset className="form-grid admin-fieldset" disabled={locked || busy}>
               <h3 className="military-legend full">Photograph and rights</h3>
+              <p className="field-hint full">
+                {open.file
+                  ? `Client photo: ${open.file}${open.photographer ? ` · ${open.photographer}` : " · no photographer named"}. Add it through Contribute to store it.`
+                  : "The client has not supplied this photograph yet."}
+              </p>
               <label className="admin-field">
                 <span>Photograph source</span>
                 <select
@@ -366,53 +372,18 @@ export function MilitaryWorkspace({
                 max={600}
                 full
               />
-              <Field
-                label="Displayed answer"
-                value={draft.answer}
-                onChange={(v) => set("answer", v)}
-              />
-              <Field
-                label="Accepted aliases (comma separated)"
-                value={draft.aliases.join(",")}
-                onChange={(v) => set("aliases", v.split(","))}
-                max={600}
-              />
               <div className="admin-field full">
-                <span>Wrong answers</span>
+                <span>From the client&apos;s sheet</span>
+                <dl className="military-client">
+                  <dt>Answer</dt>
+                  <dd>{open.name}</dd>
+                  <dt>Wrong answers</dt>
+                  <dd>{open.wrong.join(" · ")}</dd>
+                </dl>
                 <p className="field-hint">
-                  Use the aircraft family, not a variant designation, and avoid
-                  answers that are also correct.
+                  If an answer looks wrong, note it below for Josh; it is not edited here.
                 </p>
-                <div className="form-grid answer-grid">
-                  {draft.distractors.map((option, index) => (
-                    <Field
-                      key={index}
-                      label={`Wrong answer ${index + 1}`}
-                      value={option}
-                      onChange={(v) => {
-                        const distractors = [...draft.distractors];
-                        distractors[index] = v;
-                        set("distractors", distractors);
-                      }}
-                    />
-                  ))}
-                </div>
               </div>
-              <Field
-                label="Hint"
-                value={draft.hint}
-                onChange={(v) => set("hint", v)}
-                max={600}
-                full
-              />
-              <label className="admin-field full">
-                <span>Reveal explanation</span>
-                <Textarea
-                  rows={3}
-                  value={draft.reveal}
-                  onChange={(_, item) => set("reveal", item.value)}
-                />
-              </label>
 
               <h3 className="military-legend full">Preview checklist</h3>
               <div className="full military-checklist">
@@ -488,8 +459,8 @@ export function MilitaryWorkspace({
         ) : (
           <section className="admin-panel detail-placeholder">
             <Target size={28} />
-            <b>Select an aircraft</b>
-            <p>Open a roster slot to prepare its photograph and question.</p>
+            <b>Select a question</b>
+            <p>Open a row of the client&apos;s sheet to prepare its photograph and rights.</p>
           </section>
         )}
       </div>
@@ -563,7 +534,7 @@ function ReleasePanel({
       </div>
       {current && (
         <p className="military-release-current">
-          Release {current.number} · {current.aircraft} aircraft ·{" "}
+          Release {current.number} · {current.aircraft} questions ·{" "}
           {new Date(current.createdAt).toLocaleString()}
           {unchanged ? " · matches the packages below" : " · packages changed since"}
         </p>
@@ -584,8 +555,8 @@ function ReleasePanel({
         </div>
       ) : (
         <p className="military-release-ready">
-          <CheckCircle size={16} weight="fill" /> All 30 packages are approved with
-          their own game-approved photographs.
+          <CheckCircle size={16} weight="fill" /> All {militaryRoster.length} packages are
+          approved with their own game-approved photographs.
         </p>
       )}
 
@@ -623,7 +594,7 @@ function ReleasePanel({
       </div>
       {!trips.length && (
         <p className="field-hint">
-          Sample Trips appear once a rank has {TRIP_SIZE} different approved aircraft.
+          Sample Trips appear once a rank has {TRIP_SIZE} approved questions at or below it.
         </p>
       )}
 
@@ -637,8 +608,8 @@ function ReleasePanel({
                   {rank}{" "}
                   <small>
                     {trip
-                      ? `${trip.questions.length} different aircraft`
-                      : `Needs ${TRIP_SIZE} approved aircraft`}
+                      ? `${trip.questions.length} questions`
+                      : `Needs ${TRIP_SIZE} approved questions`}
                   </small>
                 </summary>
                 {trip && (
@@ -657,7 +628,7 @@ function ReleasePanel({
                         <span>
                           <b>{q.name}</b>
                           <small>{q.options.join(" · ")}</small>
-                          <small>Hint: {q.hint}</small>
+                          <small>{q.rank}</small>
                         </span>
                       </li>
                     ))}

@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
+  clientContent,
   emptyPackageData,
   militaryRanks,
   militaryRoster,
@@ -16,32 +17,64 @@ import {
 const complete = () => ({
   ...emptyPackageData(militaryRoster[0]),
   photoSource: "licensed",
-  licenseUrl: "https://example.org/license/f16",
+  licenseUrl: "https://example.org/license/a10",
   permission: "Licensed for in-game use, worldwide, 2026.",
   attribution: "Example Photo Agency",
   referenceUrl: "https://www.af.mil/About-Us/Fact-Sheets/",
-  aliases: ["F-16", "Viper"],
-  distractors: ["F-15 Eagle", "Mirage 2000", "JF-17 Thunder"],
-  hint: "Single engine, bubble canopy",
-  reveal: "The F-16's ventral intake and single tail identify it.",
   checklist: { identity: true, answers: true, crop: true, clipperCard: true },
 });
 
-test("roster matches the approved rank slots: 14/6/4/3/3 with 30 distinct aircraft", () => {
+test("roster is the client's Military sheet: 31 rows, game ids, ranks as supplied", () => {
+  assert.equal(militaryRoster.length, 31);
+  assert.deepEqual(
+    militaryRoster.map((a) => a.id),
+    Array.from({ length: 31 }, (_, i) => `mil-a${i + 1}`),
+  );
   assert.deepEqual(
     militaryRanks.map((r) => r.count),
-    [14, 6, 4, 3, 3],
+    [6, 5, 6, 8, 6],
   );
-  for (const { rank, count } of militaryRanks)
-    assert.equal(militaryRoster.filter((a) => a.rank === rank).length, count);
-  assert.equal(new Set(militaryRoster.map((a) => a.id)).size, 30);
-  assert.ok(militaryRoster.some((a) => a.id === "f-a-18-hornet"));
+  for (const a of militaryRoster) {
+    assert.equal(a.wrong.length, 3, a.id);
+    assert.equal(new Set([a.name, ...a.wrong]).size, 4, a.id);
+  }
+  const row = (id) => militaryRoster.find((a) => a.id === id);
+  assert.deepEqual(row("mil-a1"), {
+    id: "mil-a1",
+    name: "Warthog A-10 Thunderbolt II",
+    rank: "Trainee",
+    wrong: ["Sukhoi Su-25 Frogfoot", "Ilyushin Il-102", "Northrop YA-9"],
+    file: "MA_A_10_10_23_26_1.jpg",
+    photographer: "Tyler Hardie",
+  });
+  // The C-17 row came without its photograph; the client sheet repeats some aircraft at several ranks.
+  assert.equal(row("mil-a5").file, "");
+  assert.equal(militaryRoster.filter((a) => a.name === "Eurofighter Typhoon").length, 3);
+});
+
+test("question content always comes from the client's sheet", () => {
+  const a = militaryRoster[8];
+  const edited = clientContent(a, {
+    ...complete(),
+    answer: "F/A-18 Hornet",
+    aliases: ["Rhino"],
+    distractors: ["x", "y", "z"],
+    hint: "Two tails",
+    reveal: "An invented explanation.",
+  });
+  assert.equal(edited.answer, a.name);
+  assert.deepEqual(edited.distractors, a.wrong);
+  assert.deepEqual(edited.aliases, []);
+  assert.equal(edited.hint, "");
+  assert.equal(edited.reveal, "");
+  assert.equal(emptyPackageData(a).attribution, "Charles Causse");
+  assert.equal(emptyPackageData(militaryRoster[13]).attribution, "");
 });
 
 test("each stage requires its own evidence plus every earlier stage's", () => {
   const empty = emptyPackageData(militaryRoster[0]);
   assert.deepEqual(stageErrors("missing_photo", empty), []);
-  assert.ok(stageErrors("rights_checked", empty).length >= 3);
+  assert.ok(stageErrors("rights_checked", empty).length >= 2);
   assert.deepEqual(stageErrors("approved", complete()), []);
   const noRights = { ...complete(), permission: "" };
   assert.ok(stageErrors("approved", noRights).some((e) => /permission/.test(e)));
@@ -52,16 +85,16 @@ test("each stage requires its own evidence plus every earlier stage's", () => {
     stageErrors("rights_checked", { ...complete(), photoSource: "submission", submissionId: "" })
       .some((e) => /submission/.test(e)),
   );
+  assert.ok(stageErrors("content_prepared", { ...complete(), referenceUrl: "" }).length);
 });
 
-test("wrong answers must be distinct and never match the answer or an alias", () => {
-  assert.deepEqual(stageErrors("content_prepared", complete()), []);
-  const alias = { ...complete(), distractors: ["viper ", "F-15 Eagle", "MiG-29"] };
-  assert.ok(stageErrors("content_prepared", alias).some((e) => /differ/.test(e)));
-  const repeat = { ...complete(), distractors: ["MiG-29", "mig-29", "F-15 Eagle"] };
-  assert.ok(stageErrors("content_prepared", repeat).some((e) => /differ/.test(e)));
-  const blank = { ...complete(), distractors: ["MiG-29", "", "F-15 Eagle"] };
-  assert.ok(stageErrors("content_prepared", blank).some((e) => /three/.test(e)));
+test("every client row passes the content checks without a hint or reveal", () => {
+  for (const a of militaryRoster)
+    assert.deepEqual(
+      stageErrors("content_prepared", { ...clientContent(a, complete()) }),
+      [],
+      a.id,
+    );
 });
 
 test("approval needs the full preview checklist; preview needs the mobile crop", () => {
@@ -81,57 +114,53 @@ test("packages advance one stage at a time and can always step back", () => {
   assert.match(transitionError("previewed", "published", data), /Unknown/);
 });
 
-test("package parsing rejects malformed or oversized input and normalizes aliases", () => {
-  const parsed = parsePackageData({ ...complete(), aliases: [" F-16 ", "", "Viper"] });
-  assert.deepEqual(parsed.aliases, ["F-16", "Viper"]);
+test("package parsing rejects malformed or oversized input", () => {
   assert.equal(parsePackageData(null), null);
   assert.equal(parsePackageData({ ...complete(), photoSource: "web" }), null);
   assert.equal(parsePackageData({ ...complete(), distractors: ["a", "b"] }), null);
   assert.equal(parsePackageData({ ...complete(), attribution: "x".repeat(161) }), null);
   assert.equal(parsePackageData({ ...complete(), checklist: { identity: true } }), null);
   assert.equal(parsePackageData({ ...complete(), hint: 5 }), null);
+  assert.deepEqual(parsePackageData(complete()), complete());
 });
 
-test("readiness counts each rank, inherits earlier ranks and gates Trips on ten approved types", () => {
+const approve = (roster) => roster.map((a) => ({ aircraftId: a.id, stage: "approved" }));
+
+test("readiness follows the sheet: ranks inherit earlier ranks; Trainee is short of a Trip", () => {
   const none = readiness([]);
   assert.equal(none.approved, 0);
   assert.equal(none.allApproved, false);
-  assert.equal(none.ranks[0].stages.missing_photo, 14);
+  assert.equal(none.ranks[0].stages.missing_photo, 6);
   assert.deepEqual(
     none.ranks.map((r) => r.eligibleTotal),
-    [14, 20, 24, 27, 30],
+    [6, 11, 17, 25, 31],
   );
   assert.ok(none.ranks.every((r) => !r.tripReady));
 
-  const trainee = militaryRoster.filter((a) => a.rank === "Trainee");
-  const nine = readiness(trainee.slice(0, 9).map((a) => ({ aircraftId: a.id, stage: "approved" })));
-  assert.equal(nine.ranks[0].tripReady, false);
-  const ten = readiness(trainee.slice(0, 10).map((a) => ({ aircraftId: a.id, stage: "approved" })));
-  assert.equal(ten.ranks[0].tripReady, true);
-  assert.equal(ten.ranks[4].eligibleApproved, 10);
-
-  // Unknown ids (e.g. a retired roster entry) are ignored, never counted.
-  const all = readiness([
-    ...militaryRoster.map((a) => ({ aircraftId: a.id, stage: "approved" })),
-    { aircraftId: "not-on-roster", stage: "approved" },
-  ]);
-  assert.equal(all.approved, 30);
+  // Unknown ids (e.g. the earlier invented roster) are ignored, never counted.
+  const all = readiness([...approve(militaryRoster), { aircraftId: "f-16-fighting-falcon", stage: "approved" }]);
+  assert.equal(all.approved, 31);
   assert.equal(all.allApproved, true);
+  assert.deepEqual(
+    all.ranks.map((r) => r.tripReady),
+    [false, true, true, true, true],
+  );
 });
 
-const approvedAll = () =>
-  militaryRoster.map((a, i) => ({
+// A roster that can fill every Trip, for the parts of release the client's sheet cannot reach yet.
+const full = [
+  ...Array.from({ length: 10 }, (_, i) => ({ id: `t${i}`, name: `Trainee ${i}`, rank: "Trainee", wrong: ["a", "b", "c"], file: "f", photographer: "" })),
+  ...["First Officer", "Captain", "Check Airman", "Chief Pilot"].map((rank, i) => ({
+    id: `r${i}`, name: `${rank} aircraft`, rank, wrong: ["a", "b", "c"], file: "f", photographer: "",
+  })),
+];
+const approvedAll = (roster) =>
+  roster.map((a, i) => ({
     aircraftId: a.id,
     stage: "approved",
     version: 4,
     updatedAt: "",
-    data: {
-      ...complete(),
-      answer: a.name,
-      photoSource: "submission",
-      submissionId: `photo-${i}`,
-      distractors: ["Wrong one", "Wrong two", "Wrong three"],
-    },
+    data: { ...clientContent(a, complete()), photoSource: "submission", submissionId: `photo-${i}` },
   }));
 const assetsFor = (packages, change = () => ({})) =>
   new Map(
@@ -141,23 +170,32 @@ const assetsFor = (packages, change = () => ({})) =>
     ]),
   );
 
-test("release needs every slot approved with its own stored, game-approved photograph", () => {
-  const all = approvedAll();
-  assert.deepEqual(releaseErrors(all, assetsFor(all)), []);
+test("the client's sheet, fully approved, is refused only for the short Trainee Trip", () => {
+  const all = approvedAll(militaryRoster);
+  assert.deepEqual(releaseErrors(all, assetsFor(all)), [
+    "Trainee: a Trip needs 10 approved questions at this rank or below; 6 are in the client's sheet.",
+  ]);
+});
+
+test("release needs every question approved with its own stored, game-approved photograph", () => {
+  const all = approvedAll(full);
+  assert.deepEqual(releaseErrors(all, assetsFor(all), full), []);
 
   const short = all.slice(1);
-  assert.ok(releaseErrors(short, assetsFor(short)).some((e) => /Trainee: 13 of 14/.test(e)));
+  assert.ok(releaseErrors(short, assetsFor(short), full).some((e) => /Trainee: 9 of 10 questions/.test(e)));
 
   const licensed = all.map((p, i) => (i ? p : { ...p, data: { ...p.data, photoSource: "licensed" } }));
-  assert.ok(releaseErrors(licensed, assetsFor(all)).some((e) => /F-16.*stored photograph/.test(e)));
+  assert.ok(releaseErrors(licensed, assetsFor(all), full).some((e) => /Trainee 0 \(Trainee\).*stored photograph/.test(e)));
 
   const revoked = assetsFor(all, (_, i) => (i === 2 ? { status: "rejected" } : {}));
-  assert.ok(releaseErrors(all, revoked).some((e) => /F-22.*no longer/.test(e)));
+  assert.ok(releaseErrors(all, revoked, full).some((e) => /Trainee 2.*no longer/.test(e)));
   const demo = assetsFor(all, (_, i) => (i === 2 ? { demo: true } : {}));
-  assert.ok(releaseErrors(all, demo).some((e) => /F-22.*no longer/.test(e)));
+  assert.ok(releaseErrors(all, demo, full).some((e) => /Trainee 2.*no longer/.test(e)));
 
   const reused = assetsFor(all, (_, i) => (i === 1 ? { digest: "d0" } : {}));
-  assert.ok(releaseErrors(all, reused).some((e) => /F-15 Eagle: uses the same photograph as F-16/.test(e)));
+  assert.ok(
+    releaseErrors(all, reused, full).some((e) => /Trainee 1 \(Trainee\): uses the same photograph as Trainee 0/.test(e)),
+  );
 });
 
 test("release basis names exact package versions regardless of order", () => {
@@ -167,25 +205,32 @@ test("release basis names exact package versions regardless of order", () => {
   assert.notEqual(releaseBasis([{ ...a, version: 3 }, b]), releaseBasis([a, b]));
 });
 
-test("sample Trips: ten different aircraft per rank, rank's own aircraft first, reproducible", () => {
-  const all = approvedAll();
+test("sample Trips deal like the game: up to six at the rank, the rest from below, reproducible", () => {
+  const all = approvedAll(militaryRoster);
   const trips = sampleTrips(all, "seed");
-  assert.deepEqual(trips.map((t) => t.rank), militaryRanks.map((r) => r.rank));
+  assert.deepEqual(trips.map((t) => t.rank), ["First Officer", "Captain", "Check Airman", "Chief Pilot"]);
   for (const trip of trips) {
     assert.equal(new Set(trip.questions.map((q) => q.aircraftId)).size, 10);
     const order = militaryRanks.findIndex((r) => r.rank === trip.rank);
     assert.ok(trip.questions.every((q) => militaryRanks.findIndex((r) => r.rank === q.rank) <= order));
     const own = militaryRoster.filter((a) => a.rank === trip.rank).length;
-    assert.equal(trip.questions.filter((q) => q.rank === trip.rank).length, Math.min(own, 10));
+    assert.equal(trip.questions.filter((q) => q.rank === trip.rank).length, Math.min(own, 6));
     for (const q of trip.questions) {
-      assert.equal(q.options.length, 4);
-      assert.ok(q.options.includes(q.name));
+      const row = militaryRoster.find((a) => a.id === q.aircraftId);
+      assert.deepEqual([...q.options].sort(), [row.name, ...row.wrong].sort());
     }
   }
   assert.deepEqual(sampleTrips(all, "seed"), trips);
   assert.notDeepEqual(sampleTrips(all, "other"), trips);
 
-  // Unapproved packages never appear; a rank short of ten has no sample.
-  const nine = all.map((p, i) => (i >= 9 ? { ...p, stage: "previewed" } : p));
-  assert.equal(sampleTrips(nine, "seed").length, 0);
+  // Thin ranks below top up from the rank itself; unapproved packages never appear.
+  const thin = [
+    ...full.slice(0, 2),
+    ...Array.from({ length: 12 }, (_, i) => ({ id: `f${i}`, name: `FO ${i}`, rank: "First Officer", wrong: ["a", "b", "c"], file: "f", photographer: "" })),
+  ];
+  const [fo] = sampleTrips(approvedAll(thin), "seed", thin);
+  assert.equal(fo.rank, "First Officer");
+  assert.equal(fo.questions.filter((q) => q.rank === "First Officer").length, 8);
+  const nine = all.map((p) => (p.aircraftId === "mil-a2" ? { ...p, stage: "previewed" } : p));
+  assert.ok(!sampleTrips(nine, "seed").some((t) => t.questions.some((q) => q.aircraftId === "mil-a2")));
 });

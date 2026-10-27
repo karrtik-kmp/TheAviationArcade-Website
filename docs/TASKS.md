@@ -44,7 +44,7 @@ These are implementation requirements, not a claim that those features have ship
 | Production staff capabilities/MFA                | Open                             | Binary verified-email allowlist is not the complete capability matrix                                           |
 | Public-launch media and privacy hardening        | Open                             | Full decode/re-encode, abuse controls, approved rights and retention/deletion workflow                          |
 | Mobile loading optimization                      | Follow-up                        | Historical pre-Firebase Lighthouse: performance 82, accessibility 100, best practices 100, LCP 4.1s             |
-| Military readiness desk and batch release        | Implemented and locally verified | Roster, stages, coverage, release checks, sample Trips, release/restore; game delivery and Clipper Card open    |
+| Military readiness desk and batch release        | Implemented and locally verified | Client's 31-question sheet, stages, coverage, release checks, sample Trips; Trainee short, delivery open        |
 
 ## Verification contract
 
@@ -411,3 +411,40 @@ Still open for Military: delivery of the current release to the game (format and
 not defined by the Unity project); selecting Trips by unique aircraft family in the game; the
 ⚠️ Clipper Card mapping definition; final photograph permission checks; real photographs for
 all 30 aircraft.
+
+## Military uses the client's sheet (2026-10-27)
+
+The 30-aircraft roster above (14/6/4/3/3, post-war fixed-wing only) was **not decided by the client**;
+it came from an earlier Claude session. It is withdrawn. The Military desk now holds exactly the
+client's sheet `docs/Military Airplane Identifier v1.xlsx` (2026-10-26): **31 questions**, ranked as
+supplied (Trainee 6, First Officer 5, Captain 6, Check Airman 8, Chief Pilot 6), including the WWII
+aircraft, helicopters and the aircraft that appear at several ranks (Typhoon ×3, AW139 ×2, T-28 ×2).
+Ids are the game's import ids (`mil-a1`…`mil-a31`, sheet row order), so the website and Unity v2
+now share a key. The C-17 (row 5) came without its photograph; the editor says so.
+
+- The answer and three wrong answers are always the sheet's: the editor shows them read-only and the
+  server replaces whatever a browser sends (`clientContent`). Hint, reveal and aliases were never
+  supplied, so they are no longer asked for and are stored empty.
+- The photographer from the sheet prefills Attribution (empty for rows 14, 23, 25, 26).
+- Trips follow the game's dealer (`InProcessMockBackend.BuildDeck`): up to 6 questions at the rank,
+  the rest from lower ranks, topped up from the rank itself, never from higher ranks, never a question
+  twice. Repeated aircraft are allowed, as in the game.
+- Consequence: **Trainee has 6 questions, so no Trainee Trip can be dealt and a release is refused**
+  until the client supplies at least 4 more Trainee questions. Release and restore stay implemented
+  and unit-tested on a synthetic roster.
+- Packages saved under the old slug ids are ignored. Local D1 still holds release records made from
+  the old roster during QA (releases 1-5); hosted D1 never had any because that commit is not deployed.
+
+Verification: TypeScript, 58/58 unit tests (`tests/military.test.mjs` rewritten, 12 tests), production
+build. On the emulator-backed demo preview (port 5186), `scripts/military-qa.mjs` passes 9/9 and
+`scripts/military-release-qa.mjs` passes 6/6, alternated twice in each order, zero page errors.
+Evidence: [results](evidence/military-client-sheet/qa.json),
+[desk](evidence/military-client-sheet/military-desktop-light.png),
+[release](evidence/military-client-sheet/military-release-desktop.png),
+[390 dark](evidence/military-client-sheet/military-release-dark-390.png),
+[320 light](evidence/military-client-sheet/military-release-light-320.png). Hosted D1 and live sign-in
+were not tested; nothing was deployed.
+
+Client to confirm (Josh): 4+ more Trainee questions; the C-17 photograph; photographer names for rows
+14, 23, 25, 26; whether the same aircraft may appear more than once in one Trip; what the Military
+Clipper Card mapping is.

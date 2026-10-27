@@ -1175,6 +1175,20 @@
   margin: 8px 0 0;
   font-size: 17px;
 }
+.military-client {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 0;
+  font-size: 13px;
+}
+.military-client dt {
+  font-weight: 600;
+}
+.military-client dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
 .military-checklist {
   display: grid;
   gap: 2px;

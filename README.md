@@ -187,10 +187,11 @@ sign-in pages, safe returns, recovery, permissions, themes, assets and logout, a
 With an unprefixed `npm run demo:preview` (port 5186) and the seeded Auth Emulator,
 `node scripts/session-return-qa.mjs` checks tab-return behaviour and
 `node scripts/military-qa.mjs` checks the Military readiness desk. The military suite
-resets and rewrites the F-16/F-15 packages in the local D1 only, and saves screenshots to
-the ignored `outputs/military-qa/`. `node scripts/military-release-qa.mjs` checks batch
-release, sample Trips and restore: it uploads and approves 30 generated QA photographs once
-(reused on later runs), approves all 30 local packages and records releases in the local D1 only.
+resets and rewrites the A-10/F-22 packages (`mil-a1`, `mil-a3`) in the local D1 only, and saves
+screenshots to the ignored `outputs/military-qa/`. `node scripts/military-release-qa.mjs` checks
+the release checks and sample Trips: it adopts or uploads one generated QA photograph per sheet row
+(reused on later runs), approves all 31 local packages and expects the release to be refused for the
+short Trainee Trip. Release and restore writes are covered by `tests/military.test.mjs`.
 
 The Firebase harness is restricted to loopback/demo services. Browser suites create local fixture
 records; they are not cloud tests. Results and screenshots are saved under `docs/evidence`.

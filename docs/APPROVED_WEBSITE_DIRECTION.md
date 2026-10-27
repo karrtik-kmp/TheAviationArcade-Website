@@ -45,62 +45,42 @@ grant game-use permission. Preserve the dedicated rights and approval workflow.
 
 ## Military catalog and difficulty
 
-Launch with 30 distinct post-war fixed-wing military aircraft types or families. Helicopters,
-drones, WWII aircraft and earlier aircraft wait for later expansions. Use an international
-roster without country quotas. Closely related variants count as one launch entry.
+**Corrected 2026-10-27.** An earlier version of this section listed a 30-aircraft post-war fixed-wing
+roster (14/6/4/3/3 slots, helicopters and WWII deferred, Hornet instead of Super Hornet). That roster
+was drafted by Claude, not decided by the client, and is withdrawn.
 
-| Rank | New aircraft | Eligible total |
+Military uses only what the client supplied: `docs/Military Airplane Identifier v1.xlsx` (2026-10-26),
+31 questions with their rank, answer, three wrong answers, photo file and photographer, exactly as
+written. It includes WWII aircraft, helicopters and aircraft repeated at several ranks.
+
+| Rank | Questions in the sheet | Eligible total |
 |---|---:|---:|
-| Trainee | 14 | 14 |
-| First Officer | 6 | 20 |
-| Captain | 4 | 24 |
-| Check Airman | 3 | 27 |
-| Chief Pilot | 3 | 30 |
+| Trainee | 6 | 6 |
+| First Officer | 5 | 11 |
+| Captain | 6 | 17 |
+| Check Airman | 8 | 25 |
+| Chief Pilot | 6 | 31 |
 
-Higher ranks inherit earlier content. Each Trip contains ten different aircraft types,
-not merely ten different photo IDs. Individual assignments remain provisional until
-photograph review and player testing; retain the approved rank counts.
-
-| Rank | Aircraft sourcing targets |
-|---|---|
-| Trainee | F-16 Fighting Falcon; F-15 Eagle; F-22 Raptor; F-35 Lightning II; A-10 Thunderbolt II; B-2 Spirit; B-52 Stratofortress; C-130 Hercules; C-17 Globemaster III; E-3 Sentry; U-2 Dragon Lady; SR-71 Blackbird; Harrier; MiG-21 |
-| First Officer | F-14 Tomcat; F/A-18 Hornet; Eurofighter Typhoon; Dassault Rafale; Airbus A400M Atlas; B-1 Lancer |
-| Captain | Saab Gripen; Dassault Mirage 2000; MiG-29; BAE Hawk |
-| Check Airman | HAL Tejas; Leonardo M-346; A-29 Super Tucano |
-| Chief Pilot | JF-17 Thunder; Pilatus PC-21; Kawasaki P-1 |
-
-Source the original F/A-18A-D Hornet for its slot; defer a separate Super Hornet challenge.
-Do not demand a variant designation when the approved answer is the aircraft family.
-Difficulty comes from recognition knowledge and meaningful similarities, not an unfair crop.
-
-Names and roles were checked against official sources: [USAF catalog](https://www.af.mil/About-Us/Fact-Sheets/Aircraft-Factsheets/),
-[RAF catalog](https://www.raf.mod.uk/aircraft/), [USAF museum](https://www.nationalmuseum.af.mil/Visit/Museum-Exhibits/Cold-War-Gallery/),
-[US Navy Hornet collection](https://www.history.navy.mil/content/history/museums/nnam/explore/collections/aircraft/f/f-a-18-hornet--tactical-.html),
-[Dassault](https://www.dassault-aviation.com/en/defense/rafale/),
-[Saab](https://www.saab.com/products/gripen-c-series),
-[India DDP](https://www.ddpmod.gov.in/en/resources/products/lca-tejas),
-[Italian Air Force](https://www.aeronautica.difesa.it/en/2024/06/19/t-346a/),
-[Embraer](https://www.embraer.com/defense-security-air/a-29-super-tucano/en/),
-[Pakistan DEPO](https://depo.gov.pk/single_product.php?pid=130),
-[Pilatus](https://www.pilatus-aircraft.com/en/pc-21), and
-[Kawasaki](https://global.kawasaki.com/en/mobility/air/aircrafts/p_1.html).
-Aircraft selection does not establish photograph availability or usage rights.
+Higher ranks draw on lower ranks as the game does: up to six questions from the pilot's own rank,
+the rest from below, never from higher ranks, never the same question twice in a Trip of ten.
+With six Trainee questions, a Trainee Trip cannot be filled until the client supplies more. Website
+and game use the same question ids (`mil-a1`…`mil-a31`). Changes to an aircraft, rank or answer
+come from a new client sheet.
 
 ## Content preparation and release
 
-Admins check the existing collection first, then fill gaps with photographer contributions
-or separately licensed photographs. Track each aircraft through Missing photo, Rights checked,
-Content prepared, Previewed and Approved. A replacement aircraft needs client approval and
-must preserve its rank slot.
+Admins store the client's photograph for each question (through Contribute) and track it through
+Missing photo, Rights checked, Content prepared, Previewed and Approved.
 
-Each package needs a real photograph with source, permission and attribution; verified aircraft
-identity with a reliable reference; displayed answer and aliases; plausible unambiguous wrong
-answers; difficulty; hint; reveal explanation; mobile crop; and a correct military Clipper Card mapping.
+Each package needs a stored photograph with source, permission and attribution; verified aircraft
+identity with a reliable reference; the client's answer and wrong answers (not edited on the website);
+a mobile crop check; and a Military Clipper Card mapping (⚠️ not yet defined by the client).
+Hints, reveal explanations and aliases were not supplied and are not required.
 
 One admin can prepare and approve a package, with mandatory preview/checklist and an approval
 record. Approval does not publish. Explicit batch release requires asset validation, rank coverage,
-complete ten-aircraft Trips, sample Trip previews and a way to restore the previous release.
-Military stays Coming Soon until all 30 packages and the playable integration pass their checks.
+complete ten-question Trips, sample Trip previews and a way to restore the previous release.
+Military stays Coming Soon until every package and the playable integration pass their checks.
 
 ## Implementation gaps
 
@@ -110,7 +90,7 @@ Military stays Coming Soon until all 30 packages and the playable integration pa
 - Community topics, reactions, comments, first-comment approval, reports and admin moderation.
 - Military delivery to the game. The per-aircraft stage tracker, readiness report, batch release with
   asset validation, sample Trip previews and release restore exist in the admin Military desk (2026-10-27).
-- Gameplay selection by unique aircraft family rather than only photo ID, plus card/session mapping.
+- Military Clipper Card and session mapping (client to define).
 - Final photography permission checks before a public launch.
 
 The sign-in layout checkpoint addresses the public page and safe homepage/action redirects.
