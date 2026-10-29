@@ -41,6 +41,7 @@ These are implementation requirements, not a claim that those features have ship
 | GitHub synchronization                           | Awaiting approval                | Local commits are complete; push to the configured GitHub remote awaits explicit authorization                  |
 | Live Google sign-in / real email delivery        | Human check pending              | Do not equate emulator behavior with live provider completion                                                   |
 | Shared app/web principal and Callsign linking    | Open integration                 | Apply original shared-account ruling; resolve applicable ADR-0006 policies and game contract                    |
+| Backend sync (content, progress, catalog)        | Planned                          | [BACKEND_SYNC_PLAN.md](BACKEND_SYNC_PLAN.md); W1/W2 done, Military desk moves to the backend under C1 (W7/W8)   |
 | Production staff capabilities/MFA                | Open                             | Binary verified-email allowlist is not the complete capability matrix                                           |
 | Public-launch media and privacy hardening        | Open                             | Full decode/re-encode, abuse controls, approved rights and retention/deletion workflow                          |
 | Mobile loading optimization                      | Follow-up                        | Historical pre-Firebase Lighthouse: performance 82, accessibility 100, best practices 100, LCP 4.1s             |
@@ -498,4 +499,16 @@ Verification (W1 + W2): TypeScript; 95/95 unit tests (`npm test`). Against `npm 
 `military-qa` 9/9, `military-release-qa` 6/6. The vinext production build completes with these
 changes in a clean worktree; in this checkout it stalls at its first step, as it does without them.
 Hosted D1, live Google sign-in and the 22.13 Node floor were not tested; nothing was deployed.
+
+## Backend sync plan committed (2026-10-29, brief W3)
+
+[BACKEND_SYNC_PLAN.md](BACKEND_SYNC_PLAN.md) is re-scoped to the user's rulings and committed. Changed
+from the 2026-10-28 draft: the backend owns game content (C1, D-2), so the website-written
+`content-release.v1` package and the Bunny push are dropped and the desks become backend admin API
+clients; the game shows the UGS copy first (C3); Cloud Code is adopted but outside purchases (C4); the
+backend owns `POST /v1/trips` (C5); Field Award progress, Go Around and Logbook are backend-recorded
+(C12); the catalog comes from Unity via the backend (D-5). It records the website's two seams
+(`RequestPrincipal`/`BackendClient` and `EditorialStore`) and lists the open questions from the
+website brief. **Military desk status:** works on D1 behind `EditorialStore`; to be migrated to the
+backend (W8) once the backend has releases and a home for preparation evidence.
 
