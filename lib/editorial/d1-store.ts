@@ -1,10 +1,10 @@
 /**
  * D1 adapter for EditorialStore. Every mutation is one batch: a compare-and-set write plus its
- * audit event, which auditFor inserts only if the write stamped this mutation's id. A failed
- * compare-and-set therefore writes nothing at all.
+ * audit event (lib/d1/kernel.ts). A failed compare-and-set writes nothing at all.
  */
 import { militaryRoster, type MilitaryAircraft, type MilitaryStage } from "../military.ts";
 import type { SubmissionData } from "../types.ts";
+import { auditFor, casStatement } from "../d1/kernel.ts";
 import {
   EditorialConflict,
   LIVE_CHANGED,
@@ -33,22 +33,6 @@ type Row = Record<string, string | number | null>;
 const POINTER_ID = "military-release-current";
 const recordId = (aircraftId: string) => `military-${aircraftId}`;
 const releaseId = (n: number) => `military-release-${n}`;
-
-export function auditFor(
-  db: D1Database,
-  table: "submissions" | "editorial_records",
-  actor: string,
-  id: string,
-  mutation: string,
-  action: string,
-  detail: unknown,
-) {
-  return db
-    .prepare(
-      `INSERT INTO audit_events (id, actor_id, entity_id, action, detail, created_at) SELECT ?, ?, ?, ?, ?, ? FROM ${table} WHERE id = ? AND last_mutation = ?`,
-    )
-    .bind(mutation, actor, id, action, JSON.stringify(detail), new Date().toISOString(), id, mutation);
-}
 
 function photoOf(row: Row): LinkedPhoto {
   return {
@@ -176,22 +160,24 @@ export function d1EditorialStore(
         now = new Date().toISOString(),
         baseVersion = current?.version ?? 0;
       const write = row
-        ? db
-            .prepare(
-              "UPDATE editorial_records SET source_id=?,payload=?,status=?,version=version+1,last_mutation=?,updated_at=? WHERE id=? AND kind='military' AND version=? AND (? IS NULL OR EXISTS (SELECT 1 FROM submissions WHERE id=? AND status='approved' AND version=?))",
-            )
-            .bind(
-              photo?.id ?? null,
-              plan.payload,
-              plan.to,
-              mutation,
-              now,
-              rid,
+        ? casStatement(
+            db,
+            {
+              table: "editorial_records",
+              id: rid,
               baseVersion,
-              guard?.id ?? null,
-              guard?.id ?? null,
-              guard?.version ?? 0,
-            )
+              set: { source_id: photo?.id ?? null, payload: plan.payload, status: plan.to },
+              where: {
+                sql: "kind='military' AND (? IS NULL OR EXISTS (SELECT 1 FROM submissions WHERE id=? AND status='approved' AND version=?))",
+                values: [guard?.id ?? null, guard?.id ?? null, guard?.version ?? 0],
+              },
+              actor: actor.principal,
+              action: "",
+              detail: null,
+            },
+            mutation,
+            now,
+          )
         : db
             .prepare(
               "INSERT INTO editorial_records (id,kind,source_id,payload,status,date_key,version,last_mutation,updated_at) SELECT ?,'military',?,?,?,NULL,1,?,? WHERE NOT EXISTS (SELECT 1 FROM editorial_records WHERE id=?) AND (? IS NULL OR EXISTS (SELECT 1 FROM submissions WHERE id=? AND status='approved' AND version=?))",

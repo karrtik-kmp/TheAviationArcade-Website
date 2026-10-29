@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { memoryEditorialStore } from "../lib/editorial/memory-store.ts";
+import { d1ContentStore } from "../lib/editorial/content-d1.ts";
 import { AuthUnavailable, accountSessionKey, resolvePrincipal } from "../lib/request/principal.ts";
 import { dispatch } from "../lib/request/router.ts";
 import { routes } from "../lib/request/routes.ts";
@@ -49,6 +50,7 @@ function harness() {
       throw new Error("photo storage is not used in these tests");
     },
     editorial: () => editorial,
+    content: () => d1ContentStore(db),
     references: async () => ({ airports: [] }),
   });
   async function call(method, path, { as, body, fence, from = origin } = {}) {

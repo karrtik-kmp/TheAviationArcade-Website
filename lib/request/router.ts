@@ -12,6 +12,7 @@
  */
 import { HttpError, failure, sameOrigin } from "../errors.ts";
 import type { EditorialStore } from "../editorial/store.ts";
+import type { ContentStore } from "../editorial/content.ts";
 import type { PhotoStorage } from "../photo-storage.ts";
 import { AuthUnavailable, type MemberPrincipal, type RequestPrincipal } from "./principal.ts";
 
@@ -23,6 +24,7 @@ export type RouteDeps = {
   db: () => D1Database;
   photos: () => PhotoStorage;
   editorial: () => EditorialStore;
+  content: () => ContentStore;
   references: () => Promise<unknown>;
 };
 export type RouteContext<A extends Audience = Audience> = Omit<RouteDeps, "principal"> & {

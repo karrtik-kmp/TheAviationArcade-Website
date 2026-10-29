@@ -530,3 +530,22 @@ it first served the new module). `browser-qa`: its catalog check expected 7 card
 8; the first four checks pass, and the contributor step is refused by the 30-proposals-a-day limit,
 which today's release QA runs used up in local D1. That step was not re-run.
 
+## Submissions and content desks out of the route table (2026-10-29, brief W4)
+
+- `lib/d1/kernel.ts` is the one implementation of "bump the version, compare-and-set, write the audit
+  event in the same batch". Submission revisions and reviews, content saves and Military package saves
+  use it.
+- `lib/submissions/d1.ts` holds photographer submissions (they stay on the website, D-2): retry-key
+  replay, the 30-a-day limit, owner-only revision, the ambiguous-acknowledgement reconciliation
+  (unchanged), reviews and the demo loader. The route keeps the form and photo parsing.
+- `lib/editorial/content.ts` + `content-d1.ts`: the Aircraft Identifier and Plane of the Day desks
+  behind a `ContentStore` (list, create draft, save, featured), with the publishing rules and messages
+  unchanged. D1 is the only adapter, on purpose: under D-2 this content moves to the backend, whose
+  adapter replaces it. One change: creating a draft whose source photograph changed between the check
+  and the insert now gives 409 instead of a 500.
+- Tests: `tests/submissions.test.mjs` (7) and `tests/content-store.test.mjs` (7) over the D1 shim.
+
+Verification: TypeScript; 117/117 unit tests. Against `demo:preview`: `api-qa` 1/1, `demo-admin-qa`
+6/6, `military-qa` 9/9. `submissions-ui-qa` was not run: it is fixed to port 5173 and needs the
+emulator profile there, while this checkout's `.dev.vars` points 5173 at the real Firebase project.
+
