@@ -135,11 +135,16 @@ Decided in Unity ADR-0006 (D1–D7) and the backend README.
   the linked photographer submissions and their photos (or say how the backend ingests them), and the
   counts and digests are compared before the switch. Blocked on the backend's release and edit
   endpoints and on where preparation evidence lives (§7).
-- **Server Trip (C5).** The backend owns `POST /v1/trips` and writes it into `openapi.yaml`; the
-  website does not sketch it. The server checks answers (decided 2026-10-28): the dealt deck omits
-  the answer key and the result returns the correct answer for the reveal.
-- **App delivery.** The game receives the live release from the backend (manifest route); Unity's
-  `HttpContentManifestService` state machine and `IContentCache` stay as they are.
+- **Server Trip (C5).** The backend owns the contract and writes it into `openapi.yaml`; the website
+  does not sketch it. Server-issued Trips are `POST /v1/trips` and `POST /v1/trips/:id/complete`,
+  Rounds belong to a Trip, and Trips deal at Active Rank (user, 2026-10-29). Trips v1 records the
+  Flight facts the client reports; server answer checks come later, with the backend's dealer slices
+  and releases (user, 2026-10-29).
+- **App delivery.** Admin updates reach the game through the pull manifest
+  `GET /v1/content/manifest` (user, 2026-10-29); Remote Config is only a kill switch and pointer.
+  Unity's `HttpContentManifestService` state machine and `IContentCache` stay as they are.
+- **Logbook.** Derived on the server from Trips (`GET /v1/me/logbook`, user 2026-10-29). The website's
+  progress read-through (W6) can show it from there once the contract exists.
 
 ### S4 Shared catalog and contract parity (D-5)
 
