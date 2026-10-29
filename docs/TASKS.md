@@ -590,3 +590,14 @@ deployed); the earlier stalls happened only on the failing H: disk.
 
 Verification: TypeScript; 132/132 unit tests, five runs in a row; `npm run build` on E:.
 
+## One rank list from the catalog (2026-10-29, cross-repo XW2)
+
+`lib/catalog.ts` exports `ranks` (id, name, Status Points threshold), `rankNames`, `RankName` and
+`RankId`, checked against `contracts/catalog.v1.json` in `tests/catalog.test.mjs`. The Military
+desk (`militaryRankNames`), the content publishing rule in `lib/rules.ts`, the admin rank picker and
+the progress contract and sample (rank ids, names, thresholds) all read it; their own literals are
+gone. The player-mock half of XW2 was already done: the mock was replaced in W6.
+
+Verification: TypeScript; 133/133 unit tests, three runs; `npm run build` on E:; against
+`demo:preview` from E:, `military-qa` 9/9 and `demo-admin-qa` 6/6.
+

@@ -60,6 +60,7 @@ import type {
   ReleasePointer,
 } from "@/lib/military";
 import { sitePath } from "@/lib/paths";
+import { rankNames } from "@/lib/catalog";
 import { createDraftSession, type Outcome } from "@/lib/editorial/draft-session";
 
 type AdminUser = { sessionKey: string };
@@ -94,13 +95,7 @@ const checkNames: { key: keyof ReviewChecks; label: string }[] = [
   { key: "rights", label: "Usage rights are documented" },
   { key: "category", label: "Submission category is accurate" },
 ];
-const ranks = [
-  "Trainee",
-  "First Officer",
-  "Captain",
-  "Check Airman",
-  "Chief Pilot",
-];
+const ranks = rankNames;
 
 function prettyDate(value: string) {
   if (!value) return "Not set";

@@ -17,6 +17,27 @@ export type Game = {
   submissionCategory: Category;
 };
 
+/**
+ * The Flight Crew Hierarchy, lowest first, the same for every game: contracts/catalog.v1.json
+ * `ranks` (Unity FlightRank is the origin). tests/catalog.test.mjs keeps this equal to the contract.
+ */
+export const ranks = [
+  { id: "trainee", name: "Trainee", statusPoints: 0 },
+  { id: "first-officer", name: "First Officer", statusPoints: 10000 },
+  { id: "captain", name: "Captain", statusPoints: 50000 },
+  { id: "check-airman", name: "Check Airman", statusPoints: 100000 },
+  { id: "chief-pilot", name: "Chief Pilot", statusPoints: 400000 },
+] as const;
+export const rankNames = ranks.map((r) => r.name) as unknown as readonly [
+  "Trainee",
+  "First Officer",
+  "Captain",
+  "Check Airman",
+  "Chief Pilot",
+];
+export type RankName = (typeof ranks)[number]["name"];
+export type RankId = (typeof ranks)[number]["id"];
+
 export const photographer = "Josh M";
 export const photographerUrl = "https://www.instagram.com/iamjoshmark/";
 

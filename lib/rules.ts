@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { rankNames } from "./catalog.ts";
 import type {
   EditorialData,
   ReviewChecks,
@@ -177,15 +178,7 @@ export function editorialErrors(
       errors.push("Provide one correct answer and three distractors.");
     if (new Set(options).size !== options.length)
       errors.push("All answer choices must be different.");
-    if (
-      ![
-        "Trainee",
-        "First Officer",
-        "Captain",
-        "Check Airman",
-        "Chief Pilot",
-      ].includes(data.difficulty)
-    )
+    if (!(rankNames as readonly string[]).includes(data.difficulty))
       errors.push("Choose a supported rank.");
   } else if (data.description.trim().length < 15)
     errors.push("Add the photo's factual context.");

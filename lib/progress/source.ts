@@ -4,14 +4,13 @@
  * are created only by the app, so the website never calls `PUT /v1/me`. Relative imports only.
  */
 import { z } from "zod";
-import { militaryRankNames } from "../military.ts";
+import { ranks, type RankId } from "../catalog.ts";
 import type { MemberPrincipal } from "../request/principal.ts";
 
-/** openapi `Rank`, lowest first. */
-export const rankIds = ["trainee", "first-officer", "captain", "check-airman", "chief-pilot"] as const;
-export type RankId = (typeof rankIds)[number];
-/** The five-rank ladder is the same for every game. */
-export const rankName = (rank: RankId) => militaryRankNames[rankIds.indexOf(rank)];
+/** openapi `Rank`, lowest first: the catalog's rank ids. */
+export const rankIds = ranks.map((r) => r.id) as unknown as readonly [RankId, ...RankId[]];
+export type { RankId };
+export const rankName = (rank: RankId) => ranks.find((r) => r.id === rank)!.name;
 
 const rank = z.enum(rankIds);
 const count = z.number().int().min(0);

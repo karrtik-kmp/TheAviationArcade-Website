@@ -30,3 +30,16 @@ test("URL slugs are unique and the submission form accepts exactly them", () => 
   assert.equal(new Set(slugs).size, slugs.length);
   assert.deepEqual(new Set(gameSlugs.options), new Set(slugs));
 });
+
+test("the website's rank ladder is the catalog's, in order, with its thresholds", async () => {
+  const { ranks, rankNames } = await import("../lib/catalog.ts");
+  assert.deepEqual(
+    ranks.map((r) => [r.id, r.name, r.statusPoints]),
+    catalog.ranks.map((r) => [r.id, r.name, r.statusPoints]),
+  );
+  assert.deepEqual([...rankNames], catalog.ranks.map((r) => r.name));
+  const { militaryRankNames } = await import("../lib/military.ts");
+  const { rankIds } = await import("../lib/progress/source.ts");
+  assert.deepEqual([...militaryRankNames], [...rankNames], "Military uses the same ladder");
+  assert.deepEqual([...rankIds], catalog.ranks.map((r) => r.id), "progress ranks are the catalog ids");
+});

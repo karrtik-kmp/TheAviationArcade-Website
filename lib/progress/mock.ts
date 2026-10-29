@@ -1,11 +1,12 @@
 /**
  * A labelled sample ProgressSource for local work without a backend (`PROGRESS_SOURCE=mock` in a
  * development build only). Deterministic per account and valid against the backend's Progress
- * contract; the page marks it as a sample. Thresholds are the backend catalog's rank thresholds.
+ * contract; the page marks it as a sample. Thresholds come from the catalog (lib/catalog.ts).
  */
+import { ranks } from "../catalog.ts";
 import { progressSchema, rankIds, type Progress, type ProgressSource } from "./source.ts";
 
-const thresholds = [0, 10000, 50000, 100000, 400000];
+const thresholds = ranks.map((r) => r.statusPoints);
 
 function seeded(text: string) {
   let hash = 2166136261;
