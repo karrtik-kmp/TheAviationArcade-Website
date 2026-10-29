@@ -8,6 +8,8 @@ export class HttpError extends Error {
     public status: number,
     message: string,
     public code?: string,
+    /** Every reason a request was refused, for forms that list them (a release check). */
+    public errors?: string[],
   ) {
     super(message);
   }
@@ -83,7 +85,11 @@ export function respond(data: unknown, status = 200) {
 export function failure(error: unknown) {
   if (error instanceof HttpError)
     return respond(
-      { error: error.message, ...(error.code ? { code: error.code } : {}) },
+      {
+        error: error.message,
+        ...(error.code ? { code: error.code } : {}),
+        ...(error.errors?.length ? { errors: error.errors } : {}),
+      },
       error.status,
     );
   console.error(

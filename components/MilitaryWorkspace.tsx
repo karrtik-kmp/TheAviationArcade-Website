@@ -68,7 +68,7 @@ export function MilitaryWorkspace({
   pointer: ReleasePointer & { version: number };
   submissions: Submission[];
   busy: boolean;
-  onRelease: (action: "release" | "restore", basis?: string) => Promise<boolean>;
+  onRelease: (action: "release" | "restore" | "activate", basis?: string, release?: number) => Promise<boolean>;
   onSave: (
     aircraft: MilitaryAircraft,
     stage: MilitaryStage,
@@ -485,7 +485,7 @@ function ReleasePanel({
   pointer: ReleasePointer & { version: number };
   submissions: Submission[];
   busy: boolean;
-  onRelease: (action: "release" | "restore", basis?: string) => Promise<boolean>;
+  onRelease: (action: "release" | "restore" | "activate", basis?: string, release?: number) => Promise<boolean>;
 }) {
   const basis = releaseBasis(packages);
   // The browser cannot see file digests; the submission id stands in for this pre-check.
@@ -515,6 +515,9 @@ function ReleasePanel({
   const previous = pointer.history[pointer.history.length - 1];
   const confirmed = reviewed === basis && showTrips;
   const unchanged = current?.basis === basis;
+  // An upload that never went live, for example because another editor released first.
+  const candidate = releases.find((r) => r.status === "uploaded");
+  const candidateReady = candidate?.basis === basis && !unchanged;
 
   return (
     <section className="admin-panel military-release" aria-labelledby="military-release-title">
@@ -537,6 +540,14 @@ function ReleasePanel({
           Release {current.number} · {current.aircraft} questions ·{" "}
           {new Date(current.createdAt).toLocaleString()}
           {unchanged ? " · matches the packages below" : " · packages changed since"}
+        </p>
+      )}
+
+      {candidate && (
+        <p className="military-release-current">
+          Release {candidate.number} uploaded, not live · {candidate.aircraft} questions ·{" "}
+          {new Date(candidate.createdAt).toLocaleString()}
+          {candidateReady ? " · matches the packages below" : " · packages changed since"}
         </p>
       )}
 
@@ -579,6 +590,16 @@ function ReleasePanel({
             }}
           >
             Shuffle samples
+          </Button>
+        )}
+        {candidate && candidateReady && (
+          <Button
+            appearance="subtle"
+            icon={<CheckCircle size={16} />}
+            disabled={busy}
+            onClick={() => void onRelease("activate", undefined, candidate.number)}
+          >
+            Make release {candidate.number} live
           </Button>
         )}
         {previous !== undefined && (

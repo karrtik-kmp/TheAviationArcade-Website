@@ -44,7 +44,7 @@ These are implementation requirements, not a claim that those features have ship
 | Production staff capabilities/MFA                | Open                             | Binary verified-email allowlist is not the complete capability matrix                                           |
 | Public-launch media and privacy hardening        | Open                             | Full decode/re-encode, abuse controls, approved rights and retention/deletion workflow                          |
 | Mobile loading optimization                      | Follow-up                        | Historical pre-Firebase Lighthouse: performance 82, accessibility 100, best practices 100, LCP 4.1s             |
-| Military readiness desk and batch release        | Implemented and locally verified | Client's 31-question sheet, stages, coverage, release checks, sample Trips; Trainee short, delivery open        |
+| Military readiness desk and batch release        | Implemented and locally verified | Client's 31-question sheet, stages, release checks, sample Trips; EditorialStore seam (W1); Trainee short       |
 
 ## Verification contract
 
@@ -448,3 +448,29 @@ were not tested; nothing was deployed.
 Client to confirm (Josh): 4+ more Trainee questions; the C-17 photograph; photographer names for rows
 14, 23, 25, 26; whether the same aircraft may appear more than once in one Trip; what the Military
 Clipper Card mapping is.
+
+## Military desk behind EditorialStore (2026-10-29, brief W1)
+
+The Military desk's reads and writes moved out of `app/api/[...path]/route.ts` into
+`lib/editorial/`: `store.ts` (the interface, typed errors and the release rules every adapter shares),
+`d1-store.ts` (the existing SQL, moved) and `memory-store.ts`. The route handlers are now short calls
+that turn store errors into the same HTTP errors and messages as before. This is the seam the backend
+adapter (W7) plugs into once the backend owns editorial content (C1, D-2).
+
+- **A release is two steps (user, 2026-10-29).** `upload` records an immutable candidate ("uploaded",
+  listed but not live). `activate` makes it live only if none of its package versions or linked
+  photographs changed since the upload: the guard compares against the candidate's stored snapshot,
+  including each contribution's version. Each step writes one audit event, so a release leaves two.
+  "Release batch" still does both in one click; if another editor wins in between, the candidate stays
+  visible and the desk offers **Make release N live** while it still matches the packages.
+- The releases list in `GET /api/admin/military` now carries `status` (`uploaded` | `released`).
+  New route: `POST /api/admin/military/releases/activate` `{ release, pointerVersion }`.
+- A refused release still returns its reasons: `HttpError` gained an optional `errors[]` that
+  `failure()` emits.
+- Restore is unchanged: it moves the pointer without re-checking rights (open question in the brief).
+- `tsconfig.json` allows `.ts` import suffixes so `node --test` can load the store modules.
+- `tests/editorial-store.test.mjs` runs one contract suite (11 cases) against the memory adapter and
+  the D1 adapter over `node:sqlite` with the real migration (`tests/support/d1-sqlite.mjs`). The
+  release cases use a 10-question synthetic roster; the client's sheet still cannot fill a Trainee
+  Trip (C13 is still waiting on Josh, so that block stays).
+

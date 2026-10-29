@@ -453,4 +453,6 @@ export type MilitaryRelease = {
   basis: string;
   aircraft: number;
   createdAt: string;
+  /** "uploaded": a candidate that has never been live. "released": live now or earlier. */
+  status: "uploaded" | "released";
 };

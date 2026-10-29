@@ -1,6 +1,6 @@
 // Military batch release against the client's 31-question sheet: release checks, sample Trips and
 // staff-only access. The sheet has six Trainee questions, so a release is refused until the client
-// supplies more; the release and restore writes are covered by tests/military.test.mjs.
+// supplies more; the release, activate and restore writes are covered by tests/editorial-store.test.mjs.
 // Local only: run against `npm run demo:preview` with the Auth Emulator seeded. Writes only local D1 and
 // local photo storage. Prepares all 31 packages with distinct generated QA photographs (reused across runs).
 import assert from "node:assert/strict";

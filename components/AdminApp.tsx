@@ -630,26 +630,30 @@ export function AdminApp({
     );
   }
 
-  /** Records a batch release or restores the previous one. Neither delivers nor publishes. */
-  async function changeRelease(action: "release" | "restore", basis = "") {
+  /** Records a batch release, makes an uploaded one live, or restores the previous one. None delivers or publishes. */
+  async function changeRelease(
+    action: "release" | "restore" | "activate",
+    basis = "",
+    release?: number,
+  ) {
     setBusy(true);
     setNotice(null);
     try {
       const body = await requestJson(
-        action === "release"
-          ? "/api/admin/military/releases"
-          : "/api/admin/military/releases/restore",
+        `/api/admin/military/releases${action === "release" ? "" : `/${action}`}`,
         "POST",
         action === "release"
           ? { basis, previewed: true, pointerVersion: pointer.version }
-          : { pointerVersion: pointer.version },
+          : action === "activate"
+            ? { release, pointerVersion: pointer.version }
+            : { pointerVersion: pointer.version },
       );
       applyMilitary(body);
       const current = (body.pointer as ReleasePointer | undefined)?.current;
       setNotice({
         kind: "success",
         text:
-          action === "release"
+          action !== "restore"
             ? `Release ${current} recorded. Nothing was delivered or published; Military stays Coming Soon.`
             : `Release ${current} is current again.`,
       });
