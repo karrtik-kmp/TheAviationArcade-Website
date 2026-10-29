@@ -20,8 +20,19 @@ test("sends only the member's bearer: no cookie, no service secret", async () =>
   assert.deepEqual(await client.getJson("/v1/me/progress"), { ok: true });
   assert.equal(calls[0].url, "http://127.0.0.1:3000/v1/me/progress");
   assert.equal(calls[0].init.headers.Authorization, "Bearer member-token");
-  assert.deepEqual(Object.keys(calls[0].init.headers).sort(), ["Accept", "Authorization"]);
+  assert.deepEqual(Object.keys(calls[0].init.headers).sort(), ["Accept", "Authorization", "X-Client"]);
   assert.equal(calls[0].init.redirect, "error", "a redirect never carries the token elsewhere");
+});
+
+test("progress calls carry X-Client: web and never X-Client-Version", async () => {
+  const { fetch, calls } = fakeFetch(json(200, {}));
+  const client = backendClient({ baseUrl: "http://127.0.0.1:3000", fetch }, new Bearer("t"));
+  await client.getJson("/v1/me/progress");
+  await client.send("PUT", "/v1/x", {});
+  for (const call of calls) {
+    assert.equal(call.init.headers["X-Client"], "web", "exempts the website's server from the app version gate");
+    assert.equal("X-Client-Version" in call.init.headers, false);
+  }
 });
 
 test("no base URL means not connected, and nothing is sent", async () => {

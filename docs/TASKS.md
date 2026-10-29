@@ -601,3 +601,11 @@ gone. The player-mock half of XW2 was already done: the mock was replaced in W6.
 Verification: TypeScript; 133/133 unit tests, three runs; `npm run build` on E:; against
 `demo:preview` from E:, `military-qa` 9/9 and `demo-admin-qa` 6/6.
 
+## Website calls exempt from the app version gate (2026-10-29)
+
+Every backend call from the website's server now sends `X-Client: web` (and never
+`X-Client-Version`), the label the backend's version gate skips (user ruling, backend `3651ccc`,
+openapi 0.5.0). It is not a credential; the member's Bearer is still verified. A 426 therefore no
+longer applies to `/play`. Test: `tests/backend-client.test.mjs` (header on progress and other calls).
+Verification: TypeScript; 134/134 unit tests.
+

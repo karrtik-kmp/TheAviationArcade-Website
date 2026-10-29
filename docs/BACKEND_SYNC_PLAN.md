@@ -116,8 +116,9 @@ Decided in Unity ADR-0006 (D1–D7) and the backend README.
 - `ProgressSource` (W6, built) replaced `lib/player-mock.ts`, with a labelled sample adapter for local work. No Callsign
   until Phase 7.
 - Website reads share the player's per-principal rate limit; fine at page-view volume.
-- The backend's `X-Client-Version` gate applies to `/v1/me/progress`, but the website is not an app
-  build. Asked of the backend session (§7).
+- The website is not an app build, so its server calls send `X-Client: web` instead of
+  `X-Client-Version`; the backend's version gate skips them (user, 2026-10-29; openapi 0.5.0). It is a
+  compatibility label, not a credential: the Bearer is still verified.
 
 ### S3 Game content: the backend owns it, the website edits through it
 
@@ -205,7 +206,7 @@ live-Google behaviour.
 |---|---|---|---|---|
 | **P0 Align** | D1–D4; `catalog.v1.json` + parity tests; website W1/W2 (done) | all | Parity tests pass in each repo | — |
 | **P1 App → backend** | Firebase SDK, token provider, headers, backend adapters, account-scoped stores | Unity | ADR-0006 A→B→A isolation tests with fakes; a device banks a Flight and replays safely | Android SHA fingerprints, Apple Team ID |
-| **P2 Website progress** | S2 read-through (W6); deletion page | website | Emulator-backed: the website shows the totals the app banked; 404/401/503 states have browser tests | Backend answer on `X-Client-Version` |
+| **P2 Website progress** | S2 read-through (W6); deletion page | website | Emulator-backed: the website shows the totals the app banked; 404/401/503 states have browser tests | — |
 | **P3 Content on the backend** | Backend releases, edit-in-place and preparation evidence; website backend adapter (W7) and D1 migration (W8); server Trip; manifest route | all | A release uploads once, activates atomically, rolls back only with rights re-checked; a Trip records its release; the app plays the live deck; Military stays refused while Trainee is short | Backend 5.0 review; release endpoints; Clipper mapping (Military) |
 | **P4 Hosting** | Host + managed Postgres, `GAME_API_BASE_URL` on the Worker, shared rate-limit store, backups | backend, website | Hosted smoke run: app and website resolve the same principal and progress | Host choice sign-off |
 | **P5 Adapters on demand** | Turn on a UGS service when its trigger fires | Unity, backend | Adapter off = identical behaviour; nothing UGS-held is read for rewards | Per-service decision |
@@ -228,8 +229,7 @@ synthetic roster, because Military cannot release yet.
 - **User:** Bunny exposure for game media (a public pull zone over content-addressed images only, or
   signed URLs).
 - **Backend session:** where Military preparation evidence lives (content item, separate record, or
-  dropped); release candidate, activate and rollback endpoints; the `X-Client-Version` gate for web
-  callers.
+  dropped); release candidate, activate and rollback endpoints.
 - **Josh:** four or more Trainee questions; whether Military deals from every rank (C13); the Military
   Clipper Card mapping; the hinted-streak ruling; Flight Segment set bonuses.
 - **Open, unchanged:** Callsign/game identity (Phase 7); retention of website rows on account

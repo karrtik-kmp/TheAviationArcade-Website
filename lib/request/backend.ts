@@ -1,7 +1,9 @@
 /**
  * BackendClient: server-to-server calls from the Worker to the game backend, as the signed-in
- * member. It sends only `Authorization: Bearer <the member's Firebase ID token>`: no cookie, no
- * service secret, and the token is never logged. Relative imports only.
+ * member. It sends `Authorization: Bearer <the member's Firebase ID token>` and `X-Client: web`:
+ * no cookie, no service secret, and the token is never logged. `X-Client: web` exempts the
+ * website's server from the backend's app version gate (openapi 0.5.0, "Client version gate"); it
+ * is a compatibility label, not a credential, and no `X-Client-Version` is sent. Relative imports only.
  */
 import type { Bearer } from "./principal.ts";
 
@@ -45,6 +47,7 @@ export function backendClient(
     const headers: Record<string, string> = {
       Accept: "application/json",
       Authorization: `Bearer ${bearer.reveal()}`,
+      "X-Client": "web",
     };
     if (body !== undefined) headers["Content-Type"] = contentType;
     let response: Response;
