@@ -83,7 +83,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
             <ThemeToggle />
             <AccountControl />
             <Link className="btn" href="/get-the-app">
-              Get the App <ArrowUpRight size={15} />
+              App release details <ArrowUpRight size={15} />
             </Link>
             <button
               className="icon-button mobile-menu-button"
@@ -103,7 +103,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
             className="mobile-nav"
             aria-label="Mobile navigation"
           >
-            {[...nav, ["/get-the-app", "Get the App"]].map(([href, label]) => (
+            {[...nav, ["/get-the-app", "App release details"]].map(([href, label]) => (
               <Link key={href} href={href}>
                 {label}
               </Link>

@@ -476,7 +476,7 @@ export default function SubmissionForm({
   });
 
   return (
-    <main className="wrap contribute-root">
+    <main id="main" className="wrap contribute-root">
       <section className="page-intro">
         <p className="eyebrow">COMMUNITY PHOTOGRAPHY</p>
         <h1>Bring your view of aviation.</h1>

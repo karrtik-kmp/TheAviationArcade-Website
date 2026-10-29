@@ -38,6 +38,7 @@
   --muted: #4c5960;
   --line: #d7c9b2;
   --action: #a93825;
+  --action-hover: #963020;
   --on-action: #fff9ee;
   --brass: #806127;
   --focus: #97651b;
@@ -55,6 +56,7 @@
   --muted: #a6b5c0;
   --line: #34505c;
   --action: #c64731;
+  --action-hover: #b33b28;
   --on-action: #fff9ee;
   --brass: #d5b66d;
   --focus: #d5b66d;
@@ -184,12 +186,15 @@ button:active,
     background 0.18s;
 }
 .btn:hover {
-  filter: brightness(1.08);
+  background: var(--action-hover);
 }
 .btn.secondary {
   background: transparent;
   color: var(--ink);
   border-color: var(--line);
+}
+.btn.secondary:hover {
+  background: var(--panel);
 }
 .text-link {
   display: inline-flex;

@@ -166,6 +166,7 @@ $env:PLAYWRIGHT_MODULE='file:///C:/Users/PC/.cache/codex-runtimes/codex-primary-
 npm run test:auth
 node scripts/browser-qa.mjs
 node scripts/api-qa.mjs
+node scripts/frontend-ui-qa.mjs
 ```
 
 For the role-flow regression under a nonempty prefix, start the demo preview in its

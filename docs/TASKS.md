@@ -549,3 +549,30 @@ Verification: TypeScript; 117/117 unit tests. Against `demo:preview`: `api-qa` 1
 6/6, `military-qa` 9/9. `submissions-ui-qa` was not run: it is fixed to port 5173 and needs the
 emulator profile there, while this checkout's `.dev.vars` points 5173 at the real Firebase project.
 
+
+## Frontend review fixes (2026-10-29)
+
+Fixed the five frontend review findings: explicit accessible primary hover tokens in both themes,
+the photographer page's missing skip target, heading focus after sign-in/register/recovery mode
+changes, honest App release details labels across desktop/mobile/game-detail links, and current
+privacy copy describing public browsing plus Firebase email/password and Google account features.
+The unused local Sites mock hosting sign-in adapter is disabled; no ChatGPT sign-in is needed.
+Product account authorization and Firebase provider behavior are unchanged.
+
+The local preview was recovered with a single Vite process using the documented sites-env preload,
+then warmed through the Vite client, auth-config and homepage endpoints. Cold compilation and
+configuration restarts must finish before browser checks; the QA waits for hydrated account/form
+controls before keyboard/touch actions. No hosted deployment or audience setting was changed.
+
+Verification: TypeScript; 117/117 unit tests; production build; 64/64 browser checks across seven
+public routes at 320/768/1024/1440 pixels in light/dark themes, plus 390px iPhone 13 Chromium touch
+emulation. No horizontal overflow or browser exceptions/console errors. Verified contrast at rest
+and hover, keyboard mode focus, the photographer skip link, catalog filters/empty/reset, mobile
+navigation/Escape and disabled legacy hosting sign-in endpoint (404). Receipt:
+[frontend-ui-qa.json](evidence/frontend-ui-qa.json). Screenshots are in outputs/frontend-ui-qa/.
+No live Google authentication or real account creation was performed.
+
+Focused ESLint is clean for AuthForm, information/game routes, Vite config and the new QA script.
+The touched PublicShell and SubmissionForm retain their pre-existing six lint errors and five
+warnings; linting HEAD via stdin reproduced the same rules/lines. Those existing issues were not
+introduced by these fixes.

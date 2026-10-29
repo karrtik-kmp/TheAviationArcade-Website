@@ -88,7 +88,7 @@ const pages: Record<
       },
       {
         title: "Prototype access",
-        body: "The review site is private. ChatGPT sign-in protects this preview and staff permissions are checked on the server. This identity is separate from the planned mobile game's player accounts. Public retention and deletion policies are not finalized.",
+        body: "You can browse this website without signing in. Email/password and Google sign-in through Firebase are used for account features and photo submissions. Staff permissions are checked on the server. App account linking is not yet available. Public retention and deletion policies are not finalized.",
       },
     ],
   },

@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
@@ -77,6 +77,14 @@ export function AuthForm({
 }) {
   const [role, setRole] = useState<Audience>(audience);
   const [mode, setMode] = useState<Mode>("signin");
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const previousMode = useRef(mode);
+  useEffect(() => {
+    if (previousMode.current !== mode) {
+      headingRef.current?.focus();
+      previousMode.current = mode;
+    }
+  }, [mode]);
   const editor = audience === "admin";
   const destination = role === audience ? returnTo : audiences[role].home;
   const [configState, setConfigState] = useState<ConfigState>("checking");
@@ -243,7 +251,7 @@ export function AuthForm({
       <span className="eyebrow">
         {editor ? "Staff access" : `Airplane Games · ${audiences[role].label}`}
       </span>
-      <h1>{editor && mode === "signin" ? "Editor sign in" : title}</h1>
+      <h1 ref={headingRef} tabIndex={-1}>{editor && mode === "signin" ? "Editor sign in" : title}</h1>
       {roles && mode !== "reset" && (
         <fieldset className="auth-roles" disabled={busy}>
           <legend>I’m signing in as</legend>

@@ -51,7 +51,7 @@ export default async function GamePage({
             </p>
             <div className="actions">
               <Link className="btn" href="/get-the-app">
-                Get the App
+                App release details
               </Link>
               <Link
                 className="btn secondary"
