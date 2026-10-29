@@ -1,0 +1,2 @@
+# Vendored contract files are byte copies of another repo's file; never convert their line endings.
+contracts/*.json text eol=lf

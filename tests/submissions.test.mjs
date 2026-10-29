@@ -105,8 +105,13 @@ test("a review is a compare-and-set on the proposal's version", async () => {
     version: 1,
   });
   assert.deepEqual([reviewed.status, reviewed.version], ["changes_requested", 2]);
-  assert.equal(
-    db.sqlite.prepare("SELECT action FROM audit_events WHERE entity_id=? ORDER BY created_at DESC").get(submission.id).action,
-    "changes_requested",
+  // Submission and review can share a millisecond, so compare the set of actions, not their order.
+  assert.deepEqual(
+    db.sqlite
+      .prepare("SELECT action FROM audit_events WHERE entity_id=? ORDER BY action")
+      .all(submission.id)
+      .map((row) => row.action),
+    ["changes_requested", "submitted"],
+    "one audit event for the submission and one for the review; the stale attempt wrote none",
   );
 });

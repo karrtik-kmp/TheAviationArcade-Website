@@ -575,3 +575,18 @@ Verification: TypeScript; 127/127 unit tests (`tests/backend-client.test.mjs` 5,
 against a running backend. `npm run build` completes on E: in 26 s, including deploy preparation (nothing
 deployed); the earlier stalls happened only on the failing H: disk.
 
+## Catalog contract vendored (2026-10-29, cross-repo XW1)
+
+- `contracts/catalog.v1.json` is a byte copy of the backend's committed file (B2, `16351d0`);
+  `.gitattributes` keeps it LF and `contracts/README.md` gives the copy rule.
+- Every `lib/catalog.ts` game has a `backendId` (Military: `aircraft-identifier-military`; its URL
+  slug `military-aircraft-identifier` and internal id stay website-local) and a `submissionCategory`,
+  which replaces the contributor form's own slug-to-category map.
+- `lib/rules.ts` exports `gameSlugs`, the enum the submission schema uses.
+- `tests/catalog.test.mjs` (5): module ids equal the catalog's as a set and in ticket order, Military's
+  slug and id, unique slugs, and the submission enum equals the catalog slugs.
+- Also fixed a flaky assertion in `tests/submissions.test.mjs` that depended on two audit events
+  having different timestamps.
+
+Verification: TypeScript; 132/132 unit tests, five runs in a row; `npm run build` on E:.
+

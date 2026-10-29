@@ -65,16 +65,6 @@ type ApiResponse = {
   fields?: Record<string, unknown>;
 };
 
-const gameCategory: Record<string, Category> = {
-  "aircraft-identifier": "aircraft",
-  "military-aircraft-identifier": "aircraft",
-  "tail-identifier": "tail",
-  "airport-spotter": "airport",
-  "atc-match": "atc",
-  "call-sign-match": "atc",
-  "code-search": "atc",
-  "runway-identifier": "runway",
-};
 const emptyData = (
   user: Contributor,
   category?: string,
@@ -88,7 +78,7 @@ const emptyData = (
     category ?? "",
   )
     ? category
-    : (gameCategory[game ?? ""] ?? "aircraft")) as Category,
+    : (games.find((entry) => entry.slug === game)?.submissionCategory ?? "aircraft")) as Category,
   customCategory: "",
   targetGames: games.some((entry) => entry.slug === game) ? [game!] : [],
   aircraft: "",
