@@ -512,3 +512,21 @@ backend owns `POST /v1/trips` (C5); Field Award progress, Go Around and Logbook 
 website brief. **Military desk status:** works on D1 behind `EditorialStore`; to be migrated to the
 backend (W8) once the backend has releases and a home for preparation evidence.
 
+## Draft session out of AdminApp (2026-10-29, brief W5)
+
+`lib/editorial/draft-session.ts` now holds the admin desk's request rules with no React: the base
+version captured when an item is opened (a refreshed list never moves it), saves that send it and
+adopt the server's version only on success, a 409 that keeps the local form and refetches, 401/403/
+ACCOUNT_CHANGED that block the desk, and a generation counter so a response from before an account
+change is dropped. Release, activate and restore carry the live pointer version the desk last showed.
+`AdminApp` and `MilitaryWorkspace` keep their React state and call it; the inline `requestJson`,
+`handleMutationError` and base-version state are gone.
+
+Verification: TypeScript; 103/103 unit tests (`tests/draft-session.test.mjs`, 8 new). Against
+`demo:preview`: `military-qa` 9/9, `military-release-qa` 6/6, `demo-admin-qa` 6/6. The first
+`military-qa` run after the change failed four checks; with the change stashed it passed, and with it
+restored it passed again, so the failure was not reproduced (most likely Vite reloading the page when
+it first served the new module). `browser-qa`: its catalog check expected 7 cards and is corrected to
+8; the first four checks pass, and the contributor step is refused by the 30-proposals-a-day limit,
+which today's release QA runs used up in local D1. That step was not re-run.
+

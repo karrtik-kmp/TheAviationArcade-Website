@@ -60,6 +60,7 @@ export function MilitaryWorkspace({
   pointer,
   submissions,
   busy,
+  onOpen,
   onSave,
   onRelease,
 }: {
@@ -69,11 +70,12 @@ export function MilitaryWorkspace({
   submissions: Submission[];
   busy: boolean;
   onRelease: (action: "release" | "restore" | "activate", basis?: string, release?: number) => Promise<boolean>;
+  /** Records the version a save will be based on (the draft session keeps it). */
+  onOpen: (aircraftId: string, version: number) => void;
   onSave: (
     aircraft: MilitaryAircraft,
     stage: MilitaryStage,
     data: MilitaryPackageData,
-    version: number,
   ) => Promise<MilitaryPackage | null>;
 }) {
   const byId = useMemo(
@@ -84,7 +86,6 @@ export function MilitaryWorkspace({
   const [filter, setFilter] = useState<"all" | MilitaryStage>("all");
   const [openId, setOpenId] = useState("");
   const [draft, setDraft] = useState<MilitaryPackageData | null>(null);
-  const [baseVersion, setBaseVersion] = useState(0);
   // Only real contributions approved for game use can supply a photograph.
   const usable = submissions.filter(
     (s) =>
@@ -98,7 +99,7 @@ export function MilitaryWorkspace({
   function choose(aircraft: MilitaryAircraft) {
     const existing = byId.get(aircraft.id);
     setOpenId(aircraft.id);
-    setBaseVersion(existing?.version ?? 0);
+    onOpen(aircraft.id, existing?.version ?? 0);
     setDraft(
       existing
         ? clientContent(aircraft, {
@@ -110,8 +111,7 @@ export function MilitaryWorkspace({
   }
   async function save(next: MilitaryStage) {
     if (!open || !draft) return;
-    const updated = await onSave(open, next, draft, baseVersion);
-    if (updated) setBaseVersion(updated.version);
+    await onSave(open, next, draft);
   }
   const set = <K extends keyof MilitaryPackageData>(key: K, value: MilitaryPackageData[K]) =>
     draft && setDraft({ ...draft, [key]: value });

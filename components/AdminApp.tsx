@@ -60,6 +60,7 @@ import type {
   ReleasePointer,
 } from "@/lib/military";
 import { sitePath } from "@/lib/paths";
+import { createDraftSession, type Outcome } from "@/lib/editorial/draft-session";
 
 type AdminUser = { sessionKey: string };
 type Section =
@@ -158,7 +159,39 @@ export function AdminApp({
   accountRef.current = accountSession;
   const [blockedAccess, setBlockedAccess] = useState<number | null>(null);
   const blockedAccessRef = useRef<number | null>(null);
-  const generation = useRef(0);
+  const userRef = useRef(user);
+  userRef.current = user;
+  // Base versions, the generation guard and refusal handling; see lib/editorial/draft-session.ts.
+  const [drafts] = useState(() =>
+    createDraftSession({
+      isActive: () => currentAccessRef.current,
+      async send(method, url, payload) {
+        try {
+          const response = await fetch(sitePath(url), {
+            method,
+            headers: {
+              "Content-Type": "application/json",
+              ...accountHeaders(userRef.current.sessionKey),
+            },
+            body: JSON.stringify(payload),
+          });
+          return {
+            ok: response.ok,
+            status: response.status,
+            body: (await response.json().catch(() => ({}))) as Record<string, unknown>,
+          };
+        } catch (error) {
+          return {
+            ok: false,
+            status: 0,
+            body: {
+              error: error instanceof Error ? error.message : "The request could not be saved.",
+            },
+          };
+        }
+      },
+    }),
+  );
   const currentAccountMatches =
     accountSession.state === "ready" &&
     !!accountSession.account?.user &&
@@ -182,24 +215,18 @@ export function AdminApp({
   const [notice, setNotice] = useState<Notice>(null);
   const [busy, setBusy] = useState(false);
   const [selectedId, setSelectedId] = useState("");
-  const [reviewBaseVersion, setReviewBaseVersion] = useState<number | null>(
-    null,
-  );
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCategory, setFilterCategory] = useState("all");
   const [search, setSearch] = useState("");
   const [checks, setChecks] = useState<ReviewChecks>(emptyChecks());
   const [reviewNote, setReviewNote] = useState("");
   const [recordId, setRecordId] = useState("");
-  const [recordBaseVersion, setRecordBaseVersion] = useState<number | null>(
-    null,
-  );
   const [recordData, setRecordData] = useState<EditorialData | null>(null);
   const [dateKey, setDateKey] = useState("");
   const [showArchived, setShowArchived] = useState(false);
 
   const clearPrivateData = useCallback(() => {
-    generation.current += 1;
+    drafts.reset();
     setSubmissions([]);
     setRecords([]);
     setPackages([]);
@@ -208,15 +235,13 @@ export function AdminApp({
     setEvents([]);
     setSelectedId("");
     setRecordId("");
-    setReviewBaseVersion(null);
-    setRecordBaseVersion(null);
     setRecordData(null);
     setChecks(emptyChecks());
     setReviewNote("");
     setLoadError("");
     setLoadState("loading");
     setBusy(false);
-  }, []);
+  }, [drafts]);
 
   const blockAccess = useCallback(
     (status: number) => {
@@ -239,7 +264,7 @@ export function AdminApp({
       !currentAccessRef.current
     )
       return;
-    const requestGeneration = ++generation.current;
+    const requestGeneration = drafts.invalidate();
     if (readOnly) {
       setRecords(sampleEditorialRecords());
       setLoadState("ready");
@@ -277,8 +302,7 @@ export function AdminApp({
         );
         throw error;
       }
-      if (requestGeneration !== generation.current || !currentAccessRef.current)
-        return;
+      if (!drafts.isCurrent(requestGeneration)) return;
       const [submissionBody, contentBody, auditBody, militaryBody] = results.map(
         ({ body }) => body as Record<string, unknown>,
       );
@@ -300,7 +324,7 @@ export function AdminApp({
       );
       setLoadState("ready");
     } catch (error) {
-      if (requestGeneration !== generation.current) return;
+      if (requestGeneration !== drafts.generation()) return;
       const status =
         typeof error === "object" && error && "status" in error
           ? Number(error.status)
@@ -320,7 +344,7 @@ export function AdminApp({
       );
       setLoadState("error");
     }
-  }, [blockAccess, readOnly, user.sessionKey]);
+  }, [blockAccess, drafts, readOnly, user.sessionKey]);
 
   const currentAccessRef = useRef(currentAccountMatches);
   currentAccessRef.current = currentAccountMatches;
@@ -329,13 +353,14 @@ export function AdminApp({
     if (currentAccountMatches) void fetchAll();
     else if (accountSession.state === "ready" || blockedAccess !== null)
       clearPrivateData();
-    else generation.current += 1;
+    else drafts.invalidate();
   }, [
     currentAccountMatches,
     accountSession.state,
     blockedAccess,
     fetchAll,
     clearPrivateData,
+    drafts,
   ]);
 
   const selected =
@@ -371,83 +396,50 @@ export function AdminApp({
     [submissions, filterStatus, filterCategory, search],
   );
 
-  async function requestJson(url: string, method: string, payload: unknown) {
-    if (!currentAccessRef.current)
-      throw new Error(
-        "Your account session is no longer active. Review was stopped.",
-      );
-    const requestGeneration = generation.current;
-    const response = await fetch(sitePath(url), {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        ...accountHeaders(user.sessionKey),
-      },
-      body: JSON.stringify(payload),
-    });
-    const body = await response.json().catch(() => ({}));
-    if (requestGeneration !== generation.current || !currentAccessRef.current)
-      throw Object.assign(
-        new Error("This request belongs to an earlier account check."),
-        { stale: true },
-      );
-    if (!response.ok)
-      throw Object.assign(
-        new Error(responseError(body, "The request could not be saved.")),
-        {
-          status: response.status,
-          code: responseCode(body),
-          errors: Array.isArray((body as { errors?: unknown }).errors)
-            ? (body as { errors: string[] }).errors
-            : [],
-        },
-      );
-    return body as Record<string, unknown>;
-  }
-  function handleMutationError(error: unknown, refreshOnConflict = false) {
-    if (typeof error === "object" && error && "stale" in error && error.stale)
-      return;
-    const status =
-      typeof error === "object" && error && "status" in error
-        ? Number(error.status)
-        : 0;
-    const message =
-      error instanceof Error
-        ? error.message
-        : "The request could not be saved.";
-    const code =
-      typeof error === "object" && error && "code" in error
-        ? String(error.code)
-        : "";
-    if (status === 401 || status === 403 || code === "ACCOUNT_CHANGED") {
-      blockAccess(status || 409);
-      return;
+  /** Reports a request that did not succeed. A stale response is dropped silently. */
+  function failed(outcome: Outcome, refreshOnConflict = false) {
+    switch (outcome.kind) {
+      case "ok":
+      case "stale":
+        return;
+      case "blocked":
+        blockAccess(outcome.status);
+        return;
+      case "conflict":
+        setNotice({
+          kind: "error",
+          text: `${outcome.message} Your form has been kept. Select the item again to load its latest version; that replaces your unsaved changes.`,
+        });
+        if (refreshOnConflict) void fetchAll();
+        return;
+      case "refused":
+        setNotice({
+          kind: "error",
+          text: outcome.errors.length
+            ? `${outcome.message} ${outcome.errors.join(" ")}`
+            : outcome.message,
+        });
+        return;
+      case "inactive":
+        setNotice({ kind: "error", text: outcome.message });
     }
-    setNotice({
-      kind: "error",
-      text:
-        status === 409
-          ? `${message} Your form has been kept. Select the item again to load its latest version; that replaces your unsaved changes.`
-          : message,
-    });
-    if (refreshOnConflict && status === 409) void fetchAll();
   }
   function openSubmission(item: Submission) {
     setSelectedId(item.id);
-    setReviewBaseVersion(item.version);
+    drafts.open(`submission:${item.id}`, item.version);
     setChecks({ ...emptyChecks(), ...item.checks });
     setReviewNote(item.reviewNote ?? "");
     setNotice(null);
   }
   function openRecord(record: EditorialRecord) {
     setRecordId(record.id);
-    setRecordBaseVersion(record.version);
+    drafts.open(`content:${record.id}`, record.version);
     setRecordData(seedData(record));
     setDateKey(record.dateKey ?? new Date().toLocaleDateString("en-CA"));
     setNotice(null);
   }
   async function review(next: SubmissionStatus) {
-    if (!selected || reviewBaseVersion === null) return;
+    if (!selected) return;
     const localError = reviewError(
       selected.data,
       selected.status,
@@ -462,18 +454,15 @@ export function AdminApp({
     setBusy(true);
     setNotice(null);
     try {
-      const body = await requestJson(
-        `/api/admin/submissions/${selected.id}`,
+      const outcome = await drafts.save(
+        `submission:${selected.id}`,
         "PATCH",
-        {
-          status: next,
-          checks,
-          note: reviewNote,
-          version: reviewBaseVersion,
-        },
+        `/api/admin/submissions/${selected.id}`,
+        { status: next, checks, note: reviewNote },
+        (body) => (body.submission as Submission | undefined)?.version,
       );
-      const updated = body.submission as Submission;
-      setReviewBaseVersion(updated.version);
+      if (outcome.kind !== "ok") return failed(outcome, true);
+      const updated = outcome.body.submission as Submission;
       setSubmissions((previous) =>
         previous.map((item) => (item.id === updated.id ? updated : item)),
       );
@@ -488,32 +477,37 @@ export function AdminApp({
       });
       if (next !== "approved") setSelectedId("");
       await fetchAll();
-    } catch (error) {
-      handleMutationError(error, true);
     } finally {
       setBusy(false);
     }
+  }
+  async function createContent(
+    payload:
+      | { kind: "identifier" | "potd"; sourceId: string }
+      | { kind: "identifier" | "potd"; sample: true },
+  ) {
+    const outcome = await drafts.request("POST", "/api/admin/content", payload);
+    if (outcome.kind !== "ok") {
+      failed(outcome);
+      return null;
+    }
+    const created = outcome.body.record as EditorialRecord;
+    setRecords((previous) => [
+      created,
+      ...previous.filter((item) => item.id !== created.id),
+    ]);
+    openRecord(created);
+    return created;
   }
   async function createFromSubmission(kind: "identifier" | "potd") {
     if (!selected) return;
     setBusy(true);
     setNotice(null);
     try {
-      const body = await requestJson("/api/admin/content", "POST", {
-        kind,
-        sourceId: selected.id,
-      });
-      const created = body.record as EditorialRecord;
-      setRecords((previous) => [
-        created,
-        ...previous.filter((item) => item.id !== created.id),
-      ]);
-      openRecord(created);
-      setSection(
-        kind === "identifier" ? "Aircraft Identifier" : "Plane of the Day",
-      );
-    } catch (error) {
-      handleMutationError(error);
+      if (await createContent({ kind, sourceId: selected.id }))
+        setSection(
+          kind === "identifier" ? "Aircraft Identifier" : "Plane of the Day",
+        );
     } finally {
       setBusy(false);
     }
@@ -522,18 +516,7 @@ export function AdminApp({
     setBusy(true);
     setNotice(null);
     try {
-      const body = await requestJson("/api/admin/content", "POST", {
-        kind,
-        sample: true,
-      });
-      const created = body.record as EditorialRecord;
-      setRecords((previous) => [
-        created,
-        ...previous.filter((item) => item.id !== created.id),
-      ]);
-      openRecord(created);
-    } catch (error) {
-      handleMutationError(error);
+      await createContent({ kind, sample: true });
     } finally {
       setBusy(false);
     }
@@ -542,20 +525,19 @@ export function AdminApp({
     setBusy(true);
     setNotice(null);
     try {
-      await requestJson("/api/admin/demo", "POST", {});
+      const outcome = await drafts.request("POST", "/api/admin/demo", {});
+      if (outcome.kind !== "ok") return failed(outcome);
       await fetchAll();
       setNotice({
         kind: "success",
         text: "Demo records loaded; these cannot be published.",
       });
-    } catch (error) {
-      handleMutationError(error);
     } finally {
       setBusy(false);
     }
   }
   async function saveRecord(status: EditorialRecord["status"]) {
-    if (!selectedRecord || !recordData || recordBaseVersion === null) return;
+    if (!selectedRecord || !recordData) return;
     if (status === "scheduled" || status === "published") {
       const errors = editorialErrors(selectedRecord.kind, recordData);
       if (errors.length) {
@@ -581,18 +563,19 @@ export function AdminApp({
     setBusy(true);
     setNotice(null);
     try {
-      const body = await requestJson(
-        `/api/admin/content/${selectedRecord.id}`,
+      const outcome = await drafts.save(
+        `content:${selectedRecord.id}`,
         "PUT",
+        `/api/admin/content/${selectedRecord.id}`,
         {
           data: recordData,
           status: effectiveStatus,
           dateKey: effectiveStatus === "scheduled" ? effectiveDate : dateKey,
-          version: recordBaseVersion,
         },
+        (body) => (body.record as EditorialRecord | undefined)?.version,
       );
-      const updated = body.record as EditorialRecord;
-      setRecordBaseVersion(updated.version);
+      if (outcome.kind !== "ok") return failed(outcome, true);
+      const updated = outcome.body.record as EditorialRecord;
       setRecords((previous) =>
         previous.map((record) => (record.id === updated.id ? updated : record)),
       );
@@ -609,8 +592,6 @@ export function AdminApp({
                 ? "Content archived."
                 : "Draft saved.",
       });
-    } catch (error) {
-      handleMutationError(error, true);
     } finally {
       setBusy(false);
     }
@@ -623,11 +604,13 @@ export function AdminApp({
     setReleases(
       Array.isArray(body.releases) ? (body.releases as MilitaryRelease[]) : [],
     );
-    setPointer(
+    const live =
       body.pointer && typeof body.pointer === "object"
         ? (body.pointer as ReleasePointer & { version: number })
-        : emptyPointer,
-    );
+        : emptyPointer;
+    setPointer(live);
+    // A release or restore is based on the pointer the desk last showed.
+    drafts.open("military-live", live.version);
   }
 
   /** Records a batch release, makes an uploaded one live, or restores the previous one. None delivers or publishes. */
@@ -639,17 +622,24 @@ export function AdminApp({
     setBusy(true);
     setNotice(null);
     try {
-      const body = await requestJson(
-        `/api/admin/military/releases${action === "release" ? "" : `/${action}`}`,
+      const outcome = await drafts.save(
+        "military-live",
         "POST",
+        `/api/admin/military/releases${action === "release" ? "" : `/${action}`}`,
         action === "release"
-          ? { basis, previewed: true, pointerVersion: pointer.version }
+          ? { basis, previewed: true }
           : action === "activate"
-            ? { release, pointerVersion: pointer.version }
-            : { pointerVersion: pointer.version },
+            ? { release }
+            : {},
+        (body) => (body.pointer as { version?: number } | undefined)?.version,
+        "pointerVersion",
       );
-      applyMilitary(body);
-      const current = (body.pointer as ReleasePointer | undefined)?.current;
+      if (outcome.kind !== "ok") {
+        failed(outcome, true);
+        return false;
+      }
+      applyMilitary(outcome.body);
+      const current = (outcome.body.pointer as ReleasePointer | undefined)?.current;
       setNotice({
         kind: "success",
         text:
@@ -658,35 +648,35 @@ export function AdminApp({
             : `Release ${current} is current again.`,
       });
       return true;
-    } catch (error) {
-      const errors =
-        typeof error === "object" && error && "errors" in error
-          ? (error.errors as string[])
-          : [];
-      if (errors.length && error instanceof Error)
-        setNotice({ kind: "error", text: `${error.message} ${errors.join(" ")}` });
-      else handleMutationError(error, true);
-      return false;
     } finally {
       setBusy(false);
     }
   }
 
+  /** The package editor opened a question: later saves are based on this version. */
+  function openMilitary(aircraftId: string, version: number) {
+    drafts.open(`military:${aircraftId}`, version);
+  }
   async function saveMilitary(
     aircraft: MilitaryAircraft,
     stage: MilitaryStage,
     data: MilitaryPackageData,
-    version: number,
   ): Promise<MilitaryPackage | null> {
     setBusy(true);
     setNotice(null);
     try {
-      const body = await requestJson(
-        `/api/admin/military/${aircraft.id}`,
+      const outcome = await drafts.save(
+        `military:${aircraft.id}`,
         "PUT",
-        { stage, data, version },
+        `/api/admin/military/${aircraft.id}`,
+        { stage, data },
+        (body) => (body.package as MilitaryPackage | undefined)?.version,
       );
-      const updated = body.package as MilitaryPackage;
+      if (outcome.kind !== "ok") {
+        failed(outcome, true);
+        return null;
+      }
+      const updated = outcome.body.package as MilitaryPackage;
       setPackages((previous) => [
         ...previous.filter((item) => item.aircraftId !== updated.aircraftId),
         updated,
@@ -699,9 +689,6 @@ export function AdminApp({
             : `${aircraft.name} saved as ${stage.replaceAll("_", " ")}.`,
       });
       return updated;
-    } catch (error) {
-      handleMutationError(error, true);
-      return null;
     } finally {
       setBusy(false);
     }
@@ -964,6 +951,7 @@ export function AdminApp({
                       onRelease={changeRelease}
                       submissions={submissions}
                       busy={busy}
+                      onOpen={openMilitary}
                       onSave={saveMilitary}
                     />
                   )}
