@@ -185,7 +185,7 @@ entitlements, and the game never writes them to UGS.
 | # | Where | Fix | Status |
 |---|---|---|---|
 | D1 | `website/lib/catalog.ts` | Add `backendId`; Military → `aircraft-identifier-military` | Website W7 (with the vendored catalog) |
-| D2 | `website/lib/player-mock.ts` | Ranks must be Trainee, First Officer, Captain, Check Airman, Chief Pilot | Fix now; the mock is replaced in W6 |
+| D2 | `website/lib/player-mock.ts` | Ranks must be Trainee, First Officer, Captain, Check Airman, Chief Pilot | Fixed 2026-10-29; the mock is replaced in W6 |
 | D3 | Backend `CLAUDE.md` vocabulary | Round = one **Flight**, Flight Segment = **Trip** (Unity ADR-0007) | Backend session |
 | D4 | Unity `ApiClientConfig` | Default `127.0.0.1:8787` is the retired Worker; per-build base URL | Unity session |
 | D5 | Field Awards source | `docs/Field Awards #1.xlsx` (28 rows) | Settled 2026-10-28 |

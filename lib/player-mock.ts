@@ -31,7 +31,8 @@ function seeded(text: string) {
   };
 }
 
-const ranks = ["Student Pilot", "Private Pilot", "First Officer", "Captain"];
+/** The game's five-rank ladder, the same for every game. */
+const ranks = ["Trainee", "First Officer", "Captain", "Check Airman", "Chief Pilot"];
 
 /** Deterministic per account, so a reload shows the same mock profile. */
 export function playerProfile(user: {
