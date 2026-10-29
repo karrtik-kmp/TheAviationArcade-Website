@@ -61,7 +61,7 @@ try {
     async () => {
       await page.goto(origin + "/games", { waitUntil: "domcontentloaded" });
       await page.getByRole("link", { name: "Sign in", exact: true }).waitFor();
-      assert.equal(await page.locator(".game-card").count(), 7);
+      assert.equal(await page.locator(".game-card").count(), 8);
       await page.getByRole("button", { name: "Matching", exact: true }).click();
       assert.equal(await page.locator(".game-card").count(), 2);
       await page
@@ -74,7 +74,7 @@ try {
       await page.getByRole("textbox", { name: "Search games" }).fill("zzzz");
       await page.getByRole("heading", { name: "No matching games" }).waitFor();
       await page.getByRole("button", { name: "Clear filters" }).click();
-      assert.equal(await page.locator(".game-card").count(), 7);
+      assert.equal(await page.locator(".game-card").count(), 8);
       await page.screenshot({
         path: "docs/evidence/catalog-desktop-dark.png",
         fullPage: true,
