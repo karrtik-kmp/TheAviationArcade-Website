@@ -1,9 +1,7 @@
 import { cache } from "react";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { getProductUser, type ProductUser } from "@/lib/product-auth";
-import { isStaffUser } from "@/lib/server";
-import { isDemoPrincipal } from "@/lib/demo-server";
-import { accountSessionKey } from "@/lib/account-server";
+import { requestPrincipal } from "@/lib/request/worker";
 import {
   accountSignInPath,
   audiences,
@@ -13,25 +11,30 @@ import {
 } from "@/lib/account";
 
 export type Viewer = {
-  user: ProductUser;
+  user: { userId: string; email: string; emailVerified: boolean; displayName: string };
   principal: Extract<Principal, { signedIn: true }>;
   sessionKey: string;
 };
 
 /** The current visitor, verified once per request no matter how many layouts and pages ask. */
 export const currentViewer = cache(async (): Promise<Viewer | null> => {
-  const user = await getProductUser();
-  if (!user) return null;
+  const viewer = await requestPrincipal(await headers());
+  if (viewer.kind === "guest") return null;
   return {
-    user,
+    user: {
+      userId: viewer.userId,
+      email: viewer.email,
+      emailVerified: viewer.emailVerified,
+      displayName: viewer.displayName,
+    },
     principal: {
       signedIn: true,
-      displayName: user.displayName,
-      emailVerified: user.emailVerified,
-      staff: isStaffUser(user),
-      demo: isDemoPrincipal(user),
+      displayName: viewer.displayName,
+      emailVerified: viewer.emailVerified,
+      staff: viewer.staff,
+      demo: viewer.demo,
     },
-    sessionKey: await accountSessionKey(user.userId),
+    sessionKey: viewer.sessionKey,
   };
 });
 

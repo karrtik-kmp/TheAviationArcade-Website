@@ -1,23 +1,17 @@
-import { getProductUser } from "@/lib/product-auth";
-import { isStaff } from "@/lib/server";
+import { headers } from "next/headers";
+import { requestPrincipal } from "@/lib/request/worker";
 import type { AccountSnapshot } from "@/lib/account";
 
 // A change detector for this Site's UI, never a credential or a shared game principal.
-export async function accountSessionKey(userId: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(`airplane-games-site-session:${userId}`),
-  );
-  return Array.from(new Uint8Array(digest), (byte) =>
-    byte.toString(16).padStart(2, "0"),
-  ).join("");
-}
+export { accountSessionKey } from "@/lib/request/principal";
+
+/** The signed-in account for the UI, from the same single verification as the API. */
 export async function accountSnapshot(): Promise<AccountSnapshot> {
-  const user = await getProductUser();
-  if (!user) return { user: null, isStaff: false, sessionKey: null };
+  const viewer = await requestPrincipal(await headers());
+  if (viewer.kind === "guest") return { user: null, isStaff: false, sessionKey: null };
   return {
-    user: { displayName: user.displayName, emailVerified: user.emailVerified },
-    isStaff: await isStaff(),
-    sessionKey: await accountSessionKey(user.userId),
+    user: { displayName: viewer.displayName, emailVerified: viewer.emailVerified },
+    isStaff: viewer.staff,
+    sessionKey: viewer.sessionKey,
   };
 }

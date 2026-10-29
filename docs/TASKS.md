@@ -474,3 +474,28 @@ adapter (W7) plugs into once the backend owns editorial content (C1, D-2).
   release cases use a 10-question synthetic roster; the client's sheet still cannot fill a Trainee
   Trip (C13 is still waiting on Josh, so that block stays).
 
+## One sign-in check per request and a declared route table (2026-10-29, brief W2)
+
+- `lib/request/principal.ts` resolves who is asking once: the session cookie is parsed once and the
+  Firebase token verified once (an admin save used to verify it four or five times). Staff, demo and
+  the session key come from that one result. The member's token is kept as a `Bearer` that never
+  serializes, ready for forwarding to the backend (W6). Pages (`currentViewer`), `/api/account` and
+  the API all use it; `getProductUser`, `identity()`, `isStaff()` and `staff()` are gone.
+- `lib/request/routes.ts` lists every API route with its audience (public, member, owner, staff) and
+  whether it is a mutation. `lib/request/router.ts` runs the checks in one order: sign-in (guest 401,
+  demo 403 DEMO_ACCOUNT), the account fence (409 ACCOUNT_CHANGED), staff (403), same-origin for
+  mutations (403), then the handler. Public routes never verify a token. `app/api/[...path]/route.ts`
+  only wires the Worker bindings in. HTTP errors and responses live in `lib/errors.ts`.
+- Observable changes: a signed-out cross-origin submission POST/PUT now gets 401 instead of 403
+  (both refuse); an unreachable Google key service now gives 503 instead of 500. Unchanged: a guest
+  or demo request with a stale `X-Account-Session` still gets 401/403, and unknown paths under
+  `admin/` still answer 401/403 before 404.
+- Tests: `tests/principal.test.mjs` (6) and `tests/router.test.mjs` (9, an audience matrix generated
+  from the table, run in Node over the memory store and the D1 shim).
+
+Verification (W1 + W2): TypeScript; 95/95 unit tests (`npm test`). Against `npm run demo:preview`
+(port 5186, Auth Emulator): `api-qa` 1/1, `session-return-qa` 6/6, `role-auth-qa` 10/10 (no prefix),
+`military-qa` 9/9, `military-release-qa` 6/6. The vinext production build completes with these
+changes in a clean worktree; in this checkout it stalls at its first step, as it does without them.
+Hosted D1, live Google sign-in and the 22.13 Node floor were not tested; nothing was deployed.
+
