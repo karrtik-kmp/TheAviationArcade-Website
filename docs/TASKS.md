@@ -549,3 +549,29 @@ Verification: TypeScript; 117/117 unit tests. Against `demo:preview`: `api-qa` 1
 6/6, `military-qa` 9/9. `submissions-ui-qa` was not run: it is fixed to port 5173 and needs the
 emulator profile there, while this checkout's `.dev.vars` points 5173 at the real Firebase project.
 
+## Player progress from the backend (2026-10-29, brief W6)
+
+Work now happens in `E:\TheAviationArcade\website`; the H: disk is failing.
+
+- `lib/request/backend.ts`: `backendClient` calls the game backend server-to-server with only
+  `Authorization: Bearer <the member's Firebase ID token>`, with no cookie and no service secret. It
+  refuses redirects and has an 8 s timeout. With no `GAME_API_BASE_URL` it is "not connected". Errors
+  keep the backend's status, stable `error.code` and `Retry-After`.
+- `lib/progress/`: `ProgressSource` with the backend's `Progress` contract (openapi 0.4.0, strict,
+  `version` included per D-1), `httpProgressSource` over `GET /v1/me/progress`, and a labelled,
+  deterministic sample used only with `PROGRESS_SOURCE=mock` in a development build. Answers map to
+  progress, no player yet (404 `player_not_found`), sign in again (401), unavailable (429/503/426,
+  network, or an off-contract body) and not connected. The website never calls `PUT /v1/me`.
+- `/play` shows those states. The name tag, games played, best streak, recent games and the linking
+  copy are gone: the backend has no contract for them. `lib/player-mock.ts` is deleted.
+- The website does not send `X-Client-Version`. Once the backend sets a minimum build, its answer is
+  426 and the page says progress is unavailable, until the backend decides how web callers are
+  treated (open question in the plan).
+- `role-auth-qa`'s player check now asserts the honest "Not connected" page instead of the old sample.
+
+Verification: TypeScript; 127/127 unit tests (`tests/backend-client.test.mjs` 5, `tests/progress.test.mjs`
+5; a missing `Retry-After` header read as 0 s was caught and fixed). From E: against `demo:preview`:
+`session-return-qa` 6/6, `role-auth-qa` 10/10; `/play` checked in a browser (Not connected). Not tested
+against a running backend. `npm run build` completes on E: in 26 s, including deploy preparation (nothing
+deployed); the earlier stalls happened only on the failing H: disk.
+

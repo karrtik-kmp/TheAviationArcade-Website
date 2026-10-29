@@ -1,0 +1,15 @@
+{
+  "progress": {
+    "version": 42,
+    "statusPoints": 12500,
+    "miles": 860,
+    "hints": 3,
+    "certifiedRank": "first-officer",
+    "activeRank": "trainee",
+    "pleasureCruise": true,
+    "selectableRanks": ["first-officer", "trainee"],
+    "nextRank": { "rank": "captain", "statusPoints": 50000 },
+    "perfectStreak": 2,
+    "firstClassPass": false
+  }
+}

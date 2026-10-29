@@ -47,7 +47,7 @@ accounts. This repo edits only the website; items for the other repos go to thei
   owner session decides what lands.
 - **Website:** the Military desk sits behind `EditorialStore` (W1, D1 adapter) with release candidates
   separate from live. Every API request resolves one `RequestPrincipal` and runs through a declared
-  route table (W2). `/play` still shows `lib/player-mock.ts`.
+  route table (W2). `/play` reads progress through `ProgressSource` (W6).
 
 ## 2. Target topology and ownership
 
@@ -113,7 +113,7 @@ Decided in Unity ADR-0006 (D1–D7) and the backend README.
   renders as "No app progress yet", without a fake rank.
 - 401 means refresh the session (the account fence applies); 503 or 429 shows a retry state using
   `Retry-After`. The progress DTO includes `version` (D-1).
-- `ProgressSource` replaces `lib/player-mock.ts`, with a mock adapter for local work. No Callsign
+- `ProgressSource` (W6, built) replaced `lib/player-mock.ts`, with a labelled sample adapter for local work. No Callsign
   until Phase 7.
 - Website reads share the player's per-principal rate limit; fine at page-view volume.
 - The backend's `X-Client-Version` gate applies to `/v1/me/progress`, but the website is not an app
@@ -190,7 +190,7 @@ entitlements, and the game never writes them to UGS.
 | # | Where | Fix | Status |
 |---|---|---|---|
 | D1 | `website/lib/catalog.ts` | Add `backendId`; Military → `aircraft-identifier-military` | Website W7 (with the vendored catalog) |
-| D2 | `website/lib/player-mock.ts` | Ranks must be Trainee, First Officer, Captain, Check Airman, Chief Pilot | Fixed 2026-10-29; the mock is replaced in W6 |
+| D2 | `website/lib/player-mock.ts` | Ranks must be Trainee, First Officer, Captain, Check Airman, Chief Pilot | Fixed 2026-10-29; the mock was replaced in W6 |
 | D3 | Backend `CLAUDE.md` vocabulary | Round = one **Flight**, Flight Segment = **Trip** (Unity ADR-0007) | Backend session |
 | D4 | Unity `ApiClientConfig` | Default `127.0.0.1:8787` is the retired Worker; per-build base URL | Unity session |
 | D5 | Field Awards source | `docs/Field Awards #1.xlsx` (28 rows) | Settled 2026-10-28 |
