@@ -549,7 +549,6 @@ Verification: TypeScript; 117/117 unit tests. Against `demo:preview`: `api-qa` 1
 6/6, `military-qa` 9/9. `submissions-ui-qa` was not run: it is fixed to port 5173 and needs the
 emulator profile there, while this checkout's `.dev.vars` points 5173 at the real Firebase project.
 
-
 ## Frontend review fixes (2026-10-29)
 
 Fixed the five frontend review findings: explicit accessible primary hover tokens in both themes,
@@ -576,3 +575,63 @@ Focused ESLint is clean for AuthForm, information/game routes, Vite config and t
 The touched PublicShell and SubmissionForm retain their pre-existing six lint errors and five
 warnings; linting HEAD via stdin reproduced the same rules/lines. Those existing issues were not
 introduced by these fixes.
+
+## Player progress from the backend (2026-10-29, brief W6)
+
+Work now happens in `E:\TheAviationArcade\website`; the H: disk is failing.
+
+- `lib/request/backend.ts`: `backendClient` calls the game backend server-to-server with only
+  `Authorization: Bearer <the member's Firebase ID token>`, with no cookie and no service secret. It
+  refuses redirects and has an 8 s timeout. With no `GAME_API_BASE_URL` it is "not connected". Errors
+  keep the backend's status, stable `error.code` and `Retry-After`.
+- `lib/progress/`: `ProgressSource` with the backend's `Progress` contract (openapi 0.4.0, strict,
+  `version` included per D-1), `httpProgressSource` over `GET /v1/me/progress`, and a labelled,
+  deterministic sample used only with `PROGRESS_SOURCE=mock` in a development build. Answers map to
+  progress, no player yet (404 `player_not_found`), sign in again (401), unavailable (429/503/426,
+  network, or an off-contract body) and not connected. The website never calls `PUT /v1/me`.
+- `/play` shows those states. The name tag, games played, best streak, recent games and the linking
+  copy are gone: the backend has no contract for them. `lib/player-mock.ts` is deleted.
+- The website does not send `X-Client-Version`. Once the backend sets a minimum build, its answer is
+  426 and the page says progress is unavailable, until the backend decides how web callers are
+  treated (open question in the plan).
+- `role-auth-qa`'s player check now asserts the honest "Not connected" page instead of the old sample.
+
+Verification: TypeScript; 127/127 unit tests (`tests/backend-client.test.mjs` 5, `tests/progress.test.mjs`
+5; a missing `Retry-After` header read as 0 s was caught and fixed). From E: against `demo:preview`:
+`session-return-qa` 6/6, `role-auth-qa` 10/10; `/play` checked in a browser (Not connected). Not tested
+against a running backend. `npm run build` completes on E: in 26 s, including deploy preparation (nothing
+deployed); the earlier stalls happened only on the failing H: disk.
+
+## Catalog contract vendored (2026-10-29, cross-repo XW1)
+
+- `contracts/catalog.v1.json` is a byte copy of the backend's committed file (B2, `16351d0`);
+  `.gitattributes` keeps it LF and `contracts/README.md` gives the copy rule.
+- Every `lib/catalog.ts` game has a `backendId` (Military: `aircraft-identifier-military`; its URL
+  slug `military-aircraft-identifier` and internal id stay website-local) and a `submissionCategory`,
+  which replaces the contributor form's own slug-to-category map.
+- `lib/rules.ts` exports `gameSlugs`, the enum the submission schema uses.
+- `tests/catalog.test.mjs` (5): module ids equal the catalog's as a set and in ticket order, Military's
+  slug and id, unique slugs, and the submission enum equals the catalog slugs.
+- Also fixed a flaky assertion in `tests/submissions.test.mjs` that depended on two audit events
+  having different timestamps.
+
+Verification: TypeScript; 132/132 unit tests, five runs in a row; `npm run build` on E:.
+
+## One rank list from the catalog (2026-10-29, cross-repo XW2)
+
+`lib/catalog.ts` exports `ranks` (id, name, Status Points threshold), `rankNames`, `RankName` and
+`RankId`, checked against `contracts/catalog.v1.json` in `tests/catalog.test.mjs`. The Military
+desk (`militaryRankNames`), the content publishing rule in `lib/rules.ts`, the admin rank picker and
+the progress contract and sample (rank ids, names, thresholds) all read it; their own literals are
+gone. The player-mock half of XW2 was already done: the mock was replaced in W6.
+
+Verification: TypeScript; 133/133 unit tests, three runs; `npm run build` on E:; against
+`demo:preview` from E:, `military-qa` 9/9 and `demo-admin-qa` 6/6.
+
+## Website calls exempt from the app version gate (2026-10-29)
+
+Every backend call from the website's server now sends `X-Client: web` (and never
+`X-Client-Version`), the label the backend's version gate skips (user ruling, backend `3651ccc`,
+openapi 0.5.0). It is not a credential; the member's Bearer is still verified. A 426 therefore no
+longer applies to `/play`. Test: `tests/backend-client.test.mjs` (header on progress and other calls).
+Verification: TypeScript; 134/134 unit tests.

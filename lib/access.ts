@@ -16,9 +16,12 @@ export type Viewer = {
   sessionKey: string;
 };
 
-/** The current visitor, verified once per request no matter how many layouts and pages ask. */
+/** The request's principal, verified once per request however many layouts and pages ask. */
+export const currentPrincipal = cache(async () => requestPrincipal(await headers()));
+
+/** The current visitor, for rendering. Built from currentPrincipal, so it adds no verification. */
 export const currentViewer = cache(async (): Promise<Viewer | null> => {
-  const viewer = await requestPrincipal(await headers());
+  const viewer = await currentPrincipal();
   if (viewer.kind === "guest") return null;
   return {
     user: {

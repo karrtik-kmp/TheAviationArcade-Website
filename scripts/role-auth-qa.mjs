@@ -322,16 +322,11 @@ try {
   await check(
     "Player preview and assets are honest and work under a colliding prefix",
     async () => {
-      await page.getByText("Linking coming soon", { exact: true }).waitFor();
+      // No GAME_API_BASE_URL locally: the page says so and shows no rank, points or name tag.
+      await page.getByRole("heading", { name: "Not connected", exact: true }).waitFor();
       assert.equal(await page.getByText(/^Linked \w/).count(), 0);
-      assert.match(
-        await page.locator(".account-hero").innerText(),
-        /sample name tag/i,
-      );
-      assert.match(
-        await page.locator(".account-hero").innerText(),
-        /existing Callsign/,
-      );
+      const hero = await page.locator(".account-hero").innerText();
+      assert.doesNotMatch(hero, /Status Points|name tag|Callsign/i);
       assert.equal((await account()).isStaff, false);
       await page.evaluate(() => document.fonts.ready);
       const fonts = await page.evaluate(() => [

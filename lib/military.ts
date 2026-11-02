@@ -5,14 +5,11 @@
  * (`mil-aN` for sheet row N). Staff check photographs and rights; changing a question needs
  * a new sheet from the client. Approval never publishes.
  */
-export const militaryRankNames = [
-  "Trainee",
-  "First Officer",
-  "Captain",
-  "Check Airman",
-  "Chief Pilot",
-] as const;
-export type MilitaryRank = (typeof militaryRankNames)[number];
+import { rankNames, type RankName } from "./catalog.ts";
+
+/** Military uses the same five-rank ladder as every game. */
+export const militaryRankNames = rankNames;
+export type MilitaryRank = RankName;
 
 /** Flights in a Trip. As in the game, a Trip never repeats a question. */
 export const TRIP_SIZE = 10;

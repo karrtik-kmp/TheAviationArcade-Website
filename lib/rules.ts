@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { rankNames } from "./catalog.ts";
 import type {
   EditorialData,
   ReviewChecks,
@@ -37,6 +38,17 @@ const webUrl = z
         })()),
     "Use a full https:// link.",
   );
+/** The website URL slugs a contributor may target; tests/catalog.test.mjs keeps it equal to lib/catalog.ts. */
+export const gameSlugs = z.enum([
+  "aircraft-identifier",
+  "military-aircraft-identifier",
+  "tail-identifier",
+  "airport-spotter",
+  "atc-match",
+  "call-sign-match",
+  "code-search",
+  "runway-identifier",
+]);
 export const submissionSchema = z
   .object({
     title: shortText.min(3, "Add a title of at least 3 characters."),
@@ -45,20 +57,7 @@ export const submissionSchema = z
     portfolio: webUrl,
     category: z.enum(["aircraft", "tail", "airport", "atc", "runway", "other"]),
     customCategory: shortText,
-    targetGames: z
-      .array(
-        z.enum([
-          "aircraft-identifier",
-          "military-aircraft-identifier",
-          "tail-identifier",
-          "airport-spotter",
-          "atc-match",
-          "call-sign-match",
-          "code-search",
-          "runway-identifier",
-        ]),
-      )
-      .max(8),
+    targetGames: z.array(gameSlugs).max(8),
     aircraft: shortText,
     airline: shortText,
     registration: z.string().trim().max(40),
@@ -179,15 +178,7 @@ export function editorialErrors(
       errors.push("Provide one correct answer and three distractors.");
     if (new Set(options).size !== options.length)
       errors.push("All answer choices must be different.");
-    if (
-      ![
-        "Trainee",
-        "First Officer",
-        "Captain",
-        "Check Airman",
-        "Chief Pilot",
-      ].includes(data.difficulty)
-    )
+    if (!(rankNames as readonly string[]).includes(data.difficulty))
       errors.push("Choose a supported rank.");
   } else if (data.description.trim().length < 15)
     errors.push("Add the photo's factual context.");
