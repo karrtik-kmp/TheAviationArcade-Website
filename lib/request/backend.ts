@@ -30,9 +30,21 @@ export class BackendError extends Error {
   }
 }
 
+/** Per-call options. `idempotencyKey` is sent as `Idempotency-Key` only when it is valid. */
+export type SendOptions = { idempotencyKey?: string; timeoutMs?: number };
+const idempotencyKeyPattern = /^[A-Za-z0-9_-]{1,128}$/;
+
 export type BackendClient = {
   getJson(path: string): Promise<unknown>;
-  send(method: string, path: string, body: unknown, contentType?: string): Promise<unknown>;
+  send(method: string, path: string, body: unknown, contentType?: string, options?: SendOptions): Promise<unknown>;
+  /** Like `send`, but also returns the backend's success status (e.g. 201 created, 200 replay). */
+  sendWithStatus(
+    method: string,
+    path: string,
+    body: unknown,
+    contentType?: string,
+    options?: SendOptions,
+  ): Promise<{ status: number; body: unknown }>;
 };
 
 export function backendClient(
@@ -42,14 +54,23 @@ export function backendClient(
   const base = options.baseUrl?.trim().replace(/\/+$/, "");
   const call = options.fetch ?? ((input, init) => fetch(input, init));
 
-  async function request(method: string, path: string, body?: unknown, contentType = "application/json") {
+  async function request(
+    method: string,
+    path: string,
+    body?: unknown,
+    contentType = "application/json",
+    send: SendOptions = {},
+  ): Promise<{ status: number; body: unknown }> {
     if (!base) throw new BackendNotConnected();
+    if (send.idempotencyKey !== undefined && !idempotencyKeyPattern.test(send.idempotencyKey))
+      throw new TypeError("The Idempotency-Key is not valid.");
     const headers: Record<string, string> = {
       Accept: "application/json",
       Authorization: `Bearer ${bearer.reveal()}`,
       "X-Client": "web",
     };
     if (body !== undefined) headers["Content-Type"] = contentType;
+    if (send.idempotencyKey !== undefined) headers["Idempotency-Key"] = send.idempotencyKey;
     let response: Response;
     try {
       response = await call(`${base}${path}`, {
@@ -57,7 +78,7 @@ export function backendClient(
         headers,
         body: body === undefined ? undefined : contentType === "application/json" ? JSON.stringify(body) : (body as BodyInit),
         redirect: "error",
-        signal: AbortSignal.timeout(options.timeoutMs ?? 8000),
+        signal: AbortSignal.timeout(send.timeoutMs ?? options.timeoutMs ?? 8000),
       });
     } catch {
       throw new BackendError(0, "unreachable");
@@ -72,11 +93,12 @@ export function backendClient(
       const retry = header === null || header.trim() === "" ? NaN : Number(header);
       throw new BackendError(response.status, code, Number.isFinite(retry) && retry >= 0 ? retry : undefined);
     }
-    return parsed;
+    return { status: response.status, body: parsed };
   }
 
   return {
-    getJson: (path) => request("GET", path),
-    send: (method, path, body, contentType) => request(method, path, body, contentType),
+    getJson: async (path) => (await request("GET", path)).body,
+    send: async (method, path, body, contentType, send) => (await request(method, path, body, contentType, send)).body,
+    sendWithStatus: (method, path, body, contentType, send) => request(method, path, body, contentType, send),
   };
 }

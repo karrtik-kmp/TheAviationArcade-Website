@@ -7,24 +7,28 @@ export class HttpError extends Error {
   code?: string;
   /** Every reason a request was refused, for forms that list them (a release check). */
   errors?: string[];
+  /** Whole seconds to wait, sent as `Retry-After` and `retryAfter` (rate limits, storage outages). */
+  retryAfter?: number;
   // Plain fields, not parameter properties: node --test strips types and cannot run those.
-  constructor(status: number, message: string, code?: string, errors?: string[]) {
+  constructor(status: number, message: string, code?: string, errors?: string[], retryAfter?: number) {
     super(message);
     this.status = status;
     this.code = code;
     this.errors = errors;
+    this.retryAfter = retryAfter;
   }
 }
 export function sameOrigin(request: Request) {
   if (request.headers.get("origin") !== new URL(request.url).origin)
     throw new HttpError(403, "This request must come from this website.");
 }
-export function respond(data: unknown, status = 200) {
+export function respond(data: unknown, status = 200, extraHeaders?: Record<string, string>) {
   return Response.json(data, {
     status,
     headers: {
       "Cache-Control": "no-store",
       "X-Content-Type-Options": "nosniff",
+      ...extraHeaders,
     },
   });
 }
@@ -35,8 +39,10 @@ export function failure(error: unknown) {
         error: error.message,
         ...(error.code ? { code: error.code } : {}),
         ...(error.errors?.length ? { errors: error.errors } : {}),
+        ...(error.retryAfter !== undefined ? { retryAfter: error.retryAfter } : {}),
       },
       error.status,
+      error.retryAfter !== undefined ? { "Retry-After": String(error.retryAfter) } : undefined,
     );
   console.error(
     "Content request failed",

@@ -28,6 +28,7 @@ import {
 import type { EditorialData } from "../types.ts";
 import { route, type Route, type RouteContext } from "./router.ts";
 import { roleRoutes } from "./role-routes.ts";
+import { mediaRoutes } from "./media-routes.ts";
 
 type Ctx = RouteContext<"member">;
 type PublicCtx = RouteContext<"public">;
@@ -61,8 +62,23 @@ const privatePhoto = (body: ReadableStream | null, mime: string) =>
     },
   });
 
+/**
+ * Photographer submissions are stored in the backend and Bunny, not this website's database
+ * (PROJECT_STATE 11-04, D-2 amended). The website's own proposal routes take nothing new and show
+ * members nothing, in every mode; admins can still read existing proposals until they are migrated
+ * to backend media. The handlers below stay only for that migration and are removed after it.
+ */
+function submissionsClosed(_ctx: Ctx) {
+  throw new HttpError(
+    404,
+    "Photo proposals on this website are closed. Approved photographers upload in the photo area.",
+    "SUBMISSIONS_CLOSED",
+  );
+}
+
 /** Parses the contributor form and photo, then stores the proposal or its revision. */
 async function saveSubmission(ctx: Ctx, id?: string) {
+  submissionsClosed(ctx);
   const { request } = ctx;
   // New photos and revisions need an approved photographer; reading your own list does not.
   if (!ctx.principal.photographer)
@@ -129,6 +145,8 @@ async function saveSubmission(ctx: Ctx, id?: string) {
 }
 
 async function submissionPhoto(ctx: Ctx, id: string) {
+  // Admins keep reviewing existing proposals; members are closed out in every mode (D-2 amended 11-04).
+  if (!ctx.principal.staff) submissionsClosed(ctx);
   const row = await findSubmission(ctx.db(), id);
   if (row.owner_id !== ctx.principal.userId && !ctx.principal.staff)
     throw new HttpError(404, "Photograph not found.");
@@ -280,7 +298,10 @@ export const routes: Route[] = [
     method: "GET",
     path: "submissions",
     audience: "member",
-    run: async (ctx) => respond({ submissions: await ownSubmissions(ctx.db(), ctx.principal.userId) }),
+    run: async (ctx) => {
+      submissionsClosed(ctx);
+      return respond({ submissions: await ownSubmissions(ctx.db(), ctx.principal.userId) });
+    },
   }),
   route({ method: "PUT", path: "submissions/:id", audience: "owner", mutation: true, run: (ctx) => saveSubmission(ctx, ctx.params.id) }),
   route({ method: "GET", path: "submissions/:id/photo", audience: "owner", run: (ctx) => submissionPhoto(ctx, ctx.params.id) }),
@@ -317,4 +338,5 @@ export const routes: Route[] = [
   route({ method: "PUT", path: "admin/military/:id", audience: "staff", mutation: true, run: (ctx) => saveMilitary(ctx, ctx.params.id) }),
   route({ method: "GET", path: "admin/audit", audience: "staff", run: auditEvents }),
   ...roleRoutes,
+  ...mediaRoutes,
 ];

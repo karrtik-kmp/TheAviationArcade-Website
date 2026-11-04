@@ -253,20 +253,32 @@ test("unreadable roles fail closed with 503, never as staff", async () => {
   const { call } = harness({ roles: "down" });
   const res = await call("GET", "admin/military", { as: "staff" });
   assert.deepEqual([res.status, res.body.code], [503, "ROLES_UNAVAILABLE"]);
+  const media = await call("GET", "media", { as: "photographer" });
+  assert.deepEqual([media.status, media.body.code], [503, "ROLES_UNAVAILABLE"]);
+  // Unreadable roles are not mock roles, so the D1 proposal routes stay closed (D-2, backend mode).
   const photo = await call("POST", "submissions", { as: "photographer", body: {} });
-  assert.deepEqual([photo.status, photo.body.code], [403, "ROLES_UNAVAILABLE"]);
+  assert.deepEqual([photo.status, photo.body.code], [404, "SUBMISSIONS_CLOSED"]);
 });
 
-test("new photos and revisions need an active photographer role", async () => {
-  const { call } = harness();
-  for (const [method, path] of [["POST", "submissions"], ["PUT", "submissions/x-1"]]) {
-    const res = await call(method, path, { as: "member", body: {} });
-    assert.deepEqual([res.status, res.body.code], [403, "PHOTOGRAPHER_REQUIRED"], `${method} ${path}`);
+/** Roles as the deployment's mock lists give them. */
+const mockBackendRoles = async (bearer) => ({ status: "ok", roles: backendRoles[bearer.reveal()] ?? [], source: "mock" });
+
+test("the website's own proposal routes are closed to members in every mode (D-2 amended 11-04)", async () => {
+  for (const roles of [backendRoles, mockBackendRoles, "down"]) {
+    const { call } = harness({ roles });
+    for (const [method, path, as] of [
+      ["GET", "submissions", "photographer"],
+      ["POST", "submissions", "photographer"],
+      ["POST", "submissions", "member"],
+      ["PUT", "submissions/x-1", "photographer"],
+      ["GET", "submissions/x-1/photo", "member"],
+    ]) {
+      const res = await call(method, path, { as, body: method === "GET" ? undefined : {} });
+      assert.deepEqual([res.status, res.body.code], [404, "SUBMISSIONS_CLOSED"], `${method} ${path}`);
+    }
   }
-  // A photographer passes the role check and reaches the request's own validation.
-  const res = await call("POST", "submissions", { as: "photographer", body: {} });
-  assert.notEqual(res.body?.code, "PHOTOGRAPHER_REQUIRED");
-  assert.equal((await call("GET", "submissions", { as: "member" })).status, 200, "reading your own list needs no role");
+  const { call } = harness();
+  assert.equal((await call("GET", "admin/submissions", { as: "staff" })).status, 200, "admins still read existing proposals");
 });
 
 test("a member reads their own roles and asks for photographer with their own token", async () => {
@@ -392,8 +404,10 @@ test("mock roles from the deployment's lists: verified emails only, and nothing 
   const { call } = harness({ backend, roles: async (_bearer, user) => mockRoles(user, lists) });
   assert.equal((await call("GET", "admin/military", { as: "staff" })).status, 200, "a listed admin is staff");
   assert.equal((await call("GET", "admin/military", { as: "photographer" })).status, 403);
-  assert.equal((await call("POST", "submissions", { as: "member", body: {} })).body.code, "PHOTOGRAPHER_REQUIRED");
-  assert.notEqual((await call("POST", "submissions", { as: "photographer", body: {} })).body?.code, "PHOTOGRAPHER_REQUIRED");
+  // Photos need the backend: with mock roles nobody can send one, listed photographer or not.
+  const media = await call("GET", "media", { as: "photographer" });
+  assert.deepEqual([media.status, media.body.code], [404, "MEDIA_UNAVAILABLE"]);
+  assert.equal((await call("POST", "submissions", { as: "photographer", body: {} })).body.code, "SUBMISSIONS_CLOSED");
   for (const [method, path, as] of [
     ["POST", "me/roles/photographer", "member"],
     ["GET", "admin/roles", "staff"],
@@ -475,6 +489,6 @@ test("a blocked account asking for photographer gets PHOTOGRAPHER_BLOCKED", asyn
 
 test("a blocked photographer row is no role", async () => {
   const { call } = harness({ roles: { ...backendRoles, photographer: [row("photographer", "blocked")] } });
-  const res = await call("POST", "submissions", { as: "photographer", body: {} });
+  const res = await call("GET", "media", { as: "photographer" });
   assert.deepEqual([res.status, res.body.code], [403, "PHOTOGRAPHER_REQUIRED"]);
 });
