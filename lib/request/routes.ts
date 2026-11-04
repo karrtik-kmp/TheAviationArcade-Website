@@ -29,6 +29,7 @@ import type { EditorialData } from "../types.ts";
 import { route, type Route, type RouteContext } from "./router.ts";
 import { roleRoutes } from "./role-routes.ts";
 import { mediaRoutes } from "./media-routes.ts";
+import { storeRoutes } from "./store-routes.ts";
 
 type Ctx = RouteContext<"member">;
 type PublicCtx = RouteContext<"public">;
@@ -339,4 +340,5 @@ export const routes: Route[] = [
   route({ method: "GET", path: "admin/audit", audience: "staff", run: auditEvents }),
   ...roleRoutes,
   ...mediaRoutes,
+  ...storeRoutes,
 ];

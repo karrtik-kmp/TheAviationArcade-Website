@@ -24,6 +24,7 @@ import {
   Newspaper,
   ShieldCheck,
   SquaresFour,
+  Storefront,
   UsersThree,
 } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
@@ -35,6 +36,7 @@ import { Brand, ThemeToggle } from "@/components/PublicShell";
 import { AccountActions } from "@/components/AccessGate";
 import { MilitaryWorkspace } from "@/components/MilitaryWorkspace";
 import { MediaDesk } from "@/components/MediaDesk";
+import { StoreDesk } from "@/components/StoreDesk";
 import { UsersDesk } from "@/components/UsersDesk";
 import "@/components/admin.css";
 import {
@@ -75,6 +77,7 @@ type Section =
   | "Plane of the Day"
   | "Military readiness"
   | "Media"
+  | "Store catalog"
   | "Users"
   | "Activity";
 type AuditEvent = {
@@ -93,6 +96,7 @@ const navItems: { label: Section; icon: typeof SquaresFour }[] = [
   { label: "Plane of the Day", icon: ImageSquare },
   { label: "Military readiness", icon: AirplaneTilt },
   { label: "Media", icon: Images },
+  { label: "Store catalog", icon: Storefront },
   { label: "Users", icon: UsersThree },
   { label: "Activity", icon: ClockCounterClockwise },
 ];
@@ -805,12 +809,13 @@ export function AdminApp({
                       label !== "Submissions" &&
                       label !== "Military readiness" &&
                       label !== "Media" &&
+                      label !== "Store catalog" &&
                       label !== "Users" &&
                       label !== "Activity",
                   )
                 : navItems.filter(
                     ({ label }) =>
-                      manageRoles || (label !== "Users" && label !== "Media"),
+                      manageRoles || (label !== "Users" && label !== "Media" && label !== "Store catalog"),
                   )
               ).map(({ label, icon: Icon }) => (
                 <button
@@ -968,6 +973,9 @@ export function AdminApp({
                   )}
                   {section === "Media" && !readOnly && manageRoles && (
                     <MediaDesk sessionKey={user.sessionKey} onBlocked={blockAccess} />
+                  )}
+                  {section === "Store catalog" && !readOnly && manageRoles && (
+                    <StoreDesk sessionKey={user.sessionKey} onBlocked={blockAccess} />
                   )}
                   {section === "Users" && !readOnly && manageRoles && (
                     <UsersDesk sessionKey={user.sessionKey} onBlocked={blockAccess} />

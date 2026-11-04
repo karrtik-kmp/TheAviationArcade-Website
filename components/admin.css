@@ -1664,3 +1664,177 @@
   width: 100%;
   max-width: 100%;
 }
+
+/* Store catalog desk */
+.admin-table.store-table tbody tr {
+  cursor: default;
+}
+.admin-table.store-table th small.store-th-hint {
+  display: block;
+  color: var(--muted);
+  font-weight: 400;
+}
+.admin-table.store-table td {
+  overflow-wrap: anywhere;
+}
+.admin-table.store-table td[data-label="Product id"] small {
+  display: block;
+  color: var(--muted);
+}
+.admin-table.store-table td[data-label="Product id"] .status-badge {
+  margin: 4px 0;
+}
+.store-id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  overflow-wrap: anywhere;
+}
+/* Wide enough on desktop that an id like aa.firstclass.monthly stays on one line. */
+@media (min-width: 768px) {
+  .admin-table.store-table td[data-label="Product id"] {
+    min-width: 13rem;
+  }
+}
+.admin-app .store-badge,
+.admin-app .store-status {
+  background: var(--raised);
+  color: var(--ink);
+  text-transform: none;
+}
+.admin-app .store-status.retired {
+  color: var(--muted);
+}
+.store-actions {
+  text-align: right;
+}
+.store-actions > .fui-Button + .fui-Button {
+  margin-left: 6px;
+}
+.store-create {
+  margin-bottom: 14px;
+  padding: 14px;
+}
+.store-form {
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+.store-form h3 {
+  margin: 0;
+}
+.store-form .form-grid .full {
+  grid-column: 1 / -1;
+}
+.store-fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.store-fieldset legend {
+  padding: 0 0 7px;
+  font-size: 10px;
+  font-weight: 600;
+}
+.store-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 24px;
+  margin: 0;
+}
+.store-facts dt {
+  color: var(--muted);
+  font-size: 11px;
+}
+.store-facts dd {
+  margin: 0;
+}
+.store-facts small {
+  color: var(--muted);
+}
+.store-error {
+  color: var(--error);
+  font-size: 12px;
+}
+.store-form-alert {
+  padding: 10px 12px;
+  border: 1px solid var(--error);
+  border-radius: 8px;
+  color: var(--error);
+  font-weight: 600;
+}
+.store-form-alert:focus {
+  outline: none;
+}
+.store-form-alert:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.store-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.store-confirm:focus {
+  outline: none;
+}
+.store-confirm:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.store-confirm p {
+  flex-basis: 100%;
+  margin: 0;
+}
+@media (max-width: 767px) {
+  .admin-table.store-table {
+    min-width: 0;
+  }
+  .admin-table.store-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .admin-table.store-table,
+  .admin-table.store-table tbody,
+  .admin-table.store-table tr,
+  .admin-table.store-table td {
+    display: block;
+    width: 100%;
+  }
+  .admin-table.store-table tr {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .admin-table.store-table td {
+    min-width: 0;
+    padding: 4px 14px;
+    border: 0;
+  }
+  .admin-table.store-table td:not([data-label="Product id"])[data-label]::before {
+    content: attr(data-label) " · ";
+    color: var(--muted);
+  }
+  .store-actions {
+    text-align: left;
+  }
+  .store-form .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .store-create {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+}
+@media (max-width: 380px) {
+  .store-actions .fui-Button,
+  .store-form .admin-actions .fui-Button,
+  .store-confirm .fui-Button {
+    width: 100%;
+  }
+  .store-actions > .fui-Button + .fui-Button {
+    margin: 6px 0 0;
+  }
+}
