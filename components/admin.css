@@ -1303,3 +1303,152 @@
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Users and roles */
+.admin-app .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.users-views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.users-view {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.users-view.active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--panel);
+}
+.users-view:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+.users-view:focus-visible,
+.admin-app .admin-message:focus-visible,
+.admin-panel-header h2:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.admin-panel-header h2:focus,
+.admin-app .admin-message:focus {
+  outline: none;
+}
+.admin-table.users-table th:first-child,
+.admin-table.users-table td:first-child {
+  width: auto;
+  min-width: 200px;
+}
+.admin-table.users-table tbody tr {
+  cursor: default;
+}
+.admin-table.users-table td:first-child b,
+.admin-table.users-table td:first-child small {
+  display: block;
+  overflow-wrap: break-word;
+}
+.admin-table.users-table td:first-child small {
+  color: var(--muted);
+}
+.admin-table.users-table td:first-child small.users-unverified {
+  font-style: italic;
+}
+.admin-app .users-role {
+  background: var(--raised);
+  color: var(--ink);
+  text-transform: none;
+}
+.users-actions {
+  text-align: right;
+  white-space: nowrap;
+}
+.users-actions > .fui-Button + .fui-Button {
+  margin-left: 6px;
+}
+.users-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.users-confirm p {
+  flex-basis: 100%;
+  margin: 0;
+  text-align: left;
+}
+.users-confirm .fui-Input {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.users-more {
+  display: flex;
+  justify-content: center;
+  padding: 12px;
+}
+.users-footnote {
+  margin-top: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+/* Phones: each account becomes a stacked card, so nothing sits off-screen. */
+@media (max-width: 767px) {
+  .admin-table.users-table {
+    min-width: 0;
+  }
+  .admin-table.users-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .admin-table.users-table,
+  .admin-table.users-table tbody,
+  .admin-table.users-table tr,
+  .admin-table.users-table td {
+    display: block;
+    width: 100%;
+  }
+  .admin-table.users-table tr {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .admin-table.users-table td,
+  .admin-table.users-table td:first-child,
+  .admin-table.users-table td:nth-child(3) {
+    display: block;
+    min-width: 0;
+    padding: 4px 14px;
+    border: 0;
+  }
+  .admin-table.users-table td[data-label="Requested"]::before,
+  .admin-table.users-table td[data-label="Decided"]::before {
+    content: attr(data-label) " · ";
+    color: var(--muted);
+  }
+  .users-actions {
+    text-align: left;
+    white-space: normal;
+  }
+  .users-actions:empty {
+    display: none;
+  }
+  .users-confirm {
+    justify-content: flex-start;
+  }
+}

@@ -23,6 +23,7 @@ import {
   Newspaper,
   ShieldCheck,
   SquaresFour,
+  UsersThree,
 } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -32,6 +33,7 @@ import { useAccountSession } from "@/components/AccountSession";
 import { Brand, ThemeToggle } from "@/components/PublicShell";
 import { AccountActions } from "@/components/AccessGate";
 import { MilitaryWorkspace } from "@/components/MilitaryWorkspace";
+import { UsersDesk } from "@/components/UsersDesk";
 import "@/components/admin.css";
 import {
   accountHeaders,
@@ -70,6 +72,7 @@ type Section =
   | "Aircraft Identifier"
   | "Plane of the Day"
   | "Military readiness"
+  | "Users"
   | "Activity";
 type AuditEvent = {
   entity_id: string;
@@ -86,6 +89,7 @@ const navItems: { label: Section; icon: typeof SquaresFour }[] = [
   { label: "Aircraft Identifier", icon: AirplaneInFlight },
   { label: "Plane of the Day", icon: ImageSquare },
   { label: "Military readiness", icon: AirplaneTilt },
+  { label: "Users", icon: UsersThree },
   { label: "Activity", icon: ClockCounterClockwise },
 ];
 const checkNames: { key: keyof ReviewChecks; label: string }[] = [
@@ -145,7 +149,10 @@ function displayStatus(status: string) {
 export function AdminApp({
   user,
   readOnly = false,
+  manageRoles = false,
 }: {
+  /** True when roles come from the game backend; mock roles have nothing to manage. */
+  manageRoles?: boolean;
   user: AdminUser;
   readOnly?: boolean;
 }) {
@@ -793,9 +800,10 @@ export function AdminApp({
                     ({ label }) =>
                       label !== "Submissions" &&
                       label !== "Military readiness" &&
+                      label !== "Users" &&
                       label !== "Activity",
                   )
-                : navItems
+                : navItems.filter(({ label }) => manageRoles || label !== "Users")
               ).map(({ label, icon: Icon }) => (
                 <button
                   key={label}
@@ -949,6 +957,9 @@ export function AdminApp({
                       onOpen={openMilitary}
                       onSave={saveMilitary}
                     />
+                  )}
+                  {section === "Users" && !readOnly && manageRoles && (
+                    <UsersDesk sessionKey={user.sessionKey} onBlocked={blockAccess} />
                   )}
                   {section === "Activity" && <Activity events={events} />}
                 </>

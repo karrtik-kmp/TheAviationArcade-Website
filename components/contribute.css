@@ -397,3 +397,32 @@
     align-self: flex-start;
   }
 }
+.contribute-root .photographer-access {
+  max-width: 720px;
+  margin-bottom: 72px;
+}
+.contribute-root .photographer-access h2 {
+  margin-top: 12px;
+}
+.contribute-root .photographer-access h2:focus {
+  outline: none;
+}
+.contribute-root .photographer-access h2:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.contribute-root .photographer-access .actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.contribute-root .photographer-access .photographer-access-meta {
+  margin: 0 0 16px;
+  flex-basis: 100%;
+}
+.contribute-root .photographer-access .photographer-access-error {
+  margin: 0 0 16px;
+  color: var(--error);
+  font-weight: 600;
+}

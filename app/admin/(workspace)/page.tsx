@@ -1,5 +1,6 @@
 import { AdminApp } from "@/components/AdminApp";
 import { requireArea } from "@/lib/access";
+import { deploymentRolesSource } from "@/lib/request/worker";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ export default async function AdminPage() {
     <AdminApp
       user={{ sessionKey: access.viewer.sessionKey }}
       readOnly={access.readOnly}
+      manageRoles={deploymentRolesSource() === "backend"}
     />
   );
 }
