@@ -1,10 +1,18 @@
 # LOCAL ONLY: copy to .dev.vars. These values address the Auth emulator, not a real project.
-STAFF_EMAILS=seedy@sites.test
 FIREBASE_PROJECT_ID=demo-airplane-games
 FIREBASE_WEB_API_KEY=fake-api-key
 FIREBASE_AUTH_DOMAIN=demo-airplane-games.firebaseapp.com
 FIREBASE_APP_ID=1:123:web:demo
 FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099
+
+# Roles. ROLES_SOURCE=backend reads them from the game backend (GET /v1/me/roles): run the Backend
+# locally with FIREBASE_PROJECT_ID=demo-airplane-games and grant the first admin with its
+# `npm run roles:grant -- <uid> admin --yes`. Any other value mocks roles from the lists below
+# (verified emails only); the Users section and photographer requests are then hidden.
+ROLES_SOURCE=mock
+MOCK_ADMIN_EMAILS=seedy@sites.test
+MOCK_PHOTOGRAPHER_EMAILS=
+GAME_API_BASE_URL=http://127.0.0.1:3000
 
 # Local development uses emulated R2 unless you explicitly opt into live Bunny.
 # For the separate Cloudflare/Bunny deployment, copy .dev.vars.cloudflare.example

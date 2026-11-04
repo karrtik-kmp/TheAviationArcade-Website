@@ -6,7 +6,7 @@ import path from "node:path";
 import test from "node:test";
 
 const source = new URL("../", import.meta.url);
-const requiredSecrets = ["BUNNY_STORAGE_PASSWORD", "STAFF_EMAILS"];
+const requiredSecrets = ["BUNNY_STORAGE_PASSWORD", "MOCK_ADMIN_EMAILS", "MOCK_PHOTOGRAPHER_EMAILS"];
 
 async function fixture(t, { omitWorkersDev = false } = {}) {
   const root = await mkdtemp(path.join(os.tmpdir(), "airplane-deploy-"));
@@ -28,7 +28,7 @@ async function fixture(t, { omitWorkersDev = false } = {}) {
   const target = JSON.parse(await readFile(new URL("config/cloudflare-prototype.json", source), "utf8"));
   if (omitWorkersDev) delete target.workersDev;
   await put("config/cloudflare-prototype.json", JSON.stringify(target));
-  await put(".dev.vars.cloudflare", "BUNNY_STORAGE_PASSWORD=test-only-secret\nSTAFF_EMAILS=editor@example.test\n");
+  await put(".dev.vars.cloudflare", "BUNNY_STORAGE_PASSWORD=test-only-secret\n");
   await put("outputs/firebase-web-config.json", JSON.stringify({ runtimeBindings: {
     FIREBASE_PROJECT_ID: "airplane-games-auth-20261022",
     FIREBASE_WEB_API_KEY: "test-only-web-key",
@@ -89,9 +89,9 @@ test("preparation enables workers.dev when the source target explicitly enables 
   await assertBunnyDefault(f, { workersDev: true });
 });
 
-test("demo credentials stay out of public Wrangler vars and partial/staff configuration fails closed", async (t) => {
+test("demo credentials stay out of public Wrangler vars and partial configuration fails closed", async (t) => {
   const f = await fixture(t);
-  const settings = "BUNNY_STORAGE_PASSWORD=test-only-secret\nSTAFF_EMAILS=editor@example.test\n";
+  const settings = "BUNNY_STORAGE_PASSWORD=test-only-secret\n";
   await f.put(".dev.vars.cloudflare", settings + "DEMO_ACCOUNT_UID=sample-uid\nDEMO_LOGIN_EMAIL=demo@example.test\nDEMO_LOGIN_PASSWORD=sample-only-password\n");
   let result = f.run("scripts/prepare-cloudflare-deploy.mjs");
   assert.equal(result.status, 0, result.stderr);
@@ -100,7 +100,7 @@ test("demo credentials stay out of public Wrangler vars and partial/staff config
   assert.equal(config.vars.DEMO_LOGIN_PASSWORD, undefined);
   assert.equal((await f.json("outputs/cloudflare-secrets.json")).DEMO_LOGIN_PASSWORD, "sample-only-password");
   assert.ok(!result.stdout.includes("sample-only-password"));
-  for (const extra of ["DEMO_LOGIN_EMAIL=demo@example.test\n", "DEMO_ACCOUNT_UID=sample-uid\nDEMO_LOGIN_EMAIL=editor@example.test\nDEMO_LOGIN_PASSWORD=sample-only-password\n"]) {
+  for (const extra of ["DEMO_LOGIN_EMAIL=demo@example.test\n", "DEMO_ACCOUNT_UID=sample-uid\nDEMO_LOGIN_PASSWORD=sample-only-password\n"]) {
     await f.put(".dev.vars.cloudflare", settings + extra);
     result = f.run("scripts/prepare-cloudflare-deploy.mjs");
     assert.notEqual(result.status, 0);
@@ -131,12 +131,12 @@ test("deploy rebuilds and supplies Bunny config and secrets to the project-local
 
 test("deploy rejects missing credentials, target overrides and failed builds before upload", async (t) => {
   const f = await fixture(t);
-  await f.put(".dev.vars.cloudflare", "BUNNY_STORAGE_PASSWORD=\nSTAFF_EMAILS=editor@example.test\n");
+  await f.put(".dev.vars.cloudflare", "BUNNY_STORAGE_PASSWORD=\n");
   let result = f.run("scripts/deploy-cloudflare.mjs");
   assert.equal(result.status, 1);
   assert.match(result.stderr, /Fill BUNNY_STORAGE_PASSWORD/);
   await assert.rejects(f.json("wrangler-invocation.json"), { code: "ENOENT" });
-  await f.put(".dev.vars.cloudflare", "BUNNY_STORAGE_PASSWORD=test-only-secret\nSTAFF_EMAILS=editor@example.test\n");
+  await f.put(".dev.vars.cloudflare", "BUNNY_STORAGE_PASSWORD=test-only-secret\n");
   result = f.run("scripts/deploy-cloudflare.mjs", ["--config", "wrong-target.json"]);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /cannot be overridden/);
@@ -145,4 +145,55 @@ test("deploy rejects missing credentials, target overrides and failed builds bef
   result = f.run("scripts/deploy-cloudflare.mjs");
   assert.equal(result.status, 7);
   await assert.rejects(f.json("wrangler-invocation.json"), { code: "ENOENT" });
+});
+
+test("roles are mocked by default: lists travel as secrets, never as public vars", async (t) => {
+  const f = await fixture(t);
+  await f.put(
+    ".dev.vars.cloudflare",
+    "BUNNY_STORAGE_PASSWORD=test-only-secret\nMOCK_ADMIN_EMAILS= Editor@Example.test \nMOCK_PHOTOGRAPHER_EMAILS=lens@example.test\n",
+  );
+  const result = f.run("scripts/prepare-cloudflare-deploy.mjs");
+  assert.equal(result.status, 0, result.stderr);
+  const config = await f.json("outputs/cloudflare-deploy/wrangler.json");
+  assert.equal(config.vars.ROLES_SOURCE, "mock");
+  assert.ok(!JSON.stringify(config).includes("example.test"), "no listed email in public vars");
+  const secrets = await f.json("outputs/cloudflare-secrets.json");
+  assert.deepEqual([secrets.MOCK_ADMIN_EMAILS, secrets.MOCK_PHOTOGRAPHER_EMAILS], ["editor@example.test", "lens@example.test"]);
+  assert.ok(!result.stdout.includes("example.test"));
+});
+
+test("an empty mock admin list only warns", async (t) => {
+  const f = await fixture(t);
+  const result = f.run("scripts/prepare-cloudflare-deploy.mjs");
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stderr, /MOCK_ADMIN_EMAILS is empty/);
+});
+
+test("the shared demo login can't be on a mock role list", async (t) => {
+  const f = await fixture(t);
+  await f.put(
+    ".dev.vars.cloudflare",
+    "BUNNY_STORAGE_PASSWORD=test-only-secret\nDEMO_ACCOUNT_UID=sample-uid\nDEMO_LOGIN_EMAIL=demo@example.test\nDEMO_LOGIN_PASSWORD=sample-only-password\nMOCK_PHOTOGRAPHER_EMAILS=DEMO@example.test\n",
+  );
+  const result = f.run("scripts/prepare-cloudflare-deploy.mjs");
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /must not be on a mock role list/);
+});
+
+test("ROLES_SOURCE=backend forwards GAME_API_BASE_URL as a public var, drops the mock lists, and only warns without it", async (t) => {
+  const f = await fixture(t);
+  const base = "BUNNY_STORAGE_PASSWORD=test-only-secret\nROLES_SOURCE=backend\nMOCK_ADMIN_EMAILS=editor@example.test\n";
+  await f.put(".dev.vars.cloudflare", base);
+  let result = f.run("scripts/prepare-cloudflare-deploy.mjs");
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stderr, /GAME_API_BASE_URL is not set/);
+  assert.equal((await f.json("outputs/cloudflare-deploy/wrangler.json")).vars.GAME_API_BASE_URL, undefined);
+  assert.equal((await f.json("outputs/cloudflare-secrets.json")).MOCK_ADMIN_EMAILS, "", "mock lists are not uploaded in backend mode");
+  await f.put(".dev.vars.cloudflare", base + "GAME_API_BASE_URL=https://game.example.test\n");
+  result = f.run("scripts/prepare-cloudflare-deploy.mjs");
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stderr, /GAME_API_BASE_URL/);
+  const vars = (await f.json("outputs/cloudflare-deploy/wrangler.json")).vars;
+  assert.deepEqual([vars.ROLES_SOURCE, vars.GAME_API_BASE_URL], ["backend", "https://game.example.test"]);
 });

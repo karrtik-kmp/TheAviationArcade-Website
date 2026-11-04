@@ -10,8 +10,15 @@ BUNNY_STORAGE_ENDPOINT=https://de-s3.storage.bunnycdn.com
 # The S3 Access Key ID is the zone name above. Do not use your Bunny account API key.
 BUNNY_STORAGE_PASSWORD=
 
-# Comma-separated Firebase account emails. Staff must also have verified email.
-STAFF_EMAILS=
+# Where staff and photographer roles come from. Until the game backend is hosted where this
+# deployment can reach it, leave ROLES_SOURCE=mock and list verified emails below (they are uploaded
+# as secrets). The Users section and photographer requests are hidden while roles are mocked.
+# Switch to ROLES_SOURCE=backend and set GAME_API_BASE_URL once the backend is hosted; the mock lists
+# are then ignored.
+ROLES_SOURCE=mock
+MOCK_ADMIN_EMAILS=
+MOCK_PHOTOGRAPHER_EMAILS=
+GAME_API_BASE_URL=
 
 # Production Firebase Web SDK settings. The preparation script can also read these
 # from the existing ignored outputs/firebase-web-config.json provisioning output.
