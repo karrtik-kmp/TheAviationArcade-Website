@@ -213,9 +213,21 @@ With an unprefixed `npm run demo:preview` (port 5186) and the seeded Auth Emulat
 `node scripts/military-qa.mjs` checks the Military readiness desk. The military suite
 resets and rewrites the A-10/F-22 packages (`mil-a1`, `mil-a3`) in the local D1 only, and saves
 screenshots to the ignored `outputs/military-qa/`. `node scripts/military-release-qa.mjs` checks
-the release checks and sample Trips: it adopts or uploads one generated QA photograph per sheet row
-(reused on later runs), approves all 31 local packages and expects the release to be refused for the
-short Trainee Trip. Release and restore writes are covered by `tests/military.test.mjs`.
+the release checks and sample Trips: it adopts one generated QA photograph per sheet row from earlier
+runs, approves all 31 local packages and expects the release to be refused for the short Trainee Trip.
+It can no longer upload those photographs itself (the website's member submission routes answer
+`404 SUBMISSIONS_CLOSED`, D-2 amended 2026-11-04), so on a database without the 31 fixtures it stops
+with a message saying so. Release and restore writes are covered by `tests/military.test.mjs`.
+
+The browser suites above cover mock-roles mode (`ROLES_SOURCE=mock`, the default): the member
+`/api/submissions` routes answer `404 SUBMISSIONS_CLOSED`, `/contribute` shows the closed panel, the account
+page shows the Photo area card, and staff review uses the proposals that `POST /api/admin/demo` seeds.
+`.dev.vars` needs `MOCK_ADMIN_EMAILS` (the example uses `seedy@sites.test`). The old
+`submissions-ui-qa.mjs` suite tested the retired proposal form and was deleted.
+
+TODO (not yet covered): browser coverage of `ROLES_SOURCE=backend` needs a running game Backend, so there
+is none yet. It should cover the guest sign-in panel, an approved photographer's `MediaContribute` area,
+the non-photographer `PhotographerAccess` panel and the admin Users and Media sections.
 
 The Firebase harness is restricted to loopback/demo services. Browser suites create local fixture
 records; they are not cloud tests. Results and screenshots are saved under `docs/evidence`.

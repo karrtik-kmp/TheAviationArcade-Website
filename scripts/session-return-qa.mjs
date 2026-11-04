@@ -114,7 +114,7 @@ await check("a photographer sees no editorial entry points", async () => {
   await signIn(page, "/sign-in?as=photographer", "photographer-a@sites.test");
   await page.waitForURL((url) => url.pathname !== "/sign-in", { timeout: 30000, waitUntil: "commit" });
   await page.goto(origin + "/account", { waitUntil: "domcontentloaded" });
-  await page.getByRole("heading", { name: "My submissions" }).waitFor({ timeout: 15000 });
+  await page.getByRole("heading", { name: "Photo area", exact: true }).waitFor({ timeout: 15000 });
   assert.equal(await page.getByRole("link", { name: "Editor workspace" }).count(), 0);
   assert.equal(await page.getByText(/editorial/i).count(), 0);
   await page.getByRole("button", { name: "Account menu" }).click();

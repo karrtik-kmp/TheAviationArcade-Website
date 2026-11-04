@@ -28,8 +28,8 @@ async function api(path, method = "GET", data) {
   });
   return { status: response.status(), body: await response.json() };
 }
-let createdId, featureId;
-const proposalTitle = "Local QA photograph " + Date.now();
+let createdId;
+const demoTitle = "KLM on approach [Demo]";
 try {
   await check("Homepage desktop and theme switch", async () => {
     await page.goto(origin, { waitUntil: "domcontentloaded", timeout: 90000 });
@@ -149,61 +149,49 @@ try {
     },
   );
   await check(
-    "Photographer form uploads a proposal with private metadata",
+    "Member submission routes are closed and /contribute shows the closed panel",
     async () => {
+      for (const [path, method] of [
+        ["/api/submissions", "GET"],
+        ["/api/submissions", "POST"],
+        ["/api/submissions/demo-submission-aircraft", "PUT"],
+      ]) {
+        const closed = await api(path, method, method === "GET" ? undefined : {});
+        assert.equal(closed.status, 404, method + " " + path);
+        assert.equal(closed.body.code, "SUBMISSIONS_CLOSED", method + " " + path);
+      }
+      // Query params are ignored; there is no form to fill in any more.
       await page.goto(origin + "/contribute?game=aircraft-identifier", {
         waitUntil: "domcontentloaded",
       });
       await page
-        .locator("#field-photo")
-        .setInputFiles("public/media/aircraft.jpg");
-      await page.locator("#field-title").fill(proposalTitle);
-      await page
-        .locator("#field-description")
-        .fill(
-          "Local-only automated workflow fixture using the client preview photograph. Not a production rights grant.",
-        );
-      await page.locator("#field-aircraft").fill("Boeing 767-200");
-      await page.locator("#field-location").fill("Local QA fixture");
-      await page.locator("#field-credit").fill("Josh M (local QA fixture)");
-      await page
-        .locator("#field-factualSource")
-        .fill("https://www.boeing.com/commercial/767/");
-      await page
-        .locator("#field-rightsEvidence")
-        .fill(
-          "Local-only workflow verification. This is not evidence for public use.",
-        );
-      for (const label of [
-        "Game content",
-        "Website & gallery",
-        "Plane of the Day",
-      ])
-        await page.getByRole("checkbox", { name: label, exact: true }).check();
-      await page.locator("#field-consent").check();
+        .getByRole("heading", { name: "Photo submissions aren't open yet" })
+        .waitFor();
+      assert.equal(await page.locator("#field-photo").count(), 0);
       await page.screenshot({
-        path: "docs/evidence/contributor-form-dark.png",
+        path: "docs/evidence/contributor-closed-dark.png",
         fullPage: true,
       });
-      const [response] = await Promise.all([
-        page.waitForResponse(
-          (r) =>
-            new URL(r.url()).pathname === "/api/submissions" &&
-            r.request().method() === "POST",
-        ),
-        page
-          .getByRole("button", { name: "Send for private review", exact: true })
-          .click(),
-      ]);
-      const body = await response.json();
-      assert.equal(response.status(), 201, JSON.stringify(body));
-      createdId = body.submission.id;
-      assert.equal(body.submission.status, "pending");
     },
   );
   await check(
-    "Review requires checks, supports changes, revision, and approval",
+    "Account page shows the Photo area card instead of My submissions",
     async () => {
+      await page.goto(origin + "/account", { waitUntil: "domcontentloaded" });
+      await page.getByRole("heading", { name: "Photo area", exact: true }).waitFor();
+      await page.getByRole("link", { name: "Open the photo area", exact: true }).waitFor();
+      assert.equal(
+        await page.getByRole("heading", { name: "My submissions", exact: true }).count(),
+        0,
+      );
+    },
+  );
+  await check(
+    "Staff review of a seeded demo proposal: checks, changes, stale version",
+    async () => {
+      // Member proposals can no longer be created on the website (D-2), so review the proposal
+      // that POST /api/admin/demo seeds. Demo proposals can never be approved or published.
+      createdId = "demo-submission-aircraft";
       await page.goto(origin + "/admin", { waitUntil: "domcontentloaded" });
       await page
         .getByRole("heading", { name: "Good to have you back." })
@@ -212,7 +200,7 @@ try {
         .getByRole("navigation", { name: "Admin sections" })
         .getByRole("button", { name: /^Submissions/ })
         .click();
-      await page.locator("tr").filter({ hasText: proposalTitle }).click();
+      await page.locator("tr").filter({ hasText: demoTitle }).click();
       await page
         .getByRole("button", { name: "Approve submission", exact: true })
         .click();
@@ -233,56 +221,24 @@ try {
           .click(),
       ]);
       assert.equal(changeResponse.status(), 200, await changeResponse.text());
-      let owned = (await api("/api/submissions")).body.submissions.find(
+      const owned = (await api("/api/admin/submissions")).body.submissions.find(
         (s) => s.id === createdId,
       );
       assert.equal(owned.status, "changes_requested");
-      // Exercise the real revision endpoint with the owning browser session, preserving its photo.
-      const revision = await context.request.put(
-        origin + `/api/submissions/${createdId}`,
-        {
-          headers: { Origin: origin, "Idempotency-Key": crypto.randomUUID() },
-          multipart: {
-            data: JSON.stringify({
-              ...owned.data,
-              location: "London Heathrow (local QA only)",
-            }),
-            version: String(owned.version),
-          },
+      // Approval is refused server-side: the demo proposal has no rights evidence or source.
+      const approve = await api(`/api/admin/submissions/${createdId}`, "PATCH", {
+        status: "approved",
+        note: "",
+        checks: {
+          identity: true,
+          quality: true,
+          credit: true,
+          rights: true,
+          category: true,
         },
-      );
-      assert.equal(revision.status(), 200, await revision.text());
-      await page.reload({ waitUntil: "domcontentloaded" });
-      await page
-        .getByRole("heading", { name: "Good to have you back." })
-        .waitFor();
-      await page
-        .getByRole("navigation", { name: "Admin sections" })
-        .getByRole("button", { name: /^Submissions/ })
-        .click();
-      await page.locator("tr").filter({ hasText: proposalTitle }).click();
-      for (const label of [
-        "Aircraft identity is supported",
-        "Photo quality is suitable",
-        "Photographer credit is correct",
-        "Usage rights are documented",
-        "Submission category is accurate",
-      ])
-        await page.getByRole("checkbox", { name: label, exact: true }).check();
-      await page
-        .getByRole("button", { name: "Approve submission", exact: true })
-        .click();
-      await page
-        .getByRole("button", { name: "Use for Plane of the Day", exact: true })
-        .waitFor();
-      await page.screenshot({
-        path: "docs/evidence/admin-approved-review-dark.png",
-        fullPage: true,
+        version: owned.version,
       });
-      owned = (await api("/api/submissions")).body.submissions.find(
-        (s) => s.id === createdId,
-      );
-      assert.equal(owned.status, "approved");
+      assert.equal(approve.status, 422);
       const stale = await api(`/api/admin/submissions/${createdId}`, "PATCH", {
         status: "rejected",
         note: "Stale revision should be refused.",
@@ -290,77 +246,6 @@ try {
         version: owned.version - 1,
       });
       assert.equal(stale.status, 409);
-    },
-  );
-  await check(
-    "POTD draft, schedule, local-day visibility, private fields and archive",
-    async () => {
-      await page
-        .getByRole("button", { name: "Use for Plane of the Day", exact: true })
-        .click();
-      await page
-        .getByRole("heading", { name: "Edit content", exact: true })
-        .waitFor();
-      let record = (await api("/api/admin/content")).body.records.find(
-        (r) => r.sourceId === createdId && r.kind === "potd",
-      );
-      assert.ok(record);
-      featureId = record.id;
-      await page
-        .getByRole("button", { name: "Publish for today", exact: true })
-        .click();
-      await page
-        .getByText(/saved|published|scheduled/i)
-        .first()
-        .waitFor();
-      const current = await api("/api/featured?timeZone=Asia%2FKolkata");
-      assert.equal(current.status, 200);
-      assert.equal(current.body.featured.id, featureId);
-      assert.equal("email" in current.body.featured, false);
-      assert.equal("rightsEvidence" in current.body.featured, false);
-      assert.equal(
-        (
-          await context.request.get(origin + current.body.featured.imageUrl)
-        ).status(),
-        200,
-      );
-      record = (await api("/api/admin/content")).body.records.find(
-        (r) => r.id === featureId,
-      );
-      const tomorrow = new Date(Date.now() + 2 * 86400000)
-        .toISOString()
-        .slice(0, 10);
-      assert.equal(
-        (
-          await api(`/api/admin/content/${featureId}`, "PUT", {
-            data: record.data,
-            version: record.version,
-            status: "scheduled",
-            dateKey: tomorrow,
-          })
-        ).status,
-        200,
-      );
-      assert.equal(
-        (await api("/api/featured?timeZone=Asia%2FKolkata")).body.archive.some(
-          (p) => p.id === featureId,
-        ),
-        false,
-      );
-      record = (await api("/api/admin/content")).body.records.find(
-        (r) => r.id === featureId,
-      );
-      assert.equal(
-        (
-          await api(`/api/admin/content/${featureId}`, "PUT", {
-            data: record.data,
-            version: record.version,
-            status: "archived",
-            dateKey: record.dateKey,
-          })
-        ).status,
-        200,
-      );
     },
   );
   await check(

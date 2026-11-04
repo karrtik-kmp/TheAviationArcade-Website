@@ -12,7 +12,6 @@ import {
   accountSignInPath,
   accountSignOutPath,
   audiences,
-  contributorPath,
   safeAccountReturn,
 } from "@/lib/account";
 import {
@@ -126,11 +125,8 @@ export function AccountControl() {
           <SiteLink href="/account" onClick={() => close()}>
             <IdentificationCard size={18} /> My account
           </SiteLink>
-          <SiteLink
-            href={contributorPath(undefined, undefined, "mine")}
-            onClick={() => close()}
-          >
-            My submissions
+          <SiteLink href="/contribute" onClick={() => close()}>
+            Photo area
           </SiteLink>
           <SiteLink href={audiences.player.home} onClick={() => close()}>
             Player profile

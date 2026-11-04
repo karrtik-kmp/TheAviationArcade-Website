@@ -317,49 +317,20 @@ async function assertAccountShape(expectedUser, isStaff) {
   return body;
 }
 
-async function uploadLocalProposal(title) {
-  await page.goto(
-    `${localOrigin}/contribute?category=aircraft&game=aircraft-identifier&view=new`,
-    { waitUntil: "domcontentloaded" },
-  );
-  await page.locator("#field-photo").setInputFiles("public/media/aircraft.jpg");
-  await page.locator("#field-title").fill(title);
-  await page
-    .locator("#field-description")
-    .fill("Local Firebase Auth Emulator QA fixture. Not a rights grant.");
-  await page.locator("#field-aircraft").fill("Boeing 767-200");
-  await page.locator("#field-location").fill("Local QA fixture");
-  await page.locator("#field-credit").fill("Local QA");
-  await page
-    .locator("#field-factualSource")
-    .fill("https://www.boeing.com/commercial/767/");
-  await page
-    .locator("#field-rightsEvidence")
-    .fill("Local-only emulator test. Not evidence for public use.");
-  for (const label of ["Game content", "Website & gallery", "Plane of the Day"])
-    await page.getByRole("checkbox", { name: label, exact: true }).check();
-  await page.locator("#field-consent").check();
-  const [response] = await Promise.all([
-    page.waitForResponse(
-      (r) =>
-        new URL(r.url()).pathname === "/api/submissions" &&
-        r.request().method() === "POST",
-      { timeout: 60000 },
-    ),
-    page
-      .getByRole("button", { name: "Send for private review", exact: true })
-      .click(),
-  ]);
-  const body = await response.json();
-  assert.equal(response.status(), 201, JSON.stringify(body));
-  return body.submission;
-}
+const closedPanel = (p) =>
+  p.getByRole("heading", { name: "Photo submissions aren't open yet", exact: true });
 
-async function currentSubmissionIds() {
-  const response = await api("/api/submissions");
-  assert.equal(response.status(), 200, await response.text());
-  const body = await response.json();
-  return (body.submissions || []).map((item) => item.id);
+async function assertMemberSubmissionRoutesClosed(photoUrl = "/api/submissions/demo-submission-aircraft/photo") {
+  for (const [path, method, data] of [
+    ["/api/submissions", "GET"],
+    ["/api/submissions", "POST", {}],
+    ["/api/submissions/demo-submission-aircraft", "PUT", {}],
+    [photoUrl, "GET"],
+  ]) {
+    const response = await api(path, method, data);
+    assert.equal(response.status(), 404, `${method} ${path}`);
+    assert.equal((await response.json()).code, "SUBMISSIONS_CLOSED", `${method} ${path}`);
+  }
 }
 
 async function main() {
@@ -438,25 +409,20 @@ async function main() {
       await page
         .getByRole("heading", { name: "Editor sign in", exact: true })
         .waitFor();
-      await page.goto(
-        `${localOrigin}/contribute?category=aircraft&game=aircraft-identifier&view=mine`,
-      );
-      await page
-        .getByRole("heading", { name: "Sign in to contribute", exact: true })
-        .waitFor();
+      // Mock mode: guests get the same closed panel as members; query params are ignored.
+      await page.goto(`${localOrigin}/contribute?category=aircraft&game=aircraft-identifier&view=mine`);
+      await closedPanel(page).waitFor();
+      assert.equal(await page.locator("#field-photo").count(), 0);
       const signInHrefs = await page
         .locator('a[href^="/sign-in?"]')
         .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
       assert.ok(
         signInHrefs.some((href) => {
           if (!href) return false;
-          const url = new URL(href, localOrigin);
-          return (
-            url.searchParams.get("return_to") ===
-            "/contribute?category=aircraft&game=aircraft-identifier&view=mine"
-          );
+          const returnTo = new URL(href, localOrigin).searchParams.get("return_to");
+          return returnTo?.startsWith("/contribute");
         }),
-        "Anonymous contributor CTA must preserve safe filters and view=mine",
+        "Anonymous header sign-in link must return to /contribute",
       );
     },
   );
@@ -481,10 +447,9 @@ async function main() {
   );
 
   await check(
-    "Account control preserves safe category, game and mine filters through sign-in",
+    "Account control returns to /contribute through sign-in and shows the closed panel",
     async () => {
-      const target =
-        "/contribute?category=aircraft&game=aircraft-identifier&view=mine";
+      const target = "/contribute";
       await page.goto(`${localOrigin}${target}`);
       const signInLink = page
         .getByRole("link", { name: "Sign in", exact: true })
@@ -502,14 +467,8 @@ async function main() {
       assert.equal(returnTo, target);
       await signInThroughForm(qaUsers.photographerA.email, password, target);
       assert.equal(new URL(page.url()).pathname, "/contribute");
-      const actual = new URL(page.url());
-      assert.equal(actual.searchParams.get("category"), "aircraft");
-      assert.equal(actual.searchParams.get("game"), "aircraft-identifier");
-      assert.equal(actual.searchParams.get("view"), "mine");
       await assertAccountShape(qaUsers.photographerA, false);
-      await page
-        .getByRole("heading", { name: "My submissions", exact: true })
-        .waitFor({ timeout: 20000 });
+      await closedPanel(page).waitFor({ timeout: 20000 });
     },
   );
 
@@ -519,6 +478,12 @@ async function main() {
       await mkdir("docs/evidence", { recursive: true });
       await page.goto(`${localOrigin}/account`);
       await page.getByRole("heading", { name: "My account" }).waitFor();
+      await page.getByRole("heading", { name: "Photo area", exact: true }).waitFor();
+      await page.getByRole("link", { name: "Open the photo area", exact: true }).waitFor();
+      assert.equal(
+        await page.getByRole("heading", { name: "My submissions", exact: true }).count(),
+        0,
+      );
       await page
         .getByText("Your community name tag uses your existing Callsign.")
         .waitFor();
@@ -533,7 +498,7 @@ async function main() {
         .getByRole("link", { name: "My account", exact: true })
         .waitFor();
       await menu
-        .getByRole("link", { name: "My submissions", exact: true })
+        .getByRole("link", { name: "Photo area", exact: true })
         .waitFor();
       assert.equal(
         await menu
@@ -582,96 +547,24 @@ async function main() {
     },
   );
 
-  const proposalA = `Firebase QA A ${emailSuffix}`;
-  const proposalB = `Firebase QA B ${emailSuffix}`;
   await check(
-    "Two emulator users see only their own contribution records",
+    "Member submission routes are closed for every signed-in user",
     async () => {
-      const createdA = await uploadLocalProposal(proposalA);
-      await signOutThroughUI();
-      await signInThroughForm(qaUsers.photographerB.email);
-      const bBefore = await currentSubmissionIds();
-      assert.equal(
-        bBefore.includes(createdA.id),
-        false,
-        "Photographer B must not see A's record",
-      );
-      const crossUserRevision = await context.request.put(
-        `${localOrigin}/api/submissions/${createdA.id}`,
-        {
-          headers: { Origin: localOrigin, "Idempotency-Key": randomUUID() },
-          multipart: {
-            data: JSON.stringify({
-              ...createdA.data,
-              location: "Unauthorized local QA edit",
-            }),
-            version: String(createdA.version),
-          },
-        },
-      );
-      assert.ok(
-        [403, 404].includes(crossUserRevision.status()),
-        `A different user changed the proposal (${crossUserRevision.status()})`,
-      );
-      if (createdA.photoUrl) {
-        const crossUserPhoto = await api(createdA.photoUrl);
-        assert.ok(
-          [403, 404].includes(crossUserPhoto.status()),
-          `A different user accessed the private photo (${crossUserPhoto.status()})`,
-        );
-      }
-      const createdB = await uploadLocalProposal(proposalB);
       await signOutThroughUI();
       await signInThroughForm(qaUsers.photographerA.email);
-      const aList = await currentSubmissionIds();
-      assert.ok(aList.includes(createdA.id));
-      assert.equal(
-        aList.includes(createdB.id),
-        false,
-        "Photographer A must not see B's record",
-      );
-      if (createdA.photoUrl) {
-        const ownerPhoto = await api(createdA.photoUrl);
-        assert.equal(
-          ownerPhoto.status(),
-          200,
-          "The owner must retain access to the private photo",
-        );
-        assert.match(ownerPhoto.headers()["cache-control"] || "", /no-store/i);
-      }
-      const ownerRevision = await context.request.put(
-        `${localOrigin}/api/submissions/${createdA.id}`,
-        {
-          headers: { Origin: localOrigin, "Idempotency-Key": randomUUID() },
-          multipart: {
-            data: JSON.stringify({
-              ...createdA.data,
-              location: "Local QA owner revision",
-            }),
-            version: String(createdA.version),
-          },
-        },
-      );
-      assert.equal(ownerRevision.status(), 200, await ownerRevision.text());
+      await assertMemberSubmissionRoutesClosed();
       await page.goto(`${localOrigin}/contribute?view=mine`);
-      await page.getByRole("button", { name: /^My submissions/ }).waitFor();
-      await page
-        .getByRole("heading", { name: "My submissions", exact: true })
-        .waitFor();
-      assert.match(
-        await page.locator("main").innerText(),
-        new RegExp(proposalA.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-      );
-      assert.doesNotMatch(
-        await page.locator("main").innerText(),
-        new RegExp(proposalB.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-      );
-      return { submissionIds: { a: createdA.id, b: createdB.id } };
+      await closedPanel(page).waitFor();
+      await signOutThroughUI();
+      await signInThroughForm(qaUsers.photographerB.email);
+      await assertMemberSubmissionRoutesClosed();
+      await page.goto(`${localOrigin}/contribute`);
+      await closedPanel(page).waitFor();
     },
   );
 
   await check(
-    "A stale contributor session clears private lists and revision controls",
+    "A stale contributor session shows no private proposal data",
     async () => {
       await page.route("**/api/account", (route) =>
         route.fulfill({
@@ -686,19 +579,8 @@ async function main() {
         }),
       );
       await page.goto(`${localOrigin}/contribute?view=mine`);
-      await page
-        .getByRole("heading", { name: "Sign in to continue", exact: true })
-        .waitFor({ timeout: 30000 });
-      await page
-        .getByText(/Private proposal lists and revision details were cleared/i)
-        .waitFor();
-      await page
-        .getByRole("link", { name: "Account options", exact: true })
-        .waitFor();
-      assert.doesNotMatch(
-        await page.locator("main").innerText(),
-        new RegExp(proposalA.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-      );
+      await closedPanel(page).waitFor({ timeout: 30000 });
+      assert.equal(await page.getByRole("heading", { name: "My submissions", exact: true }).count(), 0);
       await page.unroute("**/api/account");
       return {
         outcome:
@@ -714,6 +596,8 @@ async function main() {
       await signInThroughForm(qaUsers.editor.email);
       const staffSnapshot = (await accountSnapshot()).body;
       assert.equal(staffSnapshot.isStaff, true);
+      // Member proposals cannot be created any more; seed the demo proposals for this write check.
+      assert.equal((await api("/api/admin/demo", "POST", {})).status(), 200);
       const listResponse = await api("/api/admin/submissions");
       assert.equal(listResponse.status(), 200);
       const list = await listResponse.json();

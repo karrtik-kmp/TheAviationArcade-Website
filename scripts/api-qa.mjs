@@ -24,42 +24,36 @@ try {
     (s) => s.id === "demo-submission-aircraft",
   );
   assert.ok(sample);
-  const title = "Replay QA fixture " + Date.now(),
-    key = crypto.randomUUID();
-  const file = await readFile("public/media/aircraft.jpg");
-  const payload = {
-    ...sample.data,
-    title,
-    location: "Local test only",
-    consent: true,
+  // D-2 amended 11-04: member D1 submission routes are closed in every mode.
+  const closed = async (res, label) => {
+    assert.equal(res.status(), 404, label);
+    assert.equal((await res.json()).code, "SUBMISSIONS_CLOSED", label);
   };
-  const send = () =>
-    context.request.post(origin + "/api/submissions", {
-      headers: { Origin: origin, "Idempotency-Key": key },
+  await closed(
+    await context.request.get(origin + "/api/submissions"),
+    "member list closed",
+  );
+  await closed(
+    await context.request.post(origin + "/api/submissions", {
+      headers: { Origin: origin, "Idempotency-Key": crypto.randomUUID() },
       multipart: {
-        data: JSON.stringify(payload),
-        photo: { name: "qa.jpg", mimeType: "image/jpeg", buffer: file },
+        data: JSON.stringify({ ...sample.data, consent: true }),
+        photo: {
+          name: "qa.jpg",
+          mimeType: "image/jpeg",
+          buffer: await readFile("public/media/aircraft.jpg"),
+        },
       },
-    });
-  const responses = await Promise.all([send(), send()]);
-  const decoded = await Promise.all(responses.map((r) => r.json()));
-  assert.ok(responses.every((r) => [200, 201].includes(r.status())));
-  assert.equal(decoded[0].submission.id, decoded[1].submission.id);
-  const replay = await send();
-  assert.equal(replay.status(), 200);
-  assert.equal((await replay.json()).submission.id, decoded[0].submission.id);
-  const after = await (
-    await context.request.get(origin + "/api/submissions")
-  ).json();
-  assert.equal(
-    after.submissions.filter((s) => s.data.title === title).length,
-    1,
+    }),
+    "member create closed",
   );
-  const photo = await context.request.get(
-    origin + decoded[0].submission.photoUrl,
+  await closed(
+    await context.request.put(origin + `/api/submissions/${sample.id}`, {
+      headers: { Origin: origin },
+      multipart: { data: JSON.stringify(sample.data) },
+    }),
+    "member revise closed",
   );
-  assert.equal(photo.status(), 200);
-  assert.match(photo.headers()["cache-control"], /no-store/);
   const badZone = await context.request.get(
     origin + "/api/featured?timeZone=bad-zone",
   );
@@ -86,6 +80,9 @@ try {
     ),
     false,
   );
+  await page
+    .getByRole("heading", { name: "Photo submissions aren't open yet" })
+    .waitFor();
   await page.screenshot({
     path: "docs/evidence/contributor-mobile-light.png",
     fullPage: true,
@@ -95,11 +92,9 @@ try {
     JSON.stringify(
       {
         checkedAt: new Date().toISOString(),
-        concurrentCreate: "one record, both requests accepted",
-        replay: "same record returned",
-        storedPhoto: "available after race",
+        memberSubmissionRoutes: "404 SUBMISSIONS_CLOSED",
+        contributeClosedPanel: true,
         badTimezone: 422,
-        privateCache: "no-store",
         adminLightOverflow: false,
         contributor360Overflow: false,
       },
@@ -108,7 +103,7 @@ try {
     ) + "\n",
   );
   console.log(
-    "PASS concurrent idempotency, photo retention, invalid timezone, light admin and 360px contributor layout",
+    "PASS closed member submission routes, closed /contribute panel, invalid timezone, light admin and 360px contributor layout",
   );
 } finally {
   await browser.close();

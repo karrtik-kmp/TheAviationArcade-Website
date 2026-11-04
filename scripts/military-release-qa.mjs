@@ -52,37 +52,15 @@ for (const aircraft of militaryRoster) {
   const s = mine.find((item) => item.data.title === title(aircraft)) ?? spare.shift();
   if (s) fixtureFor.set(aircraft.id, s.id);
 }
-for (const [i, aircraft] of militaryRoster.entries()) {
-  if (fixtureFor.has(aircraft.id)) continue;
-  const jpeg = await admin.evaluate(([i, name]) => {
-    const canvas = Object.assign(document.createElement("canvas"), { width: 800, height: 600 });
-    const g = canvas.getContext("2d");
-    g.fillStyle = `hsl(${i * 11} 45% 40%)`;
-    g.fillRect(0, 0, 800, 600);
-    g.fillStyle = "#fff";
-    g.font = "bold 32px sans-serif";
-    g.fillText(`QA ${i + 1}: ${name}`, 40, 300);
-    return canvas.toDataURL("image/jpeg", 0.8).split(",")[1];
-  }, [i, aircraft.name]);
-  const payload = {
-    title: title(aircraft), photographer: "QA Fixture", email: "qa@sites.test",
-    portfolio: "https://example.org/qa", category: "aircraft", customCategory: "",
-    targetGames: ["aircraft-identifier"], aircraft: aircraft.name, airline: "", registration: "",
-    location: "Local test only", airportCode: "", capturedOn: "",
-    description: "Generated local QA fixture for the Military release check. Not a real photograph.",
-    factualSource: "https://www.af.mil/About-Us/Fact-Sheets/", credit: "QA Fixture",
-    rightsBasis: "owner", rightsEvidence: "Local QA fixture created by the test suite.",
-    channels: ["games"], imageOrigin: "camera", consent: true,
-  };
-  const r = await context.request.post(origin + "/api/submissions", {
-    headers: { Origin: origin, "Idempotency-Key": crypto.randomUUID() },
-    multipart: {
-      data: JSON.stringify(payload),
-      photo: { name: `qa-${aircraft.id}.jpg`, mimeType: "image/jpeg", buffer: Buffer.from(jpeg, "base64") },
-    },
-  });
-  assert.ok([200, 201].includes(r.status()), `fixture upload ${aircraft.id}: ${r.status()} ${await r.text()}`);
-}
+// D-2 amended 2026-11-04: the website can no longer create proposals (POST /api/submissions answers
+// 404 SUBMISSIONS_CLOSED), and demo proposals can never supply rights. Fixtures can only be adopted
+// from earlier runs. Without them this suite cannot run until military photos come from backend media.
+const missing = militaryRoster.filter((aircraft) => !fixtureFor.has(aircraft.id));
+assert.equal(
+  missing.length,
+  0,
+  `military-release-qa needs ${militaryRoster.length} existing "Military release QA" proposals in D1; ${missing.length} are missing and the website can no longer create them (SUBMISSIONS_CLOSED).`,
+);
 mine = (await api("GET", "/api/admin/submissions")).body.submissions;
 const allChecks = { identity: true, quality: true, credit: true, rights: true, category: true };
 const photoFor = new Map();
