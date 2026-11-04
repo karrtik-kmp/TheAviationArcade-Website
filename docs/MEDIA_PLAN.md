@@ -170,3 +170,32 @@ full-width buttons under 380 px; tokens in both themes.
 ## Verification
 
 `npm run typecheck`, `npm test`, `npm run build`; then the browser checks above, recorded honestly.
+
+## Addendum: Backend API 0.19.0 (`867511c`, migration 0019)
+
+Breaking for uploads. The website adopts it as follows (fixed for both slices):
+
+- **Uploads** (`POST media`, `POST media/:id/versions`): the browser sends `X-Rights-Statement: v1_own | v1_authorised`
+  (underscore). The website validates it (anything else → 400 `INVALID_REQUEST`, before the body is read) and forwards
+  it through a typed BackendClient option, like the Idempotency-Key. Retries reuse the same key AND the same statement;
+  a different statement with the same key is the backend's 422 → `IDEMPOTENCY_KEY_REUSED`.
+- **Version uploads are owner only.** A backend 403 there means "not the owner" for a staff caller → `FORBIDDEN` with
+  "Only the photographer who owns this photo can add versions."; a non-owner photographer gets 404 → `NOT_FOUND`.
+- **New** `PUT media/:id/rights` `{ revision, statement }` (photographer/staff gate; backend enforces owner) →
+  `PUT /v1/admin/media/{id}/rights`. 409 `rights_already_stated` → new website code `RIGHTS_ALREADY_STATED`; other 409 →
+  `VERSION_CONFLICT`. Used for drafts with no statement or an imported one (`d1_private_review`), never published.
+- **PATCH** `media/:id` body `{ revision, licence?, description?, note? }`, at least one of `licence`/`description`.
+  `description`: 1–2000 characters after trim, CRLF → LF, newlines allowed, no other control characters (and no
+  leading/trailing tab), `null` clears. Owners and admins may edit it. `creditRequired` stays staff-only.
+- **Schemas**: `MediaVersion` gains `description: string | null` and
+  `rights: { statement, statedAt, statedBy? } | null` (`statedBy` admins only; statement values per the contract,
+  including the import's). `ImageRef` and the read routes are unchanged.
+- **Publish** needs a v1 statement on the draft (backend 422 `content_invalid` → `LICENCE_INCOMPLETE`, message
+  covers rights too); `publishBlockers` adds "No rights statement" from the saved draft.
+- **The audit-note fallback is removed**: the statement now travels with the upload. `RIGHTS_STATEMENT.options` ids map
+  to `v1_own` / `v1_authorised`.
+- **UI**: photographer upload form sends the chosen statement with the file; a draft without a v1 statement shows a
+  "State your rights" step (radio + consent → PUT rights); the details form gains a description textarea (newlines
+  allowed, 2000 max, counter). Admin desk shows the description (editable) and the rights line ("Own work · stated
+  <date> by <account id>" / "Authorised by the rights holder" / "Imported: private review only" / "None"), and the
+  publish blockers include missing rights.
