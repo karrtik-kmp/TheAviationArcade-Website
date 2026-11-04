@@ -21,7 +21,18 @@ test("sends only the member's bearer: no cookie, no service secret", async () =>
   assert.equal(calls[0].url, "http://127.0.0.1:3000/v1/me/progress");
   assert.equal(calls[0].init.headers.Authorization, "Bearer member-token");
   assert.deepEqual(Object.keys(calls[0].init.headers).sort(), ["Accept", "Authorization", "X-Client"]);
-  assert.equal(calls[0].init.redirect, "error", "a redirect never carries the token elsewhere");
+  assert.equal(calls[0].init.redirect, "manual", "a redirect is never followed (Workers reject \"error\")");
+});
+
+test("a redirect answer is never followed and fails closed as unreachable", async () => {
+  for (const status of [301, 302, 307, 308]) {
+    const { fetch, calls } = fakeFetch(new Response(null, { status, headers: { Location: "https://elsewhere.example/x" } }));
+    await assert.rejects(
+      backendClient({ baseUrl: "http://b", fetch }, new Bearer("t")).getJson("/v1/me/roles"),
+      (e) => e instanceof BackendError && e.status === 0 && e.code === "unreachable",
+    );
+    assert.equal(calls.length, 1, "the Location is not fetched");
+  }
 });
 
 test("progress calls carry X-Client: web and never X-Client-Version", async () => {

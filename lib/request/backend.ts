@@ -84,10 +84,16 @@ export function backendClient(
         method,
         headers,
         body: body === undefined ? undefined : contentType === "application/json" ? JSON.stringify(body) : (body as BodyInit),
-        redirect: "error",
+        // Never follow a redirect: it would carry the member's token elsewhere. "manual", not "error":
+        // Cloudflare Workers reject redirect "error" outright (every call would throw before it is sent).
+        redirect: "manual",
         signal: AbortSignal.timeout(send.timeoutMs ?? options.timeoutMs ?? 8000),
       });
     } catch {
+      throw new BackendError(0, "unreachable");
+    }
+    if (response.type === "opaqueredirect" || (response.status >= 300 && response.status < 400)) {
+      await response.body?.cancel().catch(() => {});
       throw new BackendError(0, "unreachable");
     }
     const parsed: unknown = await response.json().catch(() => null);

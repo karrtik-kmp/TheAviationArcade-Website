@@ -39,7 +39,7 @@ test("PUT signs with Bunny's zone and region and uploads the exact byte view", a
   assert.equal(request.headers.get("content-type"), "image/jpeg");
   assert.equal(request.headers.get("x-amz-content-sha256"), createHash("sha256").update(bytes).digest("hex"));
   assert.deepEqual(Array.from(new Uint8Array(await request.arrayBuffer())), [1, 2, 3]);
-  assert.equal(request.redirect, "error");
+  assert.equal(request.redirect, "manual");
   assert.ok(request.signal);
 });
 

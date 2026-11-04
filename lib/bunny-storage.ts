@@ -85,7 +85,7 @@ export class BunnyPhotoStorage implements PhotoStorage {
         "X-Amz-Content-Sha256": bodyHash,
       },
       body: bytes,
-      redirect: "error",
+      redirect: "manual",
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
     const response = await this.fetcher(await this.client.sign(request, requestOptions(request)));
@@ -100,7 +100,7 @@ export class BunnyPhotoStorage implements PhotoStorage {
   async get(key: string): Promise<{ body: ReadableStream<Uint8Array> } | null> {
     const request = new Request(this.objectUrl(key), {
       method: "GET",
-      redirect: "error",
+      redirect: "manual",
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
     const response = await this.fetcher(await this.client.sign(request, requestOptions(request)));
@@ -118,7 +118,7 @@ export class BunnyPhotoStorage implements PhotoStorage {
   async delete(key: string): Promise<void> {
     const request = new Request(this.objectUrl(key), {
       method: "DELETE",
-      redirect: "error",
+      redirect: "manual",
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
     const response = await this.fetcher(await this.client.sign(request, requestOptions(request)));
@@ -148,8 +148,10 @@ function validateObjectKey(key: string): void {
   }
 }
 
+// Redirects are never followed. "manual", not "error": Cloudflare Workers reject redirect "error"
+// outright. A 3xx answer is not `ok`, so every method below fails closed on it (404 aside).
 function requestOptions(request: Request): RequestInit {
-  return { redirect: "error", signal: request.signal };
+  return { redirect: "manual", signal: request.signal };
 }
 
 async function cancelResponseBody(response: Response): Promise<void> {
