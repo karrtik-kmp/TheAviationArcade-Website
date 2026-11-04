@@ -10,12 +10,19 @@ import {
   MEDIA_MAX_BYTES,
   RIGHTS_STATEMENT,
   createUploadKeys,
+  descriptionErrors,
+  descriptionOf,
   licenceDiff,
   licenceErrors,
   licenceFields,
+  licenceToValues,
   mediaOutcome,
   precheckImage,
   rebaseLicence,
+  needsRightsStatement,
+  normaliseDescription,
+  splitEdit,
+  DESCRIPTION_MAX,
   type LicenceField,
   type LicenceValues,
   type RightsChoice,
@@ -23,7 +30,7 @@ import {
   type UploadTarget,
 } from "@/lib/media-form";
 import { sitePath } from "@/lib/paths";
-import type { ImageRef, MediaDetail, MediaItem, MediaLicence, MediaList } from "@/lib/request/media";
+import type { ImageRef, MediaDetail, MediaItem, MediaLicence, MediaList, MediaVersion } from "@/lib/request/media";
 import "./contribute.css";
 
 /**
@@ -85,6 +92,8 @@ function sendFile(args: {
   file: Blob;
   contentType: string;
   key: string;
+  /** `v1_own` or `v1_authorised`, sent with the file. */
+  statement: string;
   sessionKey: string;
   xhrRef: { current: XMLHttpRequest | null };
   onProgress: (loaded: number, total: number) => void;
@@ -98,6 +107,7 @@ function sendFile(args: {
     for (const [name, value] of Object.entries(accountHeaders(args.sessionKey))) xhr.setRequestHeader(name, value);
     xhr.setRequestHeader("Content-Type", args.contentType);
     xhr.setRequestHeader("Idempotency-Key", args.key);
+    xhr.setRequestHeader("X-Rights-Statement", args.statement);
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) args.onProgress(event.loaded, event.total);
     };
@@ -150,16 +160,14 @@ function hasChangesWaiting(item: MediaItem) {
 function licenceStatus(licence: MediaLicence) {
   return licence.licenceName ? `Licence: ${licence.licenceName}` : "Licence needed";
 }
-function toValues(licence: MediaLicence): LicenceValues {
-  return {
-    credit: licence.credit ?? "",
-    licenceName: licence.licenceName ?? "",
-    licenceUrl: licence.licenceUrl ?? "",
-    sourceUrl: licence.sourceUrl ?? "",
-    attributionText: licence.attributionText ?? "",
-  };
+/** The saved licence and description of one version, as the form's base. */
+function baseOf(version: MediaVersion): MediaLicence & { description: string | null } {
+  return { ...version.licence, description: descriptionOf(version) };
 }
-const blankValues: LicenceValues = { credit: "", licenceName: "", licenceUrl: "", sourceUrl: "", attributionText: "" };
+function toValues(version: MediaVersion): LicenceValues {
+  return licenceToValues(baseOf(version));
+}
+const blankValues: LicenceValues = { credit: "", licenceName: "", licenceUrl: "", sourceUrl: "", attributionText: "", description: "" };
 const fieldLabels: Record<LicenceField, string> = {
   credit: "Credit",
   licenceName: "Licence name",
@@ -216,12 +224,6 @@ type Context = {
   /** Handles a refusal that ends the session or the role; true when it did. */
   fail: (reply: Reply) => boolean;
   say: (text: string) => void;
-  /** Rights choice per draft version, sent as the audit note of its first licence save. */
-  audit: {
-    get: (item: MediaItem) => RightsChoice | undefined;
-    set: (item: MediaItem, choice: RightsChoice) => void;
-    clear: (item: MediaItem) => void;
-  };
 };
 
 // ---------------------------------------------------------------- upload form
@@ -240,7 +242,7 @@ function UploadForm({
   target: UploadTarget;
   path: string;
   submitLabel: string;
-  onDone: (item: MediaItem, choice: RightsChoice) => void;
+  onDone: (item: MediaItem) => void;
   onConflict: () => void;
 }) {
   const [choice, setChoice] = useState<RightsChoice | "">("");
@@ -312,12 +314,12 @@ function UploadForm({
     setProgress(0);
     setPhase("sending");
     ctx.say("Uploading…");
-    const picked = choice;
     const reply = await sendFile({
       path,
       file,
       contentType,
-      key: keys.keyFor(file, target),
+      key: keys.keyFor(file, target, choice),
+      statement: choice,
       sessionKey: ctx.sessionKey,
       xhrRef: xhr,
       onProgress: (loaded, total) => alive.current && setProgress(Math.round((loaded / total) * 100)),
@@ -333,6 +335,13 @@ function UploadForm({
     const outcome = mediaOutcome(reply.status, reply.code);
     keys.settle(outcome);
     if (!ctx.valid()) return;
+    if (target !== "create" && reply.code === "FORBIDDEN") {
+      // Not the owner (a staff caller): this is not a lost role.
+      ctx.say("");
+      setProblem("Only the photographer who owns this photo can add versions.");
+      requestAnimationFrame(() => problemRef.current?.focus());
+      return;
+    }
     if (ctx.fail(reply)) return;
     const item = outcome === "ok" ? itemOf(reply.body) : null;
     if (outcome === "ok" && item) {
@@ -344,7 +353,7 @@ function UploadForm({
       setPreviewUrl(null);
       if (fileRef.current) fileRef.current.value = "";
       ctx.say("Photo received and checked.");
-      onDone(item, picked);
+      onDone(item);
       return;
     }
     ctx.say("");
@@ -479,7 +488,7 @@ function PhotoDetail({
   const [detail, setDetail] = useState<MediaDetail | null>(null);
   const [load, setLoad] = useState<"loading" | "ready" | "error" | "notfound">("loading");
   const [values, setValues] = useState<LicenceValues>(blankValues);
-  const [errors, setErrors] = useState<Partial<Record<LicenceField, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<LicenceField | "description", string>>>({});
   const [prefilled, setPrefilled] = useState(false);
   const [problem, setProblem] = useState("");
   const [saving, setSaving] = useState(false);
@@ -489,10 +498,13 @@ function PhotoDetail({
   const generation = useRef(0);
   const writeGeneration = useRef(0);
   /** The saved draft licence the form was last loaded or rebased from. */
-  const loadedBase = useRef<MediaLicence | null>(null);
+  const loadedBase = useRef<(MediaLicence & { description: string | null }) | null>(null);
   const [formChoice, setFormChoice] = useState<RightsChoice | "">("");
   const [formConsent, setFormConsent] = useState(false);
   const [rightsErrors, setRightsErrors] = useState<{ rights?: string; consent?: string }>({});
+  const [stating, setStating] = useState(false);
+  const [rightsProblem, setRightsProblem] = useState("");
+  const rightsProblemRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const problemRef = useRef<HTMLDivElement>(null);
   const addRef = useRef<HTMLButtonElement>(null);
@@ -515,7 +527,7 @@ function PhotoDetail({
       setExpired(false);
       setLoad("ready");
       onChanged(next.item);
-      const newBase = next.item.draft.licence;
+      const newBase = baseOf(next.item.draft);
       const oldBase = loadedBase.current;
       loadedBase.current = newBase;
       if (opts.prefill) {
@@ -523,7 +535,7 @@ function PhotoDetail({
         setPrefilled(true);
         setErrors({});
       } else if (opts.reset || !oldBase) {
-        setValues(toValues(newBase));
+        setValues(licenceToValues(newBase));
         setPrefilled(false);
         setErrors({});
       } else {
@@ -550,17 +562,19 @@ function PhotoDetail({
   }, [load]);
 
   const item = detail?.item ?? null;
-  const base = item?.draft.licence ?? null;
+  const base = item ? baseOf(item.draft) : null;
 
-  const licenceEmpty = !!base && licenceFields.every((field) => !base[field]);
-  const needRights = !!item && licenceEmpty && !ctx.audit.get(item);
+  // A draft with no v1 statement (none, or the import's) that was never published needs one stated, whatever the item's state.
+  const needRights = !!item && needsRightsStatement(item);
 
   async function save(event: FormEvent) {
     event.preventDefault();
-    if (!item || !base || saving) return;
-    const found = licenceErrors(values);
+    if (!item || !base || saving || stating) return;
+    const found: Partial<Record<LicenceField | "description", string>> = licenceErrors(values);
+    const descriptionProblem = descriptionErrors(values.description ?? "");
+    if (descriptionProblem) found.description = descriptionProblem;
     setErrors(found);
-    const firstBad = licenceFields.find((field) => found[field]);
+    const firstBad = [...licenceFields, "description" as const].find((field) => found[field]);
     if (firstBad) return void requestAnimationFrame(() => document.getElementById(`${uid}-${firstBad}`)?.focus());
     const diff = licenceDiff(base, values);
     if ("none" in diff) {
@@ -568,37 +582,19 @@ function PhotoDetail({
       ctx.say("No changes to save.");
       return;
     }
-    let rights = ctx.audit.get(item);
-    if (needRights) {
-      const missing: typeof rightsErrors = {};
-      if (!formChoice) missing.rights = "Choose who holds the rights to this photo.";
-      if (!formConsent) missing.consent = "Confirm the statement to save.";
-      setRightsErrors(missing);
-      if (missing.rights) return void requestAnimationFrame(() => document.getElementById(`${uid}-lrights-own`)?.focus());
-      if (missing.consent) return void requestAnimationFrame(() => document.getElementById(`${uid}-lconsent`)?.focus());
-      rights = formChoice || undefined;
-    }
     setSaving(true);
     setProblem("");
     ctx.say("Saving…");
     const mine = ++writeGeneration.current;
     const reply = await callMedia(ctx.sessionKey, `/api/media/${item.id}`, {
       method: "PATCH",
-      json: {
-        revision: item.revision,
-        licence: diff.changes,
-        ...(rights ? { note: RIGHTS_STATEMENT.auditNote(rights) } : {}),
-      },
+      json: { revision: item.revision, ...splitEdit(diff.changes) },
     });
     setSaving(false);
     if (mine !== writeGeneration.current || !ctx.valid()) return;
     if (ctx.fail(reply)) return;
     const outcome = mediaOutcome(reply.status, reply.code);
     if (outcome === "ok") {
-      ctx.audit.clear(item);
-      setFormChoice("");
-      setFormConsent(false);
-      setRightsErrors({});
       ctx.say("Licence details saved.");
       await reload({ reset: true });
       return;
@@ -612,15 +608,56 @@ function PhotoDetail({
     requestAnimationFrame(() => problemRef.current?.focus());
   }
 
-  async function afterVersion(next: MediaItem, choice: RightsChoice) {
-    ctx.audit.set(next, choice);
+  async function afterVersion() {
     setAdding(false);
     focusHeading.current = true;
     ctx.say("New version received and checked. Your earlier licence details are filled in below, not yet saved.");
     // Prefill from the saved licence of the draft as it was before this upload.
-    await reload({ reset: false, prefill: item ? toValues(item.draft.licence) : undefined });
+    await reload({ reset: false, prefill: item ? toValues(item.draft) : undefined });
     focusHeading.current = false;
     headingRef.current?.focus();
+  }
+
+  async function stateRights(event: FormEvent) {
+    event.preventDefault();
+    if (!item || stating || saving) return;
+    const missing: typeof rightsErrors = {};
+    if (!formChoice) missing.rights = "Choose who holds the rights to this photo.";
+    if (!formConsent) missing.consent = "Confirm the statement to continue.";
+    setRightsErrors(missing);
+    if (missing.rights) return void requestAnimationFrame(() => document.getElementById(`${uid}-lrights-own`)?.focus());
+    if (missing.consent) return void requestAnimationFrame(() => document.getElementById(`${uid}-lconsent`)?.focus());
+    setStating(true);
+    setRightsProblem("");
+    ctx.say("Saving your rights statement…");
+    const mine = ++writeGeneration.current;
+    const reply = await callMedia(ctx.sessionKey, `/api/media/${item.id}/rights`, {
+      method: "PUT",
+      json: { revision: item.revision, statement: formChoice },
+    });
+    setStating(false);
+    if (mine !== writeGeneration.current || !ctx.valid()) return;
+    if (ctx.fail(reply)) return;
+    // Never resent: whatever the answer, the reload shows what is stored now.
+    let failed = false;
+    if (mediaOutcome(reply.status, reply.code) === "ok") {
+      setFormChoice("");
+      setFormConsent(false);
+      ctx.say("Rights statement saved.");
+    } else if (reply.code === "RIGHTS_ALREADY_STATED") {
+      ctx.say("Rights were already stated for this photo.");
+    } else if (reply.code === "VERSION_CONFLICT") {
+      failed = true;
+      ctx.say("");
+      setRightsProblem("Someone changed this photo while you were working. The latest details are loaded; check them and try again.");
+    } else {
+      failed = true;
+      ctx.say("");
+      setRightsProblem(failureText(reply, "Your rights statement couldn't be saved."));
+    }
+    await reload({ reset: false });
+    // The form may have unmounted: land on the heading, or on the error when one is shown.
+    requestAnimationFrame(() => (failed ? rightsProblemRef.current : null)?.focus() ?? headingRef.current?.focus());
   }
 
   if (load === "loading")
@@ -715,6 +752,62 @@ function PhotoDetail({
         </p>
       </div>
 
+      {needRights && (
+        <form className="media-rights" onSubmit={(event) => void stateRights(event)} noValidate>
+          <h3>State your rights</h3>
+          <p className="media-meta">The team can only publish this photo once you have said who holds the rights to it.</p>
+          <fieldset className="media-fieldset">
+            <legend>{RIGHTS_STATEMENT.question}</legend>
+            {RIGHTS_STATEMENT.options.map((option, index) => (
+              <label className="check-label" key={option.id}>
+                <input
+                  id={index === 0 ? `${uid}-lrights-own` : undefined}
+                  type="radio"
+                  name={`${uid}-lrights`}
+                  checked={formChoice === option.id}
+                  disabled={stating}
+                  onChange={() => {
+                    setFormChoice(option.id);
+                    setRightsErrors((old) => ({ ...old, rights: undefined }));
+                  }}
+                />
+                <span>{option.label}</span>
+              </label>
+            ))}
+            {rightsErrors.rights && <span className="field-error">{rightsErrors.rights}</span>}
+          </fieldset>
+          <label className="check-label">
+            <input
+              id={`${uid}-lconsent`}
+              type="checkbox"
+              checked={formConsent}
+              disabled={stating}
+              aria-describedby={rightsErrors.consent ? `${uid}-lconsent-error` : undefined}
+              onChange={(event) => {
+                setFormConsent(event.target.checked);
+                setRightsErrors((old) => ({ ...old, consent: undefined }));
+              }}
+            />
+            <span>{RIGHTS_STATEMENT.consent}</span>
+          </label>
+          {rightsErrors.consent && (
+            <span className="field-error" id={`${uid}-lconsent-error`}>
+              {rightsErrors.consent}
+            </span>
+          )}
+          {rightsProblem && (
+            <div className="media-alert" role="alert" tabIndex={-1} ref={rightsProblemRef}>
+              {rightsProblem}
+            </div>
+          )}
+          <div className="media-actions">
+            <button className="btn" type="submit" disabled={stating}>
+              {stating ? "Saving…" : "State my rights"}
+            </button>
+          </div>
+        </form>
+      )}
+
       <form className="media-licence" onSubmit={(event) => void save(event)} noValidate>
         <h3>Licence and credit</h3>
         {prefilled && (
@@ -722,47 +815,6 @@ function PhotoDetail({
             This is a new version. Your earlier licence details are filled in below but not saved yet. Check them, then
             save.
           </p>
-        )}
-        {needRights && (
-          <div className="media-rights">
-            <fieldset className="media-fieldset">
-              <legend>{RIGHTS_STATEMENT.question}</legend>
-              {RIGHTS_STATEMENT.options.map((option, index) => (
-                <label className="check-label" key={option.id}>
-                  <input
-                    id={index === 0 ? `${uid}-lrights-own` : undefined}
-                    type="radio"
-                    name={`${uid}-lrights`}
-                    checked={formChoice === option.id}
-                    onChange={() => {
-                      setFormChoice(option.id);
-                      setRightsErrors((old) => ({ ...old, rights: undefined }));
-                    }}
-                  />
-                  <span>{option.label}</span>
-                </label>
-              ))}
-              {rightsErrors.rights && <span className="field-error">{rightsErrors.rights}</span>}
-            </fieldset>
-            <label className="check-label">
-              <input
-                id={`${uid}-lconsent`}
-                type="checkbox"
-                checked={formConsent}
-                aria-describedby={rightsErrors.consent ? `${uid}-lconsent-error` : undefined}
-                onChange={(event) => {
-                  setFormConsent(event.target.checked);
-                  setRightsErrors((old) => ({ ...old, consent: undefined }));
-                }}
-              />
-              <span>{RIGHTS_STATEMENT.consent}</span>
-            </label>
-            {rightsErrors.consent && (
-              <span className="field-error" id={`${uid}-lconsent-error`}>
-                {rightsErrors.consent}
-              </span>
-            )}
-          </div>
         )}
         <div className="form-grid">
           {licenceFields.map((field) => {
@@ -792,6 +844,25 @@ function PhotoDetail({
             );
           })}
         </div>
+        <div className="field media-description">
+          <label htmlFor={`${uid}-description`}>Description</label>
+          <textarea
+            id={`${uid}-description`}
+            rows={5}
+            value={values.description ?? ""}
+            onChange={(event) => setValues((old) => ({ ...old, description: event.target.value }))}
+            aria-invalid={!!errors.description}
+            aria-describedby={[`${uid}-description-hint`, errors.description ? `${uid}-description-error` : ""].filter(Boolean).join(" ")}
+          />
+          <small className="hint" id={`${uid}-description-hint`}>
+            Optional. What the photo shows. Line breaks are fine. {[...normaliseDescription(values.description ?? "")].length} of {DESCRIPTION_MAX} characters.
+          </small>
+          {errors.description && (
+            <span className="field-error" id={`${uid}-description-error`}>
+              {errors.description}
+            </span>
+          )}
+        </div>
         <p className="media-meta">
           {base.creditRequired
             ? "A credit is required for this photo. The team sets this."
@@ -803,7 +874,7 @@ function PhotoDetail({
           </div>
         )}
         <div className="media-actions">
-          <button className="btn" type="submit" disabled={saving}>
+          <button className="btn" type="submit" disabled={saving || stating}>
             {saving ? "Saving…" : "Save licence details"}
           </button>
         </div>
@@ -833,7 +904,7 @@ function PhotoDetail({
               target={`version:${item.id}`}
               path={`/api/media/${item.id}/versions?revision=${item.revision}`}
               submitLabel="Upload new version"
-              onDone={(next, choice) => void afterVersion(next, choice)}
+              onDone={() => void afterVersion()}
               onConflict={() => void reload({ reset: false })}
             />
             <div className="media-actions">
@@ -877,40 +948,6 @@ export function MediaContribute({ sessionKey }: { sessionKey: string }) {
   const [more, setMore] = useState(false);
   const [openId, setOpenId] = useState<string | null>(null);
   const generation = useRef(0);
-  const [audit] = useState(() => {
-    const rights = new Map<string, RightsChoice>();
-    const keyOf = (item: MediaItem) => `${item.id}:${item.draftVersion}`;
-    const stored = (item: MediaItem) => `media-rights:${keyOf(item)}`;
-    return {
-      get(item: MediaItem) {
-        const held = rights.get(keyOf(item));
-        if (held) return held;
-        try {
-          const saved = sessionStorage.getItem(stored(item));
-          return saved === "own" || saved === "authorised" ? saved : undefined;
-        } catch {
-          return undefined;
-        }
-      },
-      set(item: MediaItem, choice: RightsChoice) {
-        rights.set(keyOf(item), choice);
-        try {
-          sessionStorage.setItem(stored(item), choice);
-        } catch {
-          // Private mode: the licence form asks again after a reload.
-        }
-      },
-      clear(item: MediaItem) {
-        rights.delete(keyOf(item));
-        try {
-          sessionStorage.removeItem(stored(item));
-        } catch {
-          // Nothing stored.
-        }
-      },
-      reset: () => rights.clear(),
-    };
-  });
   const opener = useRef("");
   const listHeadingRef = useRef<HTMLHeadingElement>(null);
 
@@ -927,11 +964,10 @@ export function MediaContribute({ sessionKey }: { sessionKey: string }) {
 
   const clearPrivate = useCallback(() => {
     generation.current += 1;
-    audit.reset();
     setItems([]);
     setCursor(null);
     setOpenId(null);
-  }, [audit]);
+  }, []);
 
   const fail = useCallback(
     (reply: Reply) => {
@@ -959,9 +995,8 @@ export function MediaContribute({ sessionKey }: { sessionKey: string }) {
       valid: () => matchesRef.current,
       fail,
       say: sayText,
-      audit,
     }),
-    [sessionKey, fail, sayText, audit],
+    [sessionKey, fail, sayText],
   );
 
   const loadList = useCallback(
@@ -1085,8 +1120,7 @@ export function MediaContribute({ sessionKey }: { sessionKey: string }) {
                 target="create"
                 path="/api/media"
                 submitLabel="Upload photo"
-                onDone={(item, choice) => {
-                  ctx.audit.set(item, choice);
+                onDone={(item) => {
                   patchItem(item);
                   ctx.say("Photo received and checked. Add its licence details next.");
                   open(item.id);

@@ -1,17 +1,25 @@
 "use client";
 
-import { Button, Checkbox, Input, MessageBar, MessageBarBody } from "@fluentui/react-components";
+import { Button, Checkbox, Input, MessageBar, MessageBarBody, Textarea } from "@fluentui/react-components";
 import { ArrowClockwise, ArrowLeft, Images } from "@phosphor-icons/react";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent, RefObject } from "react";
 import { accountHeaders } from "@/lib/account";
 import {
+  DESCRIPTION_MAX,
+  descriptionErrors,
+  descriptionOf,
   licenceDiff,
   licenceErrors,
   licenceFields,
+  licenceToValues,
+  normaliseDescription,
   mediaOutcome,
   publishBlockers,
   rebaseLicence,
+  rightsOf,
+  splitEdit,
+  type RightsState,
   type LicenceField,
   type LicenceValues,
 } from "@/lib/media-form";
@@ -107,15 +115,18 @@ function accountOf(owner: string | undefined) {
   return owner ? (owner.split(":").at(-1) ?? owner) : "—";
 }
 const changesWaiting = (item: MediaItem) => item.state === "published" && item.draftVersion !== item.publishedVersion;
-function toValues(licence: MediaLicence): LicenceValues {
-  return {
-    credit: licence.credit ?? "",
-    licenceName: licence.licenceName ?? "",
-    licenceUrl: licence.licenceUrl ?? "",
-    sourceUrl: licence.sourceUrl ?? "",
-    attributionText: licence.attributionText ?? "",
-    creditRequired: licence.creditRequired,
-  };
+/** The saved licence and description of one version, as the form's base. */
+function baseOf(version: MediaVersion): MediaLicence & { description: string | null } {
+  return { ...version.licence, description: descriptionOf(version) };
+}
+/** The rights line an admin sees; `statedBy` shows the account id only. */
+function rightsLine(rights: RightsState, mounted: boolean) {
+  if (!rights) return "None";
+  if (rights.statement === "d1_private_review") return "Imported: private review only";
+  const date = mounted ? new Date(rights.statedAt) : null;
+  const on = date && !Number.isNaN(date.valueOf()) ? ` · stated ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date)}` : "";
+  const by = rights.statedBy ? ` by ${accountOf(rights.statedBy)}` : "";
+  return `${rights.statement === "v1_own" ? "Own work" : "Authorised by the rights holder"}${on}${by}`;
 }
 function useMounted() {
   const [mounted, setMounted] = useState(false);
@@ -178,7 +189,7 @@ function DeskDetail({
     attributionText: "",
     creditRequired: true,
   });
-  const [errors, setErrors] = useState<Partial<Record<LicenceField, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<LicenceField | "description", string>>>({});
   const [auditNote, setAuditNote] = useState("");
   const [confirm, setConfirm] = useState<"publish" | "withdraw" | null>(null);
   const [expired, setExpired] = useState(false);
@@ -188,7 +199,7 @@ function DeskDetail({
   // Writes have their own generation, so a reload never swallows a save or publish answer.
   const writeGeneration = useRef(0);
   /** The saved draft licence the form was last loaded or rebased from. */
-  const loadedBase = useRef<MediaLicence | null>(null);
+  const loadedBase = useRef<(MediaLicence & { description: string | null }) | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const noticeRef = useRef<HTMLDivElement>(null);
   const confirmRef = useRef<HTMLDivElement>(null);
@@ -216,11 +227,11 @@ function DeskDetail({
       setExpired(false);
       setLoad("ready");
       onChanged(next.item);
-      const newBase = next.item.draft.licence;
+      const newBase = baseOf(next.item.draft);
       const oldBase = loadedBase.current;
       loadedBase.current = newBase;
       if (resetForm || !oldBase) {
-        setValues(toValues(newBase));
+        setValues(licenceToValues(newBase));
         setErrors({});
       } else {
         // Untouched fields follow the new saved licence; typed text stays, so another editor's change isn't reverted.
@@ -250,7 +261,7 @@ function DeskDetail({
   }, [confirm]);
 
   const item = detail?.item ?? null;
-  const base = item?.draft.licence ?? null;
+  const base = item ? baseOf(item.draft) : null;
 
   function cancelConfirm() {
     const which = confirm;
@@ -261,9 +272,11 @@ function DeskDetail({
   async function save(event: FormEvent) {
     event.preventDefault();
     if (!item || !base || busy) return;
-    const found = licenceErrors(values);
+    const found: Partial<Record<LicenceField | "description", string>> = licenceErrors(values);
+    const descriptionProblem = descriptionErrors(values.description ?? "");
+    if (descriptionProblem) found.description = descriptionProblem;
     setErrors(found);
-    const firstBad = licenceFields.find((field) => found[field]);
+    const firstBad = [...licenceFields, "description" as const].find((field) => found[field]);
     if (firstBad) return void requestAnimationFrame(() => document.getElementById(`${uid}-${firstBad}`)?.focus());
     const diff = licenceDiff(base, values, true);
     if ("none" in diff) {
@@ -278,7 +291,7 @@ function DeskDetail({
     const reply = await callMedia(
       sessionKey,
       `/api/media/${item.id}`,
-      { revision: item.revision, licence: diff.changes, ...(note ? { note } : {}) },
+      { revision: item.revision, ...splitEdit(diff.changes), ...(note ? { note } : {}) },
       "PATCH",
     );
     setBusy(false);
@@ -302,11 +315,21 @@ function DeskDetail({
   async function act(action: "publish" | "withdraw") {
     if (!item || busy) return;
     // Re-check at the moment of confirming: the saved licence must still allow it and nothing may be unsaved.
-    if (action === "publish" && ("changes" in licenceDiff(item.draft.licence, values, true) || publishBlockers(item.draft.licence).length > 0)) {
-      setConfirm(null);
-      focusAfter.current = "notice";
-      setNotice({ kind: "error", text: "Publishing was stopped: the saved licence changed or has unsaved edits. Check it and try again." });
-      return;
+    if (action === "publish") {
+      const stopped = publishBlockers(item.draft.licence, rightsOf(item.draft));
+      const unsaved = "changes" in licenceDiff(baseOf(item.draft), values, true);
+      if (unsaved || stopped.length > 0) {
+        setConfirm(null);
+        focusAfter.current = "notice";
+        setNotice({
+          kind: "error",
+          text:
+            !unsaved && stopped.every((b) => b.field === "rights")
+              ? "This version has no rights statement yet."
+              : "Publishing was stopped: the saved licence changed or has unsaved edits. Check it and try again.",
+        });
+        return;
+      }
     }
     const mine = ++writeGeneration.current;
     setBusy(true);
@@ -378,7 +401,8 @@ function DeskDetail({
     );
 
   const preview = detail.preview;
-  const blockers = publishBlockers(base);
+  const rights = rightsOf(item.draft);
+  const blockers = publishBlockers(base, rights);
   const dirty = "changes" in licenceDiff(base, values, true);
   const canPublish = item.draftVersion !== item.publishedVersion;
   const publishBlocked = dirty || blockers.length > 0;
@@ -428,6 +452,10 @@ function DeskDetail({
             <dd>{item.publishedVersion ? `v${item.publishedVersion}` : "None"}</dd>
           </div>
           <div>
+            <dt>Rights</dt>
+            <dd>{rightsLine(rights, mounted)}</dd>
+          </div>
+          <div>
             <dt>Uploaded by</dt>
             <dd>{accountOf(item.owner)}</dd>
           </div>
@@ -468,6 +496,27 @@ function DeskDetail({
               </div>
             ))}
             <div className="admin-field full">
+              <label htmlFor={`${uid}-description`}>
+                <span>Description</span>
+              </label>
+              <Textarea
+                id={`${uid}-description`}
+                rows={5}
+                value={values.description ?? ""}
+                aria-invalid={!!errors.description}
+                aria-describedby={[`${uid}-description-hint`, errors.description ? `${uid}-description-error` : ""].filter(Boolean).join(" ")}
+                onChange={(_, data) => setValues((old) => ({ ...old, description: data.value }))}
+              />
+              <small className="field-hint" id={`${uid}-description-hint`}>
+                Optional. Line breaks are fine. {[...normaliseDescription(values.description ?? "")].length} of {DESCRIPTION_MAX} characters.
+              </small>
+              {errors.description && (
+                <span className="media-desk-error" id={`${uid}-description-error`}>
+                  {errors.description}
+                </span>
+              )}
+            </div>
+            <div className="admin-field full">
               <Checkbox
                 checked={!!values.creditRequired}
                 label="A credit is required to publish this photo"
@@ -491,7 +540,7 @@ function DeskDetail({
           <Button
             disabled={busy || confirm !== null || (!dirty && !auditNote)}
             onClick={() => {
-              setValues(toValues(base));
+              setValues(licenceToValues(base));
               setErrors({});
               setAuditNote("");
             }}
@@ -558,15 +607,17 @@ function DeskDetail({
                 {blockers.map((blocker) => (
                   <li key={blocker.field}>
                     {blocker.message}{" "}
-                    <a
-                      href={`#${uid}-${blocker.field}`}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        document.getElementById(`${uid}-${blocker.field}`)?.focus();
-                      }}
-                    >
-                      Go to {fieldLabels[blocker.field].toLowerCase()}
-                    </a>
+                    {blocker.field !== "rights" && (
+                      <a
+                        href={`#${uid}-${blocker.field}`}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          document.getElementById(`${uid}-${blocker.field}`)?.focus();
+                        }}
+                      >
+                        Go to {fieldLabels[blocker.field].toLowerCase()}
+                      </a>
+                    )}
                   </li>
                 ))}
               </ul>

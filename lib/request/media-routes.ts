@@ -18,8 +18,10 @@ import {
   mediaItemSchema,
   mediaListSchema,
   mediaRevisionRequestSchema,
+  mediaRightsRequestSchema,
   mediaStates,
   type MediaContentType,
+  type MediaUploadStatement,
 } from "./media.ts";
 import { route, type RouteContext } from "./router.ts";
 import type { ZodType } from "zod";
@@ -31,6 +33,8 @@ const MAX_BYTES = 5242880;
 const MAX_JSON_BYTES = 16384;
 const UPLOAD_TIMEOUT_MS = 30000;
 const PAGE_LIMIT = "50";
+const ownerOnlyVersions = "Only the photographer who owns this photo can add versions.";
+const ownerOnlyRights = "Only the photographer who owns this photo can state its rights.";
 
 /** In order: mock deployment, no backend, roles unreadable, then the role itself. */
 function gate(ctx: Ctx, who: Who) {
@@ -48,7 +52,7 @@ function gate(ctx: Ctx, who: Who) {
 }
 
 /** Maps a backend failure to what the website says. */
-function backendFailure(error: unknown, who: Who): never {
+function backendFailure(error: unknown, who: Who, ownerOnly?: string): never {
   if (error instanceof BackendNotConnected)
     throw new HttpError(503, "Photo uploads need the game backend, which is not connected to this website.", codes.BACKEND_NOT_CONNECTED);
   if (error instanceof BackendError) {
@@ -57,6 +61,10 @@ function backendFailure(error: unknown, who: Who): never {
       new HttpError(503, "The game backend is unavailable. Please try again.", codes.BACKEND_UNAVAILABLE);
     if (status === 400) throw new HttpError(400, "The game backend rejected this request.", codes.INVALID_REQUEST);
     if (status === 401) throw new HttpError(401, "Your sign-in has expired. Sign in again.", codes.SIGNED_OUT);
+    // Owner-only calls (new versions, rights): an admin who is not the owner is refused with 403;
+    // a photographer who is not the owner gets 404 above. The backend uses the same `forbidden` code
+    // for a lapsed role, so that case is misreported as "not the owner" here; it still fails closed.
+    if (status === 403 && ownerOnly) throw new HttpError(403, ownerOnly, codes.FORBIDDEN);
     if (status === 403)
       throw who === "staff"
         ? new HttpError(403, "The game backend refused this. It needs an active admin role and a verified email.", codes.FORBIDDEN)
@@ -65,6 +73,8 @@ function backendFailure(error: unknown, who: Who): never {
     if (status === 409) {
       if (code === "nothing_to_publish")
         throw new HttpError(409, "The latest version is already published.", codes.NOTHING_TO_PUBLISH);
+      if (code === "rights_already_stated")
+        throw new HttpError(409, "The rights for this photo have already been stated.", codes.RIGHTS_ALREADY_STATED);
       throw new HttpError(409, "Someone changed this photo first. Reload it and try again.", codes.VERSION_CONFLICT);
     }
     if (status === 413) throw new HttpError(413, "Keep each photo under 5 MB.", codes.TOO_LARGE);
@@ -75,7 +85,7 @@ function backendFailure(error: unknown, who: Who): never {
       if (code === "idempotency_key_reused")
         throw new HttpError(422, "This upload key was already used for a different photo. Try the upload again.", codes.IDEMPOTENCY_KEY_REUSED);
       if (code === "content_invalid")
-        throw new HttpError(422, "The licence is incomplete. Add a licence name, and a credit where one is required.", codes.LICENCE_INCOMPLETE);
+        throw new HttpError(422, "This version can't be published yet. It needs a licence name, a credit where one is required, and a rights statement.", codes.LICENCE_INCOMPLETE);
       throw new HttpError(502, "The game backend answered off its contract.", codes.BACKEND_CONTRACT);
     }
     if (status === 429)
@@ -87,12 +97,12 @@ function backendFailure(error: unknown, who: Who): never {
   throw error;
 }
 
-async function viaBackend<T>(schema: ZodType<T>, who: Who, run: () => Promise<unknown>): Promise<T> {
+async function viaBackend<T>(schema: ZodType<T>, who: Who, run: () => Promise<unknown>, ownerOnly?: string): Promise<T> {
   let answer: unknown;
   try {
     answer = await run();
   } catch (error) {
-    backendFailure(error, who);
+    backendFailure(error, who, ownerOnly);
   }
   const parsed = schema.safeParse(answer);
   if (!parsed.success) throw new HttpError(502, "The game backend answered off its contract.", codes.BACKEND_CONTRACT);
@@ -155,20 +165,28 @@ function idempotencyKey(request: Request) {
   return key;
 }
 
+/** `X-Rights-Statement`: the browser's consent to rights wording v1. Missing or anything else is 400. */
+function rightsStatement(request: Request): MediaUploadStatement {
+  const value = request.headers.get("X-Rights-Statement");
+  if (value === "v1_own" || value === "v1_authorised") return value;
+  throw invalid("State who holds the rights to this photo.");
+}
+
 function imageType(request: Request): MediaContentType {
   const type = (request.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
   if (type === "image/jpeg" || type === "image/png") return type;
   throw new HttpError(415, "Choose a JPEG or PNG photo.", codes.UNSUPPORTED_TYPE);
 }
 
-/** Key, type and declared length first, then the counted body; an empty body is 400. */
+/** Key, rights statement, type and declared length first, then the counted body; an empty body is 400. */
 async function uploadInput(request: Request) {
   const key = idempotencyKey(request);
+  const statement = rightsStatement(request);
   const contentType = imageType(request);
   checkDeclaredLength(request, MAX_BYTES);
   const bytes = await readCounted(request, MAX_BYTES);
   if (!bytes.byteLength) throw invalid("Choose a photo to upload.");
-  return { key, contentType, bytes };
+  return { key, statement, contentType, bytes };
 }
 
 /** Query parameters: only the allowed names, each at most once. */
@@ -221,14 +239,19 @@ async function upload(ctx: Ctx, versionOf?: string) {
     if (!/^[1-9][0-9]{0,9}$/.test(revision) || Number(revision) > 2147483647) throw invalid("The photo's revision is required.");
     path = `/v1/admin/media/${versionOf}/versions?revision=${revision}`;
   } else query(ctx, []);
-  const { key, contentType, bytes } = await uploadInput(ctx.request);
+  const { key, statement, contentType, bytes } = await uploadInput(ctx.request);
   let answer: { status: number; body: unknown };
   try {
     answer = await ctx
       .backend(ctx.principal.bearer)
-      .sendWithStatus("POST", path, bytes, contentType, { idempotencyKey: key, timeoutMs: UPLOAD_TIMEOUT_MS });
+      .sendWithStatus("POST", path, bytes, contentType, {
+        idempotencyKey: key,
+        rightsStatement: statement,
+        timeoutMs: UPLOAD_TIMEOUT_MS,
+      });
   } catch (error) {
-    backendFailure(error, "photographer");
+    // New versions are owner only: an admin who is not the owner gets 403, a photographer 404.
+    backendFailure(error, "photographer", versionOf && ctx.principal.staff ? ownerOnlyVersions : undefined);
   }
   const parsed = mediaItemSchema.safeParse(answer.body);
   if (!parsed.success || (answer.status !== 200 && answer.status !== 201))
@@ -252,13 +275,30 @@ async function edit(ctx: Ctx) {
   const id = mediaId(ctx);
   query(ctx, []);
   const parsed = mediaEditRequestSchema.safeParse(await jsonBody(ctx));
-  if (!parsed.success) throw invalid("Check the licence details and try again.");
+  if (!parsed.success) throw invalid("Check the licence and description and try again.");
   // creditRequired is a staff decision; the backend enforces it too (0.17.0).
-  if (!ctx.principal.staff && "creditRequired" in parsed.data.licence)
+  if (!ctx.principal.staff && parsed.data.licence && "creditRequired" in parsed.data.licence)
     throw new HttpError(403, "Only the team can change whether a credit is required.", codes.CREDIT_POLICY_STAFF_ONLY);
   return respond(
     await viaBackend(mediaItemSchema, "photographer", () =>
       ctx.backend(ctx.principal.bearer).send("PATCH", `/v1/admin/media/${id}`, parsed.data),
+    ),
+  );
+}
+
+/** State the rights for a draft that has none (an import, or from before statements). The backend enforces the owner. */
+async function stateRights(ctx: Ctx) {
+  gate(ctx, "photographer");
+  const id = mediaId(ctx);
+  query(ctx, []);
+  const parsed = mediaRightsRequestSchema.safeParse(await jsonBody(ctx));
+  if (!parsed.success) throw invalid("Choose who holds the rights to this photo.");
+  return respond(
+    await viaBackend(
+      mediaItemSchema,
+      "photographer",
+      () => ctx.backend(ctx.principal.bearer).send("PUT", `/v1/admin/media/${id}/rights`, parsed.data),
+      ctx.principal.staff ? ownerOnlyRights : undefined,
     ),
   );
 }
@@ -291,6 +331,7 @@ export const mediaRoutes = [
       return upload(ctx, mediaId(ctx));
     },
   }),
+  route({ method: "PUT", path: "media/:id/rights", audience: "member", mutation: true, run: stateRights }),
   route({ method: "POST", path: "media/:id/publish", audience: "member", mutation: true, run: (ctx) => decide(ctx, "publish") }),
   route({ method: "POST", path: "media/:id/withdraw", audience: "member", mutation: true, run: (ctx) => decide(ctx, "withdraw") }),
 ];

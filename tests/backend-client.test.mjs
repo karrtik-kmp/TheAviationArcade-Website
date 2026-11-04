@@ -116,3 +116,21 @@ test("a per-call timeout overrides the client's", async () => {
   );
   assert.ok(Date.now() - started < 5000, "the 30 ms call timeout applied, not the 60 s client one");
 });
+
+test("X-Rights-Statement is sent only when given, and only when it is a v1 value", async () => {
+  const { fetch, calls } = fakeFetch(json(201, {}));
+  const client = backendClient({ baseUrl: "http://b", fetch }, new Bearer("t"));
+  await client.send("POST", "/v1/x", new Uint8Array([1]), "image/png", { idempotencyKey: "k" });
+  assert.equal("X-Rights-Statement" in calls[0].init.headers, false);
+  await client.send("POST", "/v1/x", { a: 1 });
+  assert.equal("X-Rights-Statement" in calls[1].init.headers, false, "the header set is unchanged without the option");
+  for (const statement of ["v1_own", "v1_authorised"]) {
+    await client.sendWithStatus("POST", "/v1/x", new Uint8Array([1]), "image/png", { idempotencyKey: "k", rightsStatement: statement });
+    assert.equal(calls.at(-1).init.headers["X-Rights-Statement"], statement);
+    assert.equal(calls.at(-1).init.headers["Idempotency-Key"], "k");
+  }
+  const before = calls.length;
+  for (const bad of ["", "own", "d1_private_review", "v1_own\r\nX: y", "V1_OWN", "v2_own"])
+    await assert.rejects(client.send("POST", "/v1/x", new Uint8Array([1]), "image/png", { rightsStatement: bad }), TypeError, bad);
+  assert.equal(calls.length, before, "an invalid statement never reaches the network");
+});

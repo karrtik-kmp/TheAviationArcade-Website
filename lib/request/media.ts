@@ -1,15 +1,22 @@
 /**
- * Backend media (openapi 0.17.0 `Media*` and `ImageRef` schemas). Server side only: the browser
+ * Backend media (openapi 0.19.0 `Media*` and `ImageRef` schemas). Server side only: the browser
  * imports types from here, never these schemas. Every object is strict, so an answer that drifts
  * from the contract is refused rather than passed on. Relative imports only, so this loads under
  * plain `node --test`.
  */
 import { z } from "zod";
+import { normaliseDescription } from "../media-form.ts";
 
 /** openapi `MediaId`: `med-<n>`, no leading zero, at most 15 digits. */
 export const mediaIdPattern = /^med-[1-9][0-9]{0,14}$/;
 export const mediaStates = ["unverified", "published", "withdrawn"] as const;
 export const mediaContentTypes = ["image/jpeg", "image/png"] as const;
+/** Rights statements: the two the API accepts (wording v1), and the import's marker, which is read-only. */
+export const mediaUploadStatements = ["v1_own", "v1_authorised"] as const;
+export const mediaRightsStatements = ["v1_own", "v1_authorised", "d1_private_review"] as const;
+export type MediaUploadStatement = (typeof mediaUploadStatements)[number];
+/** openapi parameter `MediaRightsStatementHeader` (`X-Rights-Statement`). */
+export const mediaRightsStatementPattern = /^v1_(own|authorised)$/;
 /** openapi parameter `MediaIdempotencyKey`. */
 export const mediaIdempotencyKeyPattern = /^[A-Za-z0-9_-]{1,128}$/;
 
@@ -39,6 +46,7 @@ export const mediaErrorCodes = {
   FORBIDDEN: "FORBIDDEN",
   CREDIT_POLICY_STAFF_ONLY: "CREDIT_POLICY_STAFF_ONLY",
   SUBMISSIONS_CLOSED: "SUBMISSIONS_CLOSED",
+  RIGHTS_ALREADY_STATED: "RIGHTS_ALREADY_STATED",
 } as const;
 export type MediaErrorCode = (typeof mediaErrorCodes)[keyof typeof mediaErrorCodes];
 
@@ -50,6 +58,8 @@ const dimension = z.number().int().min(1).max(4096);
 const positive = z.number().int().min(1);
 const isoDate = z.string().datetime({ offset: true });
 const httpUrl = z.string().max(2048).regex(/^https?:\/\//);
+/** Code points, as the contract counts them (not UTF-16 units). */
+const codePoints = (value: string) => [...value].length;
 const name200 = z.string().min(1).max(200);
 
 /** openapi `MediaLicence`: the licence of one file version. */
@@ -80,6 +90,16 @@ export const mediaLicenceUpdateSchema = z
   .refine((value) => Object.keys(value).length >= 1, { message: "licence needs at least one key" });
 export type MediaLicenceUpdate = z.infer<typeof mediaLicenceUpdateSchema>;
 
+/** openapi `MediaRights`. `statedBy` is present for admin callers only. */
+export const mediaRightsSchema = z
+  .object({
+    statement: z.enum(mediaRightsStatements),
+    statedAt: isoDate,
+    statedBy: z.string().min(1).max(256).optional(),
+  })
+  .strict();
+export type MediaRights = z.infer<typeof mediaRightsSchema>;
+
 /** openapi `MediaVersion`. */
 export const mediaVersionSchema = z
   .object({
@@ -90,6 +110,11 @@ export const mediaVersionSchema = z
     width: dimension,
     height: dimension,
     licence: mediaLicenceSchema,
+    description: z
+      .string()
+      .refine((text) => codePoints(text) >= 1 && codePoints(text) <= 2000)
+      .nullable(),
+    rights: mediaRightsSchema.nullable(),
     publishedAt: isoDate.nullable(),
     createdAt: isoDate,
   })
@@ -160,8 +185,41 @@ const fence = z.number().int().min(1).max(2147483647);
 export const mediaRevisionRequestSchema = z.object({ revision: fence }).strict();
 export type MediaRevisionRequest = z.infer<typeof mediaRevisionRequestSchema>;
 
-/** openapi `MediaEditRequest`. */
-export const mediaEditRequestSchema = z
-  .object({ revision: fence, licence: mediaLicenceUpdateSchema, note: z.string().min(1).max(500).optional() })
+/** openapi `MediaRightsRequest` (`PUT media/:id/rights`). */
+export const mediaRightsRequestSchema = z
+  .object({ revision: fence, statement: z.enum(mediaUploadStatements) })
   .strict();
+export type MediaRightsRequest = z.infer<typeof mediaRightsRequestSchema>;
+
+// Everything but a newline (CRLF is folded to LF first): no tab, no other control character, even at the ends.
+// eslint-disable-next-line no-control-regex
+const disallowedInDescription = /[\u0000-\u0009\u000b-\u001f\u007f-\u009f\u2028\u2029]/;
+// The description as the backend stores it (CRLF becomes LF, then trimmed). One copy, kept in the zod-free
+// browser module so the screens and the server cannot drift; media-form only imports types from here.
+export { normaliseDescription };
+/**
+ * openapi `MediaEditRequest.description` (a string, or null to clear): at most 2000 code points as
+ * typed, CRLF becomes LF, then trimmed to 1..2000 code points. Newlines are the only control
+ * character allowed; a leading or trailing tab is refused too (checked before trimming).
+ */
+export const mediaDescriptionSchema = z
+  .string()
+  .refine((raw) => codePoints(raw) <= 2000 && !disallowedInDescription.test(raw.replace(/\r\n/g, "\n")))
+  .transform(normaliseDescription)
+  .pipe(z.string().refine((text) => codePoints(text) >= 1 && codePoints(text) <= 2000));
+
+/** The object shape of `MediaEditRequest` (exported for the contract test). */
+export const mediaEditRequestObject = z
+  .object({
+    revision: fence,
+    licence: mediaLicenceUpdateSchema.optional(),
+    description: mediaDescriptionSchema.nullable().optional(),
+    note: z.string().min(1).max(500).optional(),
+  })
+  .strict();
+/** openapi `MediaEditRequest`: at least one of `licence` and `description`. */
+export const mediaEditRequestSchema = mediaEditRequestObject.refine(
+  (body) => body.licence !== undefined || body.description !== undefined,
+  { message: "licence or description is required" },
+);
 export type MediaEditRequest = z.infer<typeof mediaEditRequestSchema>;

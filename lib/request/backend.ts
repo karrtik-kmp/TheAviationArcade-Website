@@ -6,6 +6,7 @@
  * is a compatibility label, not a credential, and no `X-Client-Version` is sent. Relative imports only.
  */
 import type { Bearer } from "./principal.ts";
+import { mediaRightsStatementPattern } from "./media.ts";
 
 export type FetchFn = (input: string, init: RequestInit) => Promise<Response>;
 
@@ -30,8 +31,11 @@ export class BackendError extends Error {
   }
 }
 
-/** Per-call options. `idempotencyKey` is sent as `Idempotency-Key` only when it is valid. */
-export type SendOptions = { idempotencyKey?: string; timeoutMs?: number };
+/**
+ * Per-call options. `idempotencyKey` is sent as `Idempotency-Key` and `rightsStatement` as
+ * `X-Rights-Statement`, each only when given and valid (an invalid one throws before any request).
+ */
+export type SendOptions = { idempotencyKey?: string; rightsStatement?: "v1_own" | "v1_authorised"; timeoutMs?: number };
 const idempotencyKeyPattern = /^[A-Za-z0-9_-]{1,128}$/;
 
 export type BackendClient = {
@@ -64,6 +68,8 @@ export function backendClient(
     if (!base) throw new BackendNotConnected();
     if (send.idempotencyKey !== undefined && !idempotencyKeyPattern.test(send.idempotencyKey))
       throw new TypeError("The Idempotency-Key is not valid.");
+    if (send.rightsStatement !== undefined && !mediaRightsStatementPattern.test(send.rightsStatement))
+      throw new TypeError("The rights statement is not valid.");
     const headers: Record<string, string> = {
       Accept: "application/json",
       Authorization: `Bearer ${bearer.reveal()}`,
@@ -71,6 +77,7 @@ export function backendClient(
     };
     if (body !== undefined) headers["Content-Type"] = contentType;
     if (send.idempotencyKey !== undefined) headers["Idempotency-Key"] = send.idempotencyKey;
+    if (send.rightsStatement !== undefined) headers["X-Rights-Statement"] = send.rightsStatement;
     let response: Response;
     try {
       response = await call(`${base}${path}`, {

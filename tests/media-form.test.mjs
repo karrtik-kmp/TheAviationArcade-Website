@@ -8,6 +8,8 @@ import {
   licenceErrors,
   mediaOutcome,
   mintKey,
+  descriptionErrors,
+  needsRightsStatement,
   precheckImage,
   rebaseLicence,
   publishBlockers,
@@ -153,6 +155,7 @@ test("outcome mapping", () => {
     [503, "ROLES_UNAVAILABLE", "retryable"],
     [409, "VERSION_CONFLICT", "conflict"],
     [409, "NOTHING_TO_PUBLISH", "conflict"],
+    [409, "RIGHTS_ALREADY_STATED", "conflict"],
     [413, "TOO_LARGE", "fileRejected"],
     [415, "UNSUPPORTED_TYPE", "fileRejected"],
     [422, "MEDIA_INVALID", "fileRejected"],
@@ -170,13 +173,52 @@ test("outcome mapping", () => {
   for (const [status, code, want] of cases) assert.equal(mediaOutcome(status, code), want, `${status} ${code}`);
 });
 
-test("the rights statement is one structured constant with a v1 audit note", () => {
-  assert.deepEqual(RIGHTS_STATEMENT.options.map((o) => o.id), ["own", "authorised"]);
+test("the rights statement ids are the backend's v1 statements", () => {
+  assert.deepEqual(RIGHTS_STATEMENT.options.map((o) => o.id), ["v1_own", "v1_authorised"]);
   assert.equal(RIGHTS_STATEMENT.question, "Who holds the rights to this photo?");
   assert.ok(RIGHTS_STATEMENT.consent.startsWith("I confirm this is true"));
-  assert.equal(RIGHTS_STATEMENT.auditNote("own"), "Rights statement v1: own work");
-  assert.equal(RIGHTS_STATEMENT.auditNote("authorised"), "Rights statement v1: authorised by the rights holder");
-  assert.ok(RIGHTS_STATEMENT.auditNote("own").length <= 500);
+  assert.equal("auditNote" in RIGHTS_STATEMENT, false);
+});
+
+test("the upload key goes with the rights statement", () => {
+  const keys = createUploadKeys();
+  const file = blobOf(JPEG, 10);
+  const k1 = keys.keyFor(file, "create", "v1_own");
+  assert.equal(keys.keyFor(file, "create", "v1_own"), k1, "a retry reuses both");
+  const k2 = keys.keyFor(file, "create", "v1_authorised");
+  assert.notEqual(k2, k1, "changing the statement mints a new key");
+});
+
+test("description rules", () => {
+  assert.equal(descriptionErrors(""), undefined);
+  assert.equal(descriptionErrors("Line one\r\nLine two\nLine three"), undefined);
+  assert.match(descriptionErrors("a	b"), /control/, "the only control character allowed is a newline");
+  assert.match(descriptionErrors("bell\u0007"), /control/);
+  assert.match(descriptionErrors("lone\rcarriage"), /control/);
+  assert.equal(descriptionErrors("x".repeat(2000)), undefined);
+  assert.match(descriptionErrors("x".repeat(2001)), /2000/);
+  assert.equal(descriptionErrors(" ".repeat(3000) + "ok"), undefined, "length counts after trim");
+});
+
+test("the diff and rebase carry the description", () => {
+  const base = { ...licence({ licenceName: "L" }), description: "Old" };
+  assert.deepEqual(licenceDiff(base, { description: "Old\r\n" }), { none: true }, "unchanged is not sent");
+  assert.deepEqual(licenceDiff(base, { description: "New\r\nline" }), { changes: { description: "New\nline" } });
+  assert.deepEqual(licenceDiff(base, { description: "  " }), { changes: { description: null } }, "cleared");
+  assert.deepEqual(licenceDiff(licence(), { description: "" }), { none: true });
+  const newBase = { ...base, description: "Theirs" };
+  assert.equal(rebaseLicence(base, newBase, { description: "Old" }).description, "Theirs", "untouched follows");
+  assert.equal(rebaseLicence(base, newBase, { description: "Mine" }).description, "Mine", "typed stays");
+});
+
+test("publish blockers include a missing v1 rights statement", () => {
+  const ok = licence({ licenceName: "L" });
+  const when = "2026-11-04T10:00:00.000Z";
+  assert.deepEqual(publishBlockers(ok), [], "rights not checked when not given");
+  assert.deepEqual(publishBlockers(ok, { statement: "v1_own", statedAt: when }), []);
+  assert.deepEqual(publishBlockers(ok, { statement: "v1_authorised", statedAt: when }), []);
+  assert.deepEqual(publishBlockers(ok, null).map((b) => b.field), ["rights"]);
+  assert.deepEqual(publishBlockers(ok, { statement: "d1_private_review", statedAt: when }).map((b) => b.field), ["rights"]);
 });
 
 test("rebaseLicence takes new saved values for untouched fields and keeps typed ones", () => {
@@ -204,4 +246,17 @@ test("rebaseLicence takes new saved values for untouched fields and keeps typed 
   // Whitespace alone is not an edit: another editor's saved credit still wins.
   const spaced = rebaseLicence(oldBase, newBase, { ...values, credit: "A " });
   assert.equal(spaced.credit, "B");
+});
+
+test("the rights step applies to any never-published draft without a v1 statement", () => {
+  const draft = (over = {}) => ({ publishedAt: null, rights: null, ...over });
+  const item = (over = {}, d = {}) => ({ draftVersion: 1, publishedVersion: null, draft: draft(d), ...over });
+  const when = "2026-11-04T10:00:00.000Z";
+  assert.equal(needsRightsStatement(item()), true, "new upload with none");
+  assert.equal(needsRightsStatement(item({}, { rights: { statement: "d1_private_review", statedAt: when } })), true, "imported");
+  assert.equal(needsRightsStatement(item({}, { rights: { statement: "v1_own", statedAt: when } })), false, "already stated");
+  assert.equal(needsRightsStatement(item({ draftVersion: 3, publishedVersion: 2 })), true, "published item with a newer draft and no rights");
+  assert.equal(needsRightsStatement(item({ draftVersion: 2, publishedVersion: 2 }, { publishedAt: when })), false, "the live version");
+  assert.equal(needsRightsStatement(item({ draftVersion: 2, publishedVersion: null }, { publishedAt: when })), false, "withdrawn, draft was live once");
+  assert.equal(needsRightsStatement(item({ draftVersion: 3, publishedVersion: null })), true, "withdrawn item with a newer, never-live draft");
 });

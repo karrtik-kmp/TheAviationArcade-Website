@@ -45,6 +45,8 @@ const version = {
   width: 800,
   height: 600,
   licence,
+  description: null,
+  rights: { statement: "v1_own", statedAt: "2026-11-04T10:00:00.000Z" },
   publishedAt: null,
   createdAt: "2026-11-04T10:00:00.000Z",
 };
@@ -71,9 +73,19 @@ test("media schemas list the contract's required keys", () => {
   assert.deepEqual(list(block("MediaList"), "required"), keys(media.mediaListSchema));
   assert.deepEqual(list(block("MediaImages"), "required"), keys(media.mediaImagesSchema));
   assert.deepEqual(list(block("MediaRevisionRequest"), "required"), keys(media.mediaRevisionRequestSchema));
-  assert.deepEqual(list(block("MediaEditRequest"), "required"), ["licence", "revision"]);
-  assert.deepEqual(Object.keys(media.mediaEditRequestSchema.shape).sort(), ["licence", "note", "revision"]);
-  assert.deepEqual(propertyNames(block("MediaEditRequest")).sort(), ["licence", "note", "revision"]);
+  // MediaEditRequest: only revision is required; anyOf needs licence or description.
+  const editBlock = block("MediaEditRequest");
+  assert.deepEqual(list(editBlock, "required"), ["revision"]);
+  assert.ok(editBlock.includes("- required: [licence]") && editBlock.includes("- required: [description]"));
+  const editKeys = ["description", "licence", "note", "revision"];
+  assert.deepEqual(Object.keys(media.mediaEditRequestObject.shape).sort(), editKeys);
+  assert.deepEqual(propertyNames(editBlock).sort(), editKeys);
+  assert.deepEqual(list(block("MediaRightsRequest"), "required"), keys(media.mediaRightsRequestSchema));
+  assert.deepEqual(list(block("MediaRights"), "required"), ["statedAt", "statement"]);
+  assert.deepEqual(Object.keys(media.mediaRightsSchema.shape).sort(), ["statedAt", "statedBy", "statement"]);
+  assert.deepEqual(list(block("MediaRights"), "enum", 10), [...media.mediaRightsStatements].sort());
+  assert.ok(yaml.includes("enum: [v1_own, v1_authorised] }"), "the upload header and the rights request take the two v1 values");
+  assert.ok(yaml.includes("name: X-Rights-Statement") && yaml.includes("/v1/admin/media/{mediaId}/rights:"));
   // MediaItem: `owner` is a property but not required.
   const itemBlock = block("MediaItem");
   const required = list(itemBlock, "required");
@@ -92,7 +104,11 @@ test("MediaLicenceUpdate has the licence keys, at least one, and no others", () 
   assert.equal(media.mediaLicenceUpdateSchema.safeParse({ creditRequired: null }).success, false, "creditRequired cannot be null");
   assert.equal(media.mediaLicenceUpdateSchema.safeParse({ credit: "x", extra: 1 }).success, false);
   assert.equal(media.mediaLicenceUpdateSchema.safeParse({ licenceUrl: "ftp://x" }).success, false);
-  assert.equal(media.mediaEditRequestSchema.safeParse({ revision: 1 }).success, false, "licence is required");
+  assert.equal(media.mediaEditRequestSchema.safeParse({ revision: 1 }).success, false, "licence or description is required");
+  assert.equal(media.mediaEditRequestSchema.safeParse({ revision: 1, note: "x" }).success, false);
+  assert.equal(media.mediaEditRequestSchema.safeParse({ revision: 1, licence: { credit: "x" } }).success, true);
+  assert.equal(media.mediaEditRequestSchema.safeParse({ revision: 1, description: "A hangar at dawn." }).success, true);
+  assert.equal(media.mediaEditRequestSchema.safeParse({ revision: 1, description: null }).success, true);
 });
 
 test("ImageRef has two branches in the contract and the schema accepts exactly those", () => {
@@ -264,7 +280,11 @@ const jpeg = (size) => {
   bytes.set([0xff, 0xd8, 0xff]);
   return bytes;
 };
-const upload = (extra = {}) => ({ body: jpeg(100), headers: { "Content-Type": "image/jpeg", "Idempotency-Key": key }, ...extra });
+const upload = (extra = {}) => ({
+  body: jpeg(100),
+  headers: { "Content-Type": "image/jpeg", "Idempotency-Key": key, "X-Rights-Statement": "v1_own" },
+  ...extra,
+});
 const detailAnswer = { item, versions: [item.draft], preview: noCdn };
 const edit = { revision: 1, licence: { credit: "A. Pilot" } };
 const mediaCalls = [
@@ -453,11 +473,13 @@ test("uploads forward the key, the canonical type and the bytes; the backend sta
   });
   const created = await call("POST", "media", upload());
   assert.deepEqual([created.status, created.body.id], [201, "med-1"]);
-  const replay = await call("POST", "media", upload({ headers: { "Content-Type": "image/png; charset=binary; x=y", "Idempotency-Key": "replay" } }));
+  const replay = await call("POST", "media", upload({ headers: { "Content-Type": "image/png; charset=binary; x=y", "Idempotency-Key": "replay", "X-Rights-Statement": "v1_authorised" } }));
   assert.equal(replay.status, 200);
   assert.equal((await call("POST", "media/med-1/versions?revision=4", upload())).status, 201);
   const [a, b, c] = backend.calls;
-  assert.deepEqual([a.method, a.path, a.contentType, a.options], ["POST", "/v1/admin/media", "image/jpeg", { idempotencyKey: key, timeoutMs: 30000 }]);
+  assert.deepEqual([a.method, a.path, a.contentType, a.options], ["POST", "/v1/admin/media", "image/jpeg", { idempotencyKey: key, rightsStatement: "v1_own", timeoutMs: 30000 }]);
+  assert.equal(b.options.rightsStatement, "v1_authorised", "the chosen statement is forwarded as given");
+  assert.equal(c.options.rightsStatement, "v1_own");
   assert.ok(a.body instanceof Uint8Array && a.body.byteLength === 100 && a.body[0] === 0xff, "raw bytes, not JSON");
   assert.equal(b.contentType, "image/png", "parameters are stripped");
   assert.deepEqual([c.path, c.options.timeoutMs], ["/v1/admin/media/med-1/versions?revision=4", 30000]);
@@ -466,16 +488,16 @@ test("uploads forward the key, the canonical type and the bytes; the backend sta
 test("upload checks run before the body is read: key, type, declared length", async () => {
   const { call, backend } = mediaHarness();
   for (const k of [undefined, "", "has space", "a".repeat(129), "bad/key", "bad.key"]) {
-    const headers = { "Content-Type": "image/jpeg", ...(k === undefined ? {} : { "Idempotency-Key": k }) };
+    const headers = { "Content-Type": "image/jpeg", "X-Rights-Statement": "v1_own", ...(k === undefined ? {} : { "Idempotency-Key": k }) };
     const res = await call("POST", "media", { body: jpeg(10), headers });
     assert.deepEqual([res.status, res.body.code], [400, "INVALID_REQUEST"], `key ${k}`);
   }
   for (const type of [undefined, "image/gif", "application/json", "image/jpegx", "text/plain"]) {
-    const headers = { "Idempotency-Key": key, ...(type ? { "Content-Type": type } : {}) };
+    const headers = { "Idempotency-Key": key, "X-Rights-Statement": "v1_own", ...(type ? { "Content-Type": type } : {}) };
     const res = await call("POST", "media", { body: jpeg(10), headers });
     assert.deepEqual([res.status, res.body.code], [415, "UNSUPPORTED_TYPE"], `type ${type}`);
   }
-  const declared = await call("POST", "media", upload({ headers: { "Content-Type": "image/jpeg", "Idempotency-Key": key, "Content-Length": "5242881" } }));
+  const declared = await call("POST", "media", upload({ headers: { "Content-Type": "image/jpeg", "Idempotency-Key": key, "X-Rights-Statement": "v1_own", "Content-Length": "5242881" } }));
   assert.deepEqual([declared.status, declared.body.code], [413, "TOO_LARGE"]);
   assert.equal(backend.calls.length, 0);
 });
@@ -495,7 +517,7 @@ test("body limit: 5,242,880 bytes pass, 5,242,881 is 413 without a backend call,
 
 test("a lying Content-Length cannot get a larger body through the counted reader", async () => {
   const { call, backend } = mediaHarness();
-  const headers = { "Content-Type": "image/jpeg", "Idempotency-Key": key, "Content-Length": "10" };
+  const headers = { "Content-Type": "image/jpeg", "Idempotency-Key": key, "X-Rights-Statement": "v1_own", "Content-Length": "10" };
   const res = await call("POST", "media", { body: jpeg(5242881), headers });
   assert.deepEqual([res.status, res.body.code], [413, "TOO_LARGE"]);
   assert.equal(backend.calls.length, 0);
@@ -617,4 +639,132 @@ test("in mock mode the member D1 submission routes are closed too (D-2 amended 1
     const res = await call(method, path, { as, body: method === "GET" ? undefined : {} });
     assert.deepEqual([res.status, res.body.code], [404, "SUBMISSIONS_CLOSED"], `${as} ${method} ${path}`);
   }
+});
+
+test("X-Rights-Statement is required and checked before the body is read; nothing reaches the backend", async () => {
+  const { call, backend } = mediaHarness();
+  const base = { "Content-Type": "image/jpeg", "Idempotency-Key": key };
+  for (const value of [undefined, "", "own", "v1", "v2_own", "V1_OWN", "d1_private_review", "v1_own, v1_authorised", "v1-own"]) {
+    const headers = value === undefined ? base : { ...base, "X-Rights-Statement": value };
+    for (const path of ["media", "media/med-1/versions?revision=1"]) {
+      const res = await call("POST", path, { body: jpeg(10), headers });
+      assert.deepEqual([res.status, res.body.code], [400, "INVALID_REQUEST"], `${path} ${value}`);
+    }
+  }
+  // Checked before the body: a body stream that must not be pulled is never touched.
+  assert.equal(backend.calls.length, 0);
+  for (const statement of ["v1_own", "v1_authorised"]) {
+    const res = await call("POST", "media", { body: jpeg(10), headers: { ...base, "X-Rights-Statement": statement } });
+    assert.equal(res.status, 201, statement);
+  }
+  assert.deepEqual(backend.calls.map((c) => c.options.rightsStatement), ["v1_own", "v1_authorised"]);
+});
+
+test("a backend 403 on a version upload is FORBIDDEN for staff, NOT_FOUND stays for a non-owner photographer", async () => {
+  const refuse = (status, code) => ({
+    reply: () => {
+      throw new BackendError(status, code);
+    },
+  });
+  const staff = await mediaHarness(refuse(403, "forbidden")).call("POST", "media/med-1/versions?revision=1", upload({ as: "staff" }));
+  assert.deepEqual([staff.status, staff.body.code], [403, "FORBIDDEN"]);
+  assert.equal(staff.body.error, "Only the photographer who owns this photo can add versions.");
+  const other = await mediaHarness(refuse(404, "not_found")).call("POST", "media/med-1/versions?revision=1", upload());
+  assert.deepEqual([other.status, other.body.code], [404, "NOT_FOUND"]);
+  const created = await mediaHarness(refuse(403, "forbidden")).call("POST", "media", upload());
+  assert.equal(created.body.code, "PHOTOGRAPHER_REQUIRED", "a plain upload 403 is still a lost role");
+});
+
+const rights = { revision: 2, statement: "v1_authorised" };
+
+test("PUT media/:id/rights: gate order, strict body, forwarded as given", async () => {
+  const mock = mediaHarness({ roles: "mock" });
+  assert.deepEqual([(await mock.call("PUT", "media/med-1/rights", { body: rights })).body.code], ["MEDIA_UNAVAILABLE"]);
+  assert.equal(mock.backend.calls.length, 0);
+  for (const [roles, code] of [["not-connected", "BACKEND_NOT_CONNECTED"], ["down", "ROLES_UNAVAILABLE"]]) {
+    const res = await mediaHarness({ roles }).call("PUT", "media/med-1/rights", { body: rights });
+    assert.deepEqual([res.status, res.body.code], [503, code]);
+  }
+  const { call, backend } = mediaHarness();
+  assert.equal((await call("PUT", "media/med-1/rights", { as: "nobody", body: rights })).status, 401);
+  assert.equal((await call("PUT", "media/med-1/rights", { as: "demo", body: rights })).body.code, "DEMO_ACCOUNT");
+  assert.equal((await call("PUT", "media/med-1/rights", { body: rights, headers: { "X-Account-Session": "other" } })).body.code, "ACCOUNT_CHANGED");
+  assert.equal((await call("PUT", "media/med-1/rights", { body: rights, from: "https://elsewhere.test" })).status, 403);
+  assert.equal((await call("PUT", "media/med-1/rights", { as: "member", body: rights })).body.code, "PHOTOGRAPHER_REQUIRED");
+  assert.equal((await call("PUT", "media/med-01/rights", { body: rights })).body.code, "NOT_FOUND");
+  assert.equal((await call("PUT", "media/med-1/rights?x=1", { body: rights })).status, 400);
+  for (const body of [
+    {},
+    { revision: 2 },
+    { statement: "v1_own" },
+    { revision: 0, statement: "v1_own" },
+    { revision: 2147483648, statement: "v1_own" },
+    { revision: "2", statement: "v1_own" },
+    { revision: 2, statement: "d1_private_review" },
+    { revision: 2, statement: "own" },
+    { revision: 2, statement: "v1_own", note: "x" },
+  ]) {
+    const res = await call("PUT", "media/med-1/rights", { body });
+    assert.deepEqual([res.status, res.body.code], [400, "INVALID_REQUEST"], JSON.stringify(body));
+  }
+  assert.equal(backend.calls.length, 0);
+  const ok = await call("PUT", "media/med-9/rights", { body: rights });
+  assert.deepEqual([ok.status, ok.body.id], [200, "med-1"]);
+  assert.deepEqual([backend.calls[0].method, backend.calls[0].path, backend.calls[0].body, backend.calls[0].token], ["PUT", "/v1/admin/media/med-9/rights", rights, "photographer"]);
+  assert.equal((await call("PUT", "media/med-9/rights", { as: "staff", body: rights })).status, 200, "staff pass the gate; the backend enforces the owner");
+});
+
+test("rights errors: rights_already_stated and a stale revision are different 409s; a staff non-owner is FORBIDDEN", async () => {
+  const fail = (status, code) =>
+    mediaHarness({
+      reply: () => {
+        throw new BackendError(status, code);
+      },
+    });
+  const stated = await fail(409, "rights_already_stated").call("PUT", "media/med-1/rights", { body: rights });
+  assert.deepEqual([stated.status, stated.body.code], [409, "RIGHTS_ALREADY_STATED"]);
+  const stale = await fail(409, "version_conflict").call("PUT", "media/med-1/rights", { body: rights });
+  assert.deepEqual([stale.status, stale.body.code], [409, "VERSION_CONFLICT"]);
+  const other = await fail(409, "something_new").call("PUT", "media/med-1/rights", { body: rights });
+  assert.equal(other.body.code, "VERSION_CONFLICT");
+  const notOwner = await fail(403, "forbidden").call("PUT", "media/med-1/rights", { as: "staff", body: rights });
+  assert.deepEqual([notOwner.status, notOwner.body.code], [403, "FORBIDDEN"]);
+  const missing = await fail(404, "not_found").call("PUT", "media/med-1/rights", { body: rights });
+  assert.equal(missing.body.code, "NOT_FOUND");
+  const publish = await fail(422, "content_invalid").call("POST", "media/med-1/publish", { as: "staff", body: { revision: 1 } });
+  assert.deepEqual([publish.status, publish.body.code], [422, "LICENCE_INCOMPLETE"]);
+});
+
+test("PATCH: licence and/or description; description is normalised before it is forwarded", async () => {
+  const { call, backend } = mediaHarness();
+  const patch = (body, as) => call("PATCH", "media/med-1", { body, as });
+  assert.equal((await patch({ revision: 1, description: "  A Spitfire.\r\nTaken at Duxford.  " })).status, 200);
+  assert.deepEqual(backend.calls[0].body, { revision: 1, description: "A Spitfire.\nTaken at Duxford." }, "CRLF becomes LF, trimmed, newlines kept");
+  assert.equal((await patch({ revision: 1, description: null })).status, 200);
+  assert.deepEqual(backend.calls[1].body, { revision: 1, description: null });
+  assert.equal((await patch({ revision: 1, description: "x", licence: { credit: "A" }, note: "n" })).status, 200);
+  assert.deepEqual(backend.calls[2].body, { revision: 1, licence: { credit: "A" }, description: "x", note: "n" });
+  assert.equal((await patch({ revision: 1, description: "😀".repeat(2000) })).status, 200, "limits count code points");
+  const before = backend.calls.length;
+  for (const description of ["", "   ", "\n\n", "a".repeat(2001), "😀".repeat(2001), "tab\there", "\tlead", "trail\t", "bell\u0007", "lone\rcr", "nul\u0000", "line\u2028sep", 5, true, {}])
+    assert.equal((await patch({ revision: 1, description })).status, 400, JSON.stringify(description));
+  assert.equal((await patch({ revision: 1, note: "only a note" })).status, 400);
+  assert.equal((await patch({ revision: 1, description: undefined })).status, 400);
+  assert.equal(backend.calls.length, before, "invalid descriptions never reach the backend");
+  const credit = await patch({ revision: 1, description: "x", licence: { creditRequired: true } });
+  assert.deepEqual([credit.status, credit.body.code], [403, "CREDIT_POLICY_STAFF_ONLY"]);
+  assert.equal((await patch({ revision: 1, description: "x", licence: { creditRequired: true } }, "staff")).status, 200);
+});
+
+test("a backend description is counted in code points: 2000 emoji parse, 2001 do not", async () => {
+  const withDescription = (description) => ({ ...item, draft: { ...item.draft, description } });
+  const ok = await mediaHarness({ reply: () => withDescription("😀".repeat(2000)) }).call("POST", "media", upload());
+  assert.equal(ok.status, 201);
+  assert.equal(ok.body.draft.description.length, 4000, "UTF-16 length is not the limit");
+  for (const bad of ["😀".repeat(2001), ""]) {
+    const res = await mediaHarness({ reply: () => withDescription(bad) }).call("POST", "media", upload());
+    assert.deepEqual([res.status, res.body.code], [502, "BACKEND_CONTRACT"]);
+  }
+  assert.equal(media.mediaItemSchema.safeParse(withDescription("a".repeat(2000))).success, true);
+  assert.equal(media.mediaItemSchema.safeParse(withDescription(null)).success, true);
 });

@@ -1658,3 +1658,9 @@
     width: 100%;
   }
 }
+
+/* Media desk: description and rights line (backend 0.19.0) */
+.media-desk-licence .fui-Textarea {
+  width: 100%;
+  max-width: 100%;
+}
