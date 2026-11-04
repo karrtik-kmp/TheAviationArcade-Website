@@ -2,6 +2,7 @@ import { cache } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { requestPrincipal } from "@/lib/request/worker";
+import type { RoleSnapshot } from "@/lib/request/roles";
 import {
   accountSignInPath,
   audiences,
@@ -13,6 +14,10 @@ import {
 export type Viewer = {
   user: { userId: string; email: string; emailVerified: boolean; displayName: string };
   principal: Extract<Principal, { signedIn: true }>;
+  /** An active backend photographer role on a verified email. */
+  photographer: boolean;
+  /** The account's backend role rows, for showing request states. */
+  roles: RoleSnapshot;
   sessionKey: string;
 };
 
@@ -37,6 +42,8 @@ export const currentViewer = cache(async (): Promise<Viewer | null> => {
       staff: viewer.staff,
       demo: viewer.demo,
     },
+    photographer: viewer.photographer,
+    roles: viewer.roles,
     sessionKey: viewer.sessionKey,
   };
 });

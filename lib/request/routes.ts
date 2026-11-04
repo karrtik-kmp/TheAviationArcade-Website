@@ -27,6 +27,7 @@ import {
 } from "../submissions/d1.ts";
 import type { EditorialData } from "../types.ts";
 import { route, type Route, type RouteContext } from "./router.ts";
+import { roleRoutes } from "./role-routes.ts";
 
 type Ctx = RouteContext<"member">;
 type PublicCtx = RouteContext<"public">;
@@ -63,6 +64,15 @@ const privatePhoto = (body: ReadableStream | null, mime: string) =>
 /** Parses the contributor form and photo, then stores the proposal or its revision. */
 async function saveSubmission(ctx: Ctx, id?: string) {
   const { request } = ctx;
+  // New photos and revisions need an approved photographer; reading your own list does not.
+  if (!ctx.principal.photographer)
+    throw new HttpError(
+      403,
+      ctx.principal.roles.status === "ok"
+        ? "Photo submissions need approved photographer access."
+        : "Photographer access could not be checked. Please try again.",
+      ctx.principal.roles.status === "ok" ? "PHOTOGRAPHER_REQUIRED" : "ROLES_UNAVAILABLE",
+    );
   const owner = ctx.principal.userId;
   const old = id ? await findSubmission(ctx.db(), id) : null;
   checkRevisable(old, owner);
@@ -306,4 +316,5 @@ export const routes: Route[] = [
   route({ method: "POST", path: "admin/military/releases/restore", audience: "staff", mutation: true, run: restoreMilitary }),
   route({ method: "PUT", path: "admin/military/:id", audience: "staff", mutation: true, run: (ctx) => saveMilitary(ctx, ctx.params.id) }),
   route({ method: "GET", path: "admin/audit", audience: "staff", run: auditEvents }),
+  ...roleRoutes,
 ];

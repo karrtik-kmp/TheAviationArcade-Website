@@ -1,7 +1,8 @@
 import { firebaseSettings } from "@/lib/firebase-config";
 import { verifyFirebaseToken } from "@/lib/firebase-verifier";
 import { productCookieName, localAuthHost } from "@/lib/product-auth";
-import { isStaffUser } from "@/lib/server";
+import { Bearer, isStaffIdentity } from "@/lib/request/principal";
+import { rolesOf } from "@/lib/request/worker";
 import { isDemoPrincipal } from "@/lib/demo-server";
 import { afterSignIn, audiences, type Audience } from "@/lib/account";
 import { decodeJwt, decodeProtectedHeader } from "jose";
@@ -94,6 +95,7 @@ export async function POST(request: Request) {
       displayName: user.fullName?.trim().slice(0, 120) || "Account",
     };
     // Only a deliberate sign-in asks where to go; background cookie refreshes don't.
+    const demo = isDemoPrincipal(productUser);
     const destination = body.audience
       ? afterSignIn({
           audience: body.audience,
@@ -103,8 +105,9 @@ export async function POST(request: Request) {
             signedIn: true,
             displayName: productUser.displayName,
             emailVerified: user.emailVerified,
-            staff: isStaffUser(productUser),
-            demo: isDemoPrincipal(productUser),
+            // Staff comes from the account's backend roles, read with its own token.
+            staff: !demo && isStaffIdentity(user, demo, await rolesOf(new Bearer(body.idToken), user)),
+            demo,
           },
         })
       : undefined;

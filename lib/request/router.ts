@@ -4,7 +4,7 @@
  *   1. the principal is resolved once, and only for routes that are not public;
  *   2. a guest gets 401 and the demo account 403 DEMO_ACCOUNT on any non-public route;
  *   3. the account fence: an X-Account-Session header that differs from the session gets 409;
- *   4. a non-staff member on a staff route gets 403;
+ *   4. a non-staff member on a staff route gets 403 (staff = an active backend admin role);
  *   5. a mutation from another origin gets 403;
  *   6. the handler runs. "owner" routes check the row owner themselves.
  * An unknown path under admin/ is checked as a staff route, and one under submissions/ as a member
@@ -14,7 +14,8 @@ import { HttpError, failure, sameOrigin } from "../errors.ts";
 import type { EditorialStore } from "../editorial/store.ts";
 import type { ContentStore } from "../editorial/content.ts";
 import type { PhotoStorage } from "../photo-storage.ts";
-import { AuthUnavailable, type MemberPrincipal, type RequestPrincipal } from "./principal.ts";
+import { AuthUnavailable, type Bearer, type MemberPrincipal, type RequestPrincipal } from "./principal.ts";
+import type { BackendClient } from "./backend.ts";
 
 export type Audience = "public" | "member" | "owner" | "staff";
 
@@ -26,6 +27,8 @@ export type RouteDeps = {
   editorial: () => EditorialStore;
   content: () => ContentStore;
   references: () => Promise<unknown>;
+  /** The game backend as the given member, with their own token. */
+  backend: (bearer: Bearer) => BackendClient;
 };
 export type RouteContext<A extends Audience = Audience> = Omit<RouteDeps, "principal"> & {
   request: Request;
@@ -76,7 +79,13 @@ async function admit(audience: Audience, request: Request, deps: RouteDeps): Pro
   if (expected && expected !== principal.sessionKey)
     throw new HttpError(409, "Your signed-in account changed. Reload before continuing.", "ACCOUNT_CHANGED");
   if (audience === "staff" && !principal.staff)
-    throw new HttpError(403, "This area is available to authorized editors only.");
+    throw new HttpError(
+      principal.roles.status === "ok" ? 403 : 503,
+      principal.roles.status === "ok"
+        ? "This area is available to authorized editors only."
+        : "Editor access could not be checked because the game backend is unavailable. Please try again.",
+      principal.roles.status === "ok" ? undefined : "ROLES_UNAVAILABLE",
+    );
   return principal;
 }
 

@@ -1,11 +1,12 @@
 /**
- * Who is making a request, decided once: the session cookie is parsed once and its Firebase ID
- * token verified once. Pages and API routes share these rules. Every Worker-specific value
- * (project, staff allowlist, demo UID, cookie name, verifier) arrives in `deps`, so this module
- * loads under plain `node --test`.
+ * Who is making a request, decided once: the session cookie is parsed once, its Firebase ID
+ * token verified once and its backend roles read once. Pages and API routes share these rules.
+ * Every Worker-specific value (project, roles reader, demo UID, cookie name, verifier) arrives in
+ * `deps`, so this module loads under plain `node --test`.
  */
 import { matchesDemoPrincipal } from "../demo-policy.ts";
 import type { FirebaseTokenIdentity } from "../firebase-verifier.ts";
+import { holdsRole, noRoles, type RoleSnapshot } from "./roles.ts";
 
 /**
  * The member's own Firebase ID token, kept for forwarding to the game backend as
@@ -35,7 +36,12 @@ export type MemberPrincipal = {
   email: string;
   emailVerified: boolean;
   displayName: string;
+  /** An active backend `admin` role, a verified email and not the demo account. */
   staff: boolean;
+  /** An active backend `photographer` role, a verified email and not the demo account. */
+  photographer: boolean;
+  /** The caller's backend role rows, for showing request states. Grants nothing by itself. */
+  roles: RoleSnapshot;
   demo: boolean;
   /** A change detector for this Site's UI, never a credential. */
   sessionKey: string;
@@ -57,7 +63,11 @@ export type PrincipalDeps = {
   /** Null while Firebase sign-in is not configured: everyone is a guest. */
   verifier: TokenVerifier | null;
   cookieName: string;
-  staffEmails: string[];
+  /**
+   * The member's roles: from the game backend with their own token, or from the deployment's mock
+   * lists while `ROLES_SOURCE` is not "backend". Must not throw.
+   */
+  roles: (bearer: Bearer, user: { email: string; emailVerified: boolean }) => Promise<RoleSnapshot>;
   projectId?: string;
   demoUid?: string;
 };
@@ -70,20 +80,18 @@ export async function accountSessionKey(userId: string): Promise<string> {
   return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
-export function parseStaffEmails(value: string | undefined) {
-  return (value ?? "")
-    .split(",")
-    .map((s) => s.trim().toLowerCase())
-    .filter(Boolean);
+/**
+ * Staff = an active backend `admin` role on a verified email, never the demo account. The backend
+ * checks the same on every call it serves; this decides what the website shows. A role picker or
+ * any client-chosen value grants nothing.
+ */
+export function isStaffIdentity(user: { emailVerified: boolean }, demo: boolean, roles: RoleSnapshot) {
+  return !demo && user.emailVerified && holdsRole(roles, "admin");
 }
 
-/** Staff = a verified email on the server allowlist, never the demo account. A role picker grants nothing. */
-export function isStaffIdentity(
-  user: { email: string; emailVerified: boolean },
-  demo: boolean,
-  staffEmails: string[],
-) {
-  return !demo && user.emailVerified && staffEmails.includes(user.email.toLowerCase());
+/** Photographer = an active backend `photographer` role on a verified email, never the demo account. */
+export function isPhotographerIdentity(user: { emailVerified: boolean }, demo: boolean, roles: RoleSnapshot) {
+  return !demo && user.emailVerified && holdsRole(roles, "photographer");
 }
 
 /** The session token, or null unless exactly one cookie of that name is present. */
@@ -102,15 +110,20 @@ export async function resolvePrincipal(headers: Headers, deps: PrincipalDeps): P
   const user = await deps.verifier.verify(token);
   if (!user) return guest;
   const demo = matchesDemoPrincipal(user.userId, deps.projectId, deps.demoUid);
+  const bearer = new Bearer(token);
+  // The demo account never holds a role here, so its roles are not asked for.
+  const roles = demo ? noRoles : await deps.roles(bearer, user);
   return {
     kind: "member",
     userId: user.userId,
     email: user.email,
     emailVerified: user.emailVerified,
     displayName: user.fullName?.trim().slice(0, 120) || "Account",
-    staff: isStaffIdentity(user, demo, deps.staffEmails),
+    staff: isStaffIdentity(user, demo, roles),
+    photographer: isPhotographerIdentity(user, demo, roles),
+    roles,
     demo,
     sessionKey: await accountSessionKey(user.userId),
-    bearer: new Bearer(token),
+    bearer,
   };
 }

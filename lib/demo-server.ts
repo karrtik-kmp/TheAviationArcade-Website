@@ -14,8 +14,6 @@ export function demoLogin(host: string) {
   const settings = firebaseSettings(host);
   if (!settings.configured || !env.DEMO_ACCOUNT_UID || !env.DEMO_LOGIN_EMAIL || !env.DEMO_LOGIN_PASSWORD)
     return null;
-  if ((env.STAFF_EMAILS ?? "").split(",").some((email) => email.trim().toLowerCase() === env.DEMO_LOGIN_EMAIL!.toLowerCase()))
-    return null;
   // Explicitly configured public sample credentials, never a staff credential.
   return { email: env.DEMO_LOGIN_EMAIL, password: env.DEMO_LOGIN_PASSWORD };
 }

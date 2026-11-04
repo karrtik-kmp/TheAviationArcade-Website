@@ -1,11 +1,8 @@
 import { env } from "cloudflare:workers";
-import type { ProductUser } from "@/lib/product-auth";
-import { isDemoPrincipal } from "@/lib/demo-server";
 import { BunnyPhotoStorage } from "@/lib/bunny-storage";
 import type { PhotoStorage } from "@/lib/photo-storage";
 export { HttpError, sameOrigin, respond, failure, limitedForm } from "@/lib/errors";
 import { HttpError } from "@/lib/errors";
-import { isStaffIdentity, parseStaffEmails } from "@/lib/request/principal";
 export function database(): D1Database {
   if (!env.DB)
     throw new HttpError(
@@ -32,9 +29,6 @@ export function bucket(): PhotoStorage {
   if (!env.BUCKET)
     throw new HttpError(503, "Photo storage is unavailable. Please try again.");
   return env.BUCKET;
-}
-export function isStaffUser(user: ProductUser | null) {
-  return !!user && isStaffIdentity(user, isDemoPrincipal(user), parseStaffEmails(env.STAFF_EMAILS));
 }
 export function audit(
   actor: string,

@@ -33,10 +33,32 @@ function fakeVerifier() {
   };
   return verifier;
 }
-const deps = (verifier) => ({
+const active = (role, state = "active") => ({
+  role,
+  state,
+  revision: 1,
+  requestedAt: "2026-11-01T00:00:00.000Z",
+  decidedAt: "2026-11-02T00:00:00.000Z",
+});
+/** Backend role rows per token. The demo token holds admin here to prove it is never asked for. */
+const backendRoles = {
+  editor: [active("player"), active("admin"), active("photographer")],
+  unverified: [active("admin"), active("photographer")],
+  member: [active("player"), active("photographer", "pending")],
+  demo: [active("admin"), active("photographer")],
+};
+function fakeRoles(snapshot) {
+  const roles = async (bearer) => {
+    roles.asked.push(bearer.reveal());
+    return snapshot ?? { status: "ok", roles: backendRoles[bearer.reveal()] ?? [] };
+  };
+  roles.asked = [];
+  return roles;
+}
+const deps = (verifier, roles = fakeRoles()) => ({
   verifier,
   cookieName: "aa_session",
-  staffEmails: ["editor@example.com"],
+  roles,
   projectId: project,
   demoUid: "demo-uid",
 });
@@ -52,14 +74,29 @@ test("a session cookie is verified exactly once", async () => {
   assert.equal(principal.sessionKey, await accountSessionKey(principal.userId));
 });
 
-test("staff needs a verified allowlisted email and is never the demo account", async () => {
+test("staff and photographer need an active backend role on a verified email, never the demo account", async () => {
   const verifier = fakeVerifier();
-  const as = (token) => resolvePrincipal(headers(`aa_session=${token}`), deps(verifier));
-  assert.equal((await as("editor")).staff, true, "the allowlist match ignores case");
-  assert.equal((await as("unverified")).staff, false);
-  assert.equal((await as("member")).staff, false);
+  const roles = fakeRoles();
+  const as = (token) => resolvePrincipal(headers(`aa_session=${token}`), deps(verifier, roles));
+  const editor = await as("editor");
+  assert.deepEqual([editor.staff, editor.photographer], [true, true]);
+  const unverified = await as("unverified");
+  assert.deepEqual([unverified.staff, unverified.photographer], [false, false], "an unverified email holds nothing");
+  const member = await as("member");
+  assert.deepEqual([member.staff, member.photographer], [false, false], "a pending row grants nothing");
   const demo = await as("demo");
-  assert.deepEqual([demo.demo, demo.staff], [true, false], "the demo UID never gains staff");
+  assert.deepEqual([demo.demo, demo.staff, demo.photographer], [true, false, false], "the demo UID never gains a role");
+  assert.deepEqual(roles.asked, ["editor", "unverified", "member"], "roles are read with the member's own token, never for demo");
+});
+
+test("unreadable roles give no role, and say so", async () => {
+  for (const status of ["unavailable", "not-connected"]) {
+    const principal = await resolvePrincipal(
+      headers("aa_session=editor"),
+      deps(fakeVerifier(), fakeRoles({ status })),
+    );
+    assert.deepEqual([principal.staff, principal.photographer, principal.roles.status], [false, false, status]);
+  }
 });
 
 test("missing, duplicate and invalid cookies give a guest", async () => {
