@@ -204,8 +204,9 @@ try {
       await page
         .getByRole("button", { name: "Approve submission", exact: true })
         .click();
+      // The seeded demo proposal has no rights evidence, so approval stops at that rule first.
       await page
-        .getByText("Complete all five verification checks before approval.")
+        .getByText("Record permission or license evidence before approval.")
         .waitFor();
       await page
         .locator(".review-form textarea")

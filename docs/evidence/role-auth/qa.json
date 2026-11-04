@@ -1,6 +1,6 @@
 {
-  "checkedAt": "2026-10-23T07:15:02.340Z",
-  "origin": "http://127.0.0.1:5188",
+  "checkedAt": "2026-11-04T04:53:28.055Z",
+  "origin": "http://127.0.0.1:5186",
   "basePath": "/play",
   "scope": "Local browser + demo Auth Emulator only; no live Google or game linking tested.",
   "results": [
@@ -9,7 +9,15 @@
       "passed": true
     },
     {
-      "name": "Anonymous guards and legacy sign-in redirects retain the prefix and safe query",
+      "name": "Anonymous guards and the shared sign-in page keep the prefix, role and safe query",
+      "passed": true
+    },
+    {
+      "name": "Sign-in keeps its palette and fits desktop/mobile in both themes",
+      "passed": true
+    },
+    {
+      "name": "Password visibility and recovery preserve email and the intended action",
       "passed": true
     },
     {
@@ -22,6 +30,10 @@
     },
     {
       "name": "Photographer sign-in retains query filters and logout stays under the prefix",
+      "passed": true
+    },
+    {
+      "name": "Direct and unsafe public sign-in land at the homepage",
       "passed": true
     },
     {

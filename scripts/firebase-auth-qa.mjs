@@ -242,7 +242,7 @@ async function signInThroughForm(email, userPassword = password, returnTo) {
   });
   await waitForAuthReady();
   await page.getByRole("textbox", { name: "Email address" }).fill(email);
-  await page.getByLabel("Password").fill(userPassword);
+  await page.getByLabel("Password", { exact: true }).fill(userPassword);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
   await page.waitForURL(
     (url) => url.origin === localOrigin && url.pathname !== "/sign-in",
@@ -413,6 +413,8 @@ async function main() {
       await page.goto(`${localOrigin}/contribute?category=aircraft&game=aircraft-identifier&view=mine`);
       await closedPanel(page).waitFor();
       assert.equal(await page.locator("#field-photo").count(), 0);
+      // The header's sign-in link is drawn after the account check; the closed panel has none.
+      await page.locator('a[href^="/sign-in?"]').first().waitFor();
       const signInHrefs = await page
         .locator('a[href^="/sign-in?"]')
         .evaluateAll((links) => links.map((link) => link.getAttribute("href")));
@@ -435,7 +437,7 @@ async function main() {
       await page
         .getByRole("textbox", { name: "Email address" })
         .fill(qaUsers.photographerA.email);
-      await page.getByLabel("Password").fill("incorrect-local-password");
+      await page.getByLabel("Password", { exact: true }).fill("incorrect-local-password");
       await page.getByRole("button", { name: "Sign in", exact: true }).click();
       await page
         .getByRole("alert")
@@ -461,9 +463,10 @@ async function main() {
         `Unexpected sign-in href: ${href}`,
       );
       const signInUrl = new URL(href, localOrigin);
+      // signInPath leaves out return_to when it is the area's home: `as=photographer` returns to /contribute.
       const returnTo =
         signInUrl.searchParams.get("return_to") ||
-        signInUrl.searchParams.get("returnTo");
+        (signInUrl.searchParams.get("as") === "photographer" ? "/contribute" : null);
       assert.equal(returnTo, target);
       await signInThroughForm(qaUsers.photographerA.email, password, target);
       assert.equal(new URL(page.url()).pathname, "/contribute");
@@ -485,12 +488,10 @@ async function main() {
         0,
       );
       await page
-        .getByText("Your community name tag uses your existing Callsign.")
+        .getByText(/use your existing Callsign without creating a new one/)
         .waitFor();
-      assert.match(
-        await page.locator("main").innerText(),
-        /Linking a Callsign to this website account is not available yet/i,
-      );
+      // No claim that linking exists yet: the copy says it is coming soon.
+      assert.match(await page.locator("main").innerText(), /App profile linking is coming soon/i);
       const menuButton = page.getByRole("button", { name: "Account menu" });
       await menuButton.click();
       const menu = page.getByRole("navigation", { name: "Account menu" });
@@ -764,7 +765,7 @@ async function main() {
         .waitFor();
       await page.getByRole("textbox", { name: "Email address" }).fill(email);
       await page.getByLabel("Display name").fill("Auth QA Signup");
-      await page.getByLabel("Password").fill(password);
+      await page.getByLabel("Password", { exact: true }).fill(password);
       await page
         .getByRole("button", { name: "Create account", exact: true })
         .click();

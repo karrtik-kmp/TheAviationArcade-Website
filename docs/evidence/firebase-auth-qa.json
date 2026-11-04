@@ -1,5 +1,5 @@
 {
-  "createdAt": "2026-10-22T14:55:11.542Z",
+  "createdAt": "2026-11-04T04:46:57.481Z",
   "qaOrigin": "http://127.0.0.1:5173",
   "authEmulator": "http://127.0.0.1:9099",
   "firebaseProject": "demo-airplane-games",
@@ -8,75 +8,71 @@
     {
       "name": "Firebase runtime config is configured for this local emulator only",
       "status": "passed",
-      "startedAt": "2026-10-22T14:54:08.067Z",
+      "startedAt": "2026-11-04T04:45:50.874Z",
       "projectId": "demo-airplane-games",
       "emulator": "http://127.0.0.1:9099"
     },
     {
       "name": "Anonymous account response is private and protected APIs deny access",
       "status": "passed",
-      "startedAt": "2026-10-22T14:54:08.185Z"
+      "startedAt": "2026-11-04T04:45:50.895Z"
     },
     {
       "name": "Sign-in rejects an incorrect password without authenticating",
       "status": "passed",
-      "startedAt": "2026-10-22T14:54:08.533Z"
+      "startedAt": "2026-11-04T04:45:52.882Z"
     },
     {
-      "name": "Account control preserves safe category, game and mine filters through sign-in",
+      "name": "Account control returns to /contribute through sign-in and shows the closed panel",
       "status": "passed",
-      "startedAt": "2026-10-22T14:54:09.720Z"
+      "startedAt": "2026-11-04T04:45:54.020Z"
     },
     {
       "name": "Signed-in account menu works on desktop and mobile, and Callsign copy is accurate",
       "status": "passed",
-      "startedAt": "2026-10-22T14:54:12.202Z"
+      "startedAt": "2026-11-04T04:45:56.660Z"
     },
     {
       "name": "Staff identity is enforced by the server and nonstaff cannot open editorial routes",
       "status": "passed",
-      "startedAt": "2026-10-22T14:54:14.328Z"
+      "startedAt": "2026-11-04T04:45:58.372Z"
     },
     {
-      "name": "Two emulator users see only their own contribution records",
+      "name": "Member submission routes are closed for every signed-in user",
       "status": "passed",
-      "startedAt": "2026-10-22T14:54:25.142Z",
-      "submissionIds": {
-        "a": "24251553-a18a-4b7b-baec-78ae808255bc",
-        "b": "d5ed6cd5-d199-4f60-979e-cb1dac04804a"
-      }
+      "startedAt": "2026-11-04T04:46:15.861Z"
     },
     {
-      "name": "A stale contributor session clears private lists and revision controls",
+      "name": "A stale contributor session shows no private proposal data",
       "status": "passed",
-      "startedAt": "2026-10-22T14:54:41.641Z",
+      "startedAt": "2026-11-04T04:46:26.298Z",
       "outcome": "simulated anonymous account snapshot via browser route; no real expiry duration waited"
     },
     {
       "name": "Expired staff session stops admin writes and clears private workspace data",
       "status": "passed",
-      "startedAt": "2026-10-22T14:54:43.015Z",
+      "startedAt": "2026-11-04T04:46:26.496Z",
       "outcome": "stale session write denied; account-session mismatch UI simulated without waiting for expiry duration"
     },
     {
       "name": "Same-origin session exchange rejects wrong, expired, and cross-origin credentials",
       "status": "passed",
-      "startedAt": "2026-10-22T14:54:48.917Z"
+      "startedAt": "2026-11-04T04:46:33.850Z"
     },
     {
       "name": "Registration and email verification use emulator OOB codes",
       "status": "passed",
-      "startedAt": "2026-10-22T14:54:49.005Z"
+      "startedAt": "2026-11-04T04:46:33.946Z"
     },
     {
       "name": "Password reset response is neutral and emulator reset code changes the credential",
       "status": "passed",
-      "startedAt": "2026-10-22T14:54:51.605Z"
+      "startedAt": "2026-11-04T04:46:36.843Z"
     },
     {
       "name": "Google sign-in starts only the emulator-hosted provider flow",
       "status": "skipped",
-      "startedAt": "2026-10-22T14:54:55.861Z",
+      "startedAt": "2026-11-04T04:46:41.671Z",
       "reason": "The emulator Google popup did not open because the Google helper script was blocked; a recoverable error was shown. Provider authentication was not exercised.",
       "outcome": "blocked-before-emulator-popup",
       "recoverableError": "We couldn’t complete that request. Please try again.",
@@ -85,7 +81,7 @@
     {
       "name": "Logout clears the Firebase-backed server session and account menu",
       "status": "passed",
-      "startedAt": "2026-10-22T14:55:06.737Z"
+      "startedAt": "2026-11-04T04:46:52.655Z"
     }
   ],
   "blockedRequests": [],

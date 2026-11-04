@@ -1,13 +1,13 @@
 {
-  "origin": "http://127.0.0.1:5173",
-  "checkedAt": "2026-10-22T14:53:40.651Z",
+  "origin": "http://127.0.0.1:5186",
+  "checkedAt": "2026-11-04T04:34:48.049Z",
   "results": [
     {
       "name": "Homepage desktop and theme switch",
       "passed": true
     },
     {
-      "name": "Seven-game catalog, category filters, search and detail",
+      "name": "Eight-game catalog, category filters, search and detail",
       "passed": true
     },
     {
@@ -19,15 +19,15 @@
       "passed": true
     },
     {
-      "name": "Photographer form uploads a proposal with private metadata",
+      "name": "Member submission routes are closed and /contribute shows the closed panel",
       "passed": true
     },
     {
-      "name": "Review requires checks, supports changes, revision, and approval",
+      "name": "Account page shows the Photo area card instead of My submissions",
       "passed": true
     },
     {
-      "name": "POTD draft, schedule, local-day visibility, private fields and archive",
+      "name": "Staff review of a seeded demo proposal: checks, changes, stale version",
       "passed": true
     },
     {
