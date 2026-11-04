@@ -28,7 +28,11 @@ Fill these fields locally in `.dev.vars.cloudflare`:
 
 - `BUNNY_STORAGE_PASSWORD`: the zone's read-write **Storage Zone Password**, also called its
   **S3 Secret Access Key**, in Bunny's Access tab. Do not use your Bunny account API key.
-- `STAFF_EMAILS`: comma-separated Firebase editor emails. Their email must also be verified.
+- `ROLES_SOURCE` (not a secret, default `mock`): where roles come from. With `mock`, fill
+  `MOCK_ADMIN_EMAILS` and `MOCK_PHOTOGRAPHER_EMAILS` (verified emails, uploaded as secrets); the deploy
+  warns when the admin list is empty. Switch to `backend` once the game backend is hosted.
+- `GAME_API_BASE_URL` (optional, not a secret): the game backend origin, used when `ROLES_SOURCE=backend`.
+  Without it the deployed site has no admins and the deploy only warns.
 
 Zone, endpoint, region and the production Firebase project are already recorded. Blank Firebase
 Web SDK fields can be resolved from the existing ignored `outputs/firebase-web-config.json`.

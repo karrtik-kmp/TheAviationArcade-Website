@@ -33,8 +33,31 @@ if (!(Test-Path -LiteralPath '.dev.vars')) {
 }
 ```
 
-Keep `.dev.vars` private. The example connects to the local Firebase Auth Emulator and allows the
-local editor `seedy@sites.test`. Preserve other settings if the file already exists.
+Keep `.dev.vars` private. The example connects to the local Firebase Auth Emulator and the local game
+backend. Preserve other settings if the file already exists.
+
+### Staff and photographer roles
+
+There is no website allowlist. `ROLES_SOURCE` picks where roles come from:
+
+- **`mock` (the default, and what deployments use until the backend is hosted).** Roles come from
+  `MOCK_ADMIN_EMAILS` and `MOCK_PHOTOGRAPHER_EMAILS` (comma-separated; a verified email is required and
+  the demo account never matches). The admin Users section and photographer requests are hidden, and
+  `/contribute` tells other accounts that photographer access is set up by the team. Deployments upload
+  the lists as secrets. Locally, `.dev.vars.example` makes the seeded `seedy@sites.test` editor the
+  mock admin.
+- **`backend`.** Roles come from the game backend (`GET /v1/me/roles` with the member's own token at
+  `GAME_API_BASE_URL`); the mock lists are ignored. Staff means an active `admin` row, a verified email
+  and not the demo account. Photo submissions need an active `photographer` row, which a member requests
+  on `/contribute` and an admin approves in the Users section (openapi 0.15.0, vendored in
+  `contracts/openapi.yaml`). There, "Remove" revokes a role and the account may ask again; "Block" bars
+  an account from asking to be a photographer until it is unblocked; an admin's email is typed by an
+  admin, shown as unverified and editable, and never grants anything. To run it locally: start
+  the Backend with `FIREBASE_PROJECT_ID=demo-airplane-games` in its `.env`, set `ROLES_SOURCE=backend`
+  and `GAME_API_BASE_URL` in `.dev.vars`, sign in once, then grant the first admin from the Backend
+  folder with `npm run roles:grant -- <uid> admin --yes` (only while no active admin exists; further
+  admins use the backend grant route, and the website has no grant UI). If the backend can't be
+  reached there are no admins: admin routes answer 503 (`ROLES_UNAVAILABLE` or `BACKEND_NOT_CONNECTED`).
 
 On a **fresh checkout/local database only**, build once and apply the content schema:
 
@@ -211,7 +234,8 @@ Historical Lighthouse results predate the Firebase change and are not a new perf
   existing light/dark brand tokens. Check keyboard controls, focus and narrow mobile layouts.
 - Use Firebase identity verified by the server. Never grant access from browser-supplied roles,
   names, contact email, hosting headers or local demo credentials. Staff needs a verified email
-  present in the server-only `STAFF_EMAILS` allowlist.
+  and an active `admin` role: a backend row, or a mock-list entry until the backend is hosted (see
+  Staff and photographer roles).
 - **Callsign is the community player name tag.** It is a public profile attribute, not a password
   or account identifier. Do not create an independent website Callsign registry or claim game
   account linking until the authoritative game contract is integrated.
@@ -230,7 +254,7 @@ Historical Lighthouse results predate the Firebase change and are not a new perf
 
 Firebase project: `airplane-games-auth-20261022`. [Firebase setup and provisioning](docs/FIREBASE_SETUP.md)
 records the exact workflow. Runtime configuration uses `FIREBASE_PROJECT_ID`, `FIREBASE_WEB_API_KEY`,
-`FIREBASE_AUTH_DOMAIN`, `FIREBASE_APP_ID` and `STAFF_EMAILS`. Keep `FIREBASE_AUTH_EMULATOR_HOST` unset
+`FIREBASE_AUTH_DOMAIN`, `FIREBASE_APP_ID` and `GAME_API_BASE_URL`. Keep `FIREBASE_AUTH_EMULATOR_HOST` unset
 in production. The deployed app rejects development/unsigned emulator tokens.
 
 The private review website is [here](https://airplane-games-community-prototype.givingstar7.chatgpt.site).
@@ -248,8 +272,8 @@ Further context: [task board](docs/TASKS.md), [account review](docs/AUTH_FLOW_RE
 
 Private Bunny photo storage is supported for zone `aviation-arcade-website`, Frankfurt (`de`),
 at `https://de-s3.storage.bunnycdn.com`. Copy `.dev.vars.cloudflare.example` to ignored
-`.dev.vars.cloudflare`, then fill the read-write zone password and Firebase staff email allowlist
-locally. The existing `.dev.vars` local emulator workflow remains separate.
+`.dev.vars.cloudflare`, then fill the read-write zone password and the game backend `GAME_API_BASE_URL`
+locally (the backend is local-only today, so a deployed site has no admins until it is reachable). The existing `.dev.vars` local emulator workflow remains separate.
 
 Run `npm run bunny:check` for a private upload/read/delete probe, then `npm run build` and
 `npm run cloudflare:prepare`. Direct configuration uses the new D1 database and Bunny with no

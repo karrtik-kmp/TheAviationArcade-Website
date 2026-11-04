@@ -22,8 +22,12 @@ docs/TASKS.md, then inspect actual Git status. Unity is a reference source for t
   Never expose CLI credentials, ID/refresh tokens, service-account keys or .dev.vars in commits.
 - Server principal is namespaced by Firebase project and UID. Never reassign existing content
   ownership by matching an editable contact email, photographer credit or provider display name.
-- Staff requires verified email plus server allowlisting. Roles/MFA and shared game identity are
-  still distinct work. No client-selected role can grant staff privileges.
+- Roles come from the game backend (Backend ADR-0002) with `ROLES_SOURCE=backend`: staff = an
+  active `admin` row, photographer = an active `photographer` row, each with a verified email and
+  never the demo account, read per request with the member's own token. Until the backend is
+  hosted, `ROLES_SOURCE=mock` (default) reads `MOCK_ADMIN_EMAILS`/`MOCK_PHOTOGRAPHER_EMAILS` and
+  hides role requests and the Users section. `STAFF_EMAILS` is retired. Unreadable roles fail
+  closed. No client-selected role can grant privileges.
 - Callsign is the community player name tag. It is not a credential. Do not build a competing
   website name registry or silently amend the frozen game account contract.
 - Keep session request generations, account-change fences and captured draft base versions.

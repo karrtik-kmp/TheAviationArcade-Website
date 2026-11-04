@@ -26,7 +26,9 @@ host has not been automated; its workflow evidence remains the earlier local sui
   the initial checked-in schema was applied; all three tables were verified.
 - No existing photos, private records or demo data were copied into the new database.
 - Worker `aviation-arcade-website` has been uploaded with the real D1 binding, production
-  Firebase settings, Bunny metadata and encrypted `BUNNY_STORAGE_PASSWORD` / `STAFF_EMAILS`.
+  Firebase settings, Bunny metadata and encrypted `BUNNY_STORAGE_PASSWORD`. The old `STAFF_EMAILS` secret is retired and unused (delete it with
+  `wrangler secret delete STAFF_EMAILS`). Roles now come from `ROLES_SOURCE`: the mock email lists
+  (uploaded as secrets) until the game backend is hosted, then the backend via `GAME_API_BASE_URL`.
   The deployed binding list has no R2 binding and no Firebase Auth emulator binding.
 - `npm run deploy` completed at checkpoint `55bf91b`. The later staff-secret correction
   created deployment `9b99864e-c961-4d62-86d0-536bdefe6966`, version

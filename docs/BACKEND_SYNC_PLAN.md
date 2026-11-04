@@ -123,8 +123,8 @@ Decided in Unity ADR-0006 (D1–D7) and the backend README.
 ### S3 Game content: the backend owns it, the website edits through it
 
 - **Admin API.** The website desks call `/v1/admin/content/{module}/…` through the Worker with the
-  staff member's token. The backend checks `email_verified` plus its own staff allowlist, the same
-  rule as the website's `STAFF_EMAILS`. Today it offers import (dry run, then confirm), item listing
+  staff member's token. The backend checks `email_verified` plus the active `admin` role in its role table (ADR-0002), the same
+  table the website reads for staff access. Today it offers import (dry run, then confirm), item listing
   and export. The website's backend adapter (W7) reads and transfers sheets; edits and releases stay
   unsupported until the backend ships them.
 - **Releases (asked of the backend for 5.2+).** "Uploaded" stays separate from "live": a release

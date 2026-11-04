@@ -10,7 +10,8 @@ and app-store release claims are outside this slice.
 Firebase email/password and Google are the product sign-in methods. Registration,
 password reset, email verification, account controls and logout are implemented.
 The outer private Site access gate is separate. Staff requires a verified email
-and the server-only `STAFF_EMAILS` allowlist. Local development uses a loopback
+and an active `admin` role: from the game backend (via `GAME_API_BASE_URL`) with `ROLES_SOURCE=backend`,
+or from the deployment's `MOCK_ADMIN_EMAILS` until the backend is hosted. Local development uses a loopback
 Firebase Auth emulator and clearly labeled demo users; those credentials have no
 production meaning.
 

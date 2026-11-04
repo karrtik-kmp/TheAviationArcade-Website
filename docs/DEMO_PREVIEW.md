@@ -23,7 +23,7 @@ settings are not allowed.
 
 `DEMO_ACCOUNT_UID` identifies the demo principal by Firebase project and UID. Every product
 API that requires identity returns 403 for it, including the admin, contributor and Load demo
-data routes. It is never staff, even if its email is later added to `STAFF_EMAILS`.
+data routes. It is never staff, even if it is later granted an `admin` role in the backend.
 
 - DEMO_ACCOUNT_UID: the actual Firebase UID; it removes live data capabilities server-side.
 - DEMO_LOGIN_EMAIL / DEMO_LOGIN_PASSWORD: intentionally shared sample credentials exposed by
