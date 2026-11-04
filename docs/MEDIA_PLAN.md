@@ -199,3 +199,45 @@ Breaking for uploads. The website adopts it as follows (fixed for both slices):
   allowed, 2000 max, counter). Admin desk shows the description (editable) and the rights line ("Own work · stated
   <date> by <account id>" / "Authorised by the rights holder" / "Imported: private review only" / "None"), and the
   publish blockers include missing rights.
+
+## Migrating D1 proposals (operator)
+
+`npm run media:export` turns the D1 photo proposals into a bundle (`manifest.json`, `export-state.json`, one photo
+file per proposal) for the game backend's `media:import` (Backend `docs/plans/media-import.md`, "Manifest format
+(final)"). It only reads. Rulings: every status except `rejected`; no licence (the photographer grants one later);
+`credit` carries over; the contact email, photographer name and review note are never read; the owner is the stored
+account id. A photo over 5,242,880 bytes or 4096 px on a side is left out and listed as needing re-upload.
+
+```
+npm run media:export -- --out outputs/media-export/<UTC stamp> [--persist-to <state dir>]
+npm run media:export -- --verify <bundle dir>
+```
+
+`--out` makes only the last folder (the parent must exist) and refuses a non-empty one. Inside this repo the folder must
+be git-ignored (`outputs/` is). Outside the repo it is allowed with a warning: the bundle holds private photos, so don't
+use a cloud-synced folder. `--remote` (live D1 and Bunny, read-only) exists but is not for use until the backend runs on
+the cloud Firebase project; it defaults `--project` to `airplane-games-auth-20261022`, the local run to
+`demo-airplane-games`. Exit codes: 0 done (skipped rows are normal), 1 unexpected failure (no manifest written),
+2 refused before reading anything (bad arguments, unsafe folder, no local state), 3 written but some photos could not
+be read (`read_error`), 4 `--verify` found drift. The report prints counts and proposal ids per reason, never emails,
+credits, text, owners or storage keys.
+
+1. **Export.** Stop `npm run dev` first (the export opens the same local state). Create `outputs/media-export` once
+   (`--out` makes only the last folder), then run `--out outputs/media-export/<UTC stamp>`. If the run fails (exit 1),
+   it removes the photos it wrote (and the folder, if it made it) and says so; if removal fails it prints
+   "Delete <dir>; it holds photos", and you must delete that folder yourself.
+2. **Send the "needs re-upload by the photographer" list** (printed first in the report) to those photographers; they
+   upload a smaller photo through the new flow.
+3. **Backend dry run**, in the Backend session/folder: `npm run media:import -- --bundle <absolute bundle dir>`. Grant
+   any missing photographer roles it names, then re-export into a NEW folder if anything changed. The backend dry run
+   is the authority on per-entry rules (owner project and role, file, size, type, digest, description, credit).
+4. **Right before the real run**, `npm run media:export -- --verify <bundle dir>` (with the same `--remote` /
+   `--persist-to` as the export): it re-reads each exported
+   proposal's id, version and status and exits 4 if staff reviewed, revised or removed any since the export.
+   Re-export if it does.
+5. **Real run**, in the Backend folder and only with the user's sign-off:
+   `BLOB_STORE=bunny npm run media:import -- --bundle <absolute bundle dir> --yes`.
+6. **Keep D1 and Bunny `submissions/`** until the import report and the admin Media check confirm everything arrived.
+7. **Delete the bundle folder** (it holds private photos).
+
+A remote export is run only once the backend is on the cloud Firebase project, so owners match its accounts.

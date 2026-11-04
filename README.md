@@ -287,6 +287,8 @@ at `https://de-s3.storage.bunnycdn.com`. Copy `.dev.vars.cloudflare.example` to 
 `.dev.vars.cloudflare`, then fill the read-write zone password and the game backend `GAME_API_BASE_URL`
 locally (the backend is local-only today, so a deployed site has no admins until it is reachable). The existing `.dev.vars` local emulator workflow remains separate.
 
+Moving old D1 photo proposals into the game backend's media store is a read-only export (`npm run media:export`); operator steps are in [Migrating D1 proposals](docs/MEDIA_PLAN.md#migrating-d1-proposals-operator).
+
 Run `npm run bunny:check` for a private upload/read/delete probe, then `npm run build` and
 `npm run cloudflare:prepare`. Direct configuration uses the new D1 database and Bunny with no
 R2 binding. The direct hostname is a public preview. Follow
