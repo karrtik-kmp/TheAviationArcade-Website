@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import {
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
@@ -99,6 +99,7 @@ export function AuthForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const passwordId = useId();
 
   useEffect(() => {
     let active = true;
@@ -380,9 +381,12 @@ export function AuthForm({
         )}
         {mode !== "reset" && (
           <label className="field">
-            <span>Password</span>
+            <span id={`${passwordId}-label`}>Password</span>
             <span className="community-password-control">
               <input
+                // Named by its own label text only: the label also wraps the show/hide button and the hint.
+                aria-labelledby={`${passwordId}-label`}
+                aria-describedby={mode === "signup" ? `${passwordId}-hint` : undefined}
                 type={showPassword ? "text" : "password"}
                 name="password"
                 value={password}
@@ -398,7 +402,7 @@ export function AuthForm({
                 {showPassword ? <EyeSlash size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
               </button>
             </span>
-            {mode === "signup" && <small>Use at least 8 characters.</small>}
+            {mode === "signup" && <small id={`${passwordId}-hint`}>Use at least 8 characters.</small>}
           </label>
         )}
         <button

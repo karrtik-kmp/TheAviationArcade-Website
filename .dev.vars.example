@@ -12,7 +12,8 @@ FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099
 ROLES_SOURCE=mock
 MOCK_ADMIN_EMAILS=seedy@sites.test
 MOCK_PHOTOGRAPHER_EMAILS=
-GAME_API_BASE_URL=http://127.0.0.1:3000
+# Uncomment with ROLES_SOURCE=backend and a running Backend; unset, the player page says "Not connected".
+# GAME_API_BASE_URL=http://127.0.0.1:3000
 
 # Local development uses emulated R2 unless you explicitly opt into live Bunny.
 # For the separate Cloudflare/Bunny deployment, copy .dev.vars.cloudflare.example
