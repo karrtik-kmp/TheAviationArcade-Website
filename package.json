@@ -20,7 +20,8 @@
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "cloudflare:prepare": "node scripts/prepare-cloudflare-deploy.mjs",
-    "bunny:check": "node scripts/check-bunny-storage.mjs"
+    "bunny:check": "node scripts/check-bunny-storage.mjs",
+    "media:export": "node scripts/export-d1-media.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
