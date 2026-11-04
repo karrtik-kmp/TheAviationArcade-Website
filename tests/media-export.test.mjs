@@ -104,7 +104,9 @@ test("EXPORT_SQL runs on the real schema and returns typed fields, never the raw
   assert.equal(row.airline_type, "text");
   assert.ok(!("payload" in row) && !("email" in row) && !("photographer" in row) && !("review_note" in row) && !("request_key" in row));
   assert.ok(!JSON.stringify(row).includes("photographer@example.com"));
-  const plan = planEntry(row, ctx);
+  // writeSubmission stamps created_at with the real clock, so check against the real clock too
+  // (the fixed NOW would make this row "in the future" once the wall clock passes it).
+  const plan = planEntry(row, { ...ctx, now: new Date() });
   assert.equal(plan.ok, true);
   assert.equal(plan.draft.entry.airline, undefined); // blank -> key omitted
   assert.equal(plan.draft.entry.rightsBasis, "own");
