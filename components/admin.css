@@ -1452,3 +1452,209 @@
     justify-content: flex-start;
   }
 }
+
+/* Media desk */
+.media-desk-views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 14px;
+}
+.media-desk-view {
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--panel);
+  color: var(--ink);
+  font: inherit;
+  cursor: pointer;
+}
+.media-desk-view.active {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: var(--panel);
+}
+.media-desk-view:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+.media-desk-view:focus-visible,
+.media-desk-detail h2:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.media-desk-detail h2:focus {
+  outline: none;
+}
+.media-desk-detail {
+  padding-bottom: 18px;
+}
+.media-desk-detail > *:not(.admin-panel-header) {
+  margin-left: 18px;
+  margin-right: 18px;
+}
+.media-desk-head {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+.media-desk-head h2 {
+  overflow-wrap: anywhere;
+}
+.media-desk-detail h3 {
+  margin: 22px 0 10px;
+  font-size: 18px;
+}
+.media-desk-badge {
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.media-desk-preview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+.media-desk-preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  background: var(--raised);
+}
+.media-desk-placeholder {
+  padding: 22px 16px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+}
+.media-desk-placeholder p {
+  margin: 0 0 10px;
+}
+.media-desk-facts {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+.media-desk-facts dt {
+  color: var(--muted);
+  font-size: 12px;
+}
+.media-desk-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.media-desk-error {
+  color: var(--error);
+  font-size: 12px;
+}
+.media-desk-dirty,
+.media-desk-blocker {
+  color: var(--ink);
+  font-weight: 600;
+}
+.media-desk-blockers {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+.media-desk-blockers a {
+  color: inherit;
+  text-decoration: underline;
+}
+.media-desk-note {
+  color: var(--muted);
+}
+.media-desk-confirm {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--raised);
+}
+.media-desk-confirm:focus {
+  outline: none;
+}
+.media-desk-confirm:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.media-desk-confirm p {
+  margin: 0 0 8px;
+}
+.admin-table.media-desk-table tbody tr,
+.admin-table.media-desk-vtable tbody tr {
+  cursor: default;
+}
+.admin-table.media-desk-table td,
+.admin-table.media-desk-vtable td {
+  overflow-wrap: anywhere;
+}
+.admin-table.media-desk-vtable td small {
+  display: block;
+  color: var(--muted);
+}
+.media-desk-hash summary {
+  cursor: pointer;
+}
+.media-desk-hash code {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+@media (max-width: 767px) {
+  .media-desk-preview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .media-desk-detail > *:not(.admin-panel-header) {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+  .admin-table.media-desk-table,
+  .admin-table.media-desk-vtable {
+    min-width: 0;
+  }
+  .admin-table.media-desk-table thead,
+  .admin-table.media-desk-vtable thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .admin-table.media-desk-table,
+  .admin-table.media-desk-table tbody,
+  .admin-table.media-desk-table tr,
+  .admin-table.media-desk-table td,
+  .admin-table.media-desk-vtable,
+  .admin-table.media-desk-vtable tbody,
+  .admin-table.media-desk-vtable tr,
+  .admin-table.media-desk-vtable td {
+    display: block;
+    width: 100%;
+  }
+  .admin-table.media-desk-table tr,
+  .admin-table.media-desk-vtable tr {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .admin-table.media-desk-table td,
+  .admin-table.media-desk-vtable td {
+    min-width: 0;
+    padding: 4px 14px;
+    border: 0;
+  }
+  .admin-table.media-desk-table td:not([data-label="Photo"])::before,
+  .admin-table.media-desk-vtable td:not([data-label="Version"])::before {
+    content: attr(data-label) " · ";
+    color: var(--muted);
+  }
+}
+@media (max-width: 380px) {
+  .media-desk-detail .admin-actions .fui-Button,
+  .media-desk-head .fui-Button {
+    width: 100%;
+  }
+}

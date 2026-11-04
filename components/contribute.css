@@ -426,3 +426,270 @@
   color: var(--error);
   font-weight: 600;
 }
+
+/* Photographer media workspace (backend mode) */
+.contribute-root .media-status {
+  min-height: 1.5em;
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.contribute-root .media-panel,
+.contribute-root .media-detail {
+  min-width: 0;
+  margin: 0 0 32px;
+  padding: clamp(18px, 3vw, 32px);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+.contribute-root .media-panel h2,
+.contribute-root .media-detail h2 {
+  margin: 0 0 8px;
+  font-size: clamp(26px, 3vw, 34px);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+.contribute-root .media-detail h3,
+.contribute-root .media-add h3 {
+  margin: 24px 0 8px;
+  font-size: 22px;
+}
+.contribute-root .media-panel h2:focus,
+.contribute-root .media-detail h2:focus,
+.contribute-root .media-alert:focus {
+  outline: none;
+}
+.contribute-root .media-panel h2:focus-visible,
+.contribute-root .media-detail h2:focus-visible,
+.contribute-root .media-alert:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.contribute-root .media-meta,
+.contribute-root .media-note {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.contribute-root .media-prompt {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--brass);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 14px;
+}
+.contribute-root .media-upload {
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.contribute-root .media-fieldset {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.contribute-root .media-fieldset legend {
+  margin-bottom: 8px;
+  padding: 0;
+  font-weight: 500;
+}
+.contribute-root .media-upload .check-label {
+  font-size: 14px;
+  align-items: flex-start;
+}
+.contribute-root .media-upload .check-label input {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+}
+.contribute-root .media-upload .check-label span {
+  min-width: 0;
+}
+.contribute-root .media-root .field,
+.contribute-root .media-root .field input {
+  min-width: 0;
+}
+.contribute-root .media-root .field label,
+.contribute-root .media-root .field .hint,
+.contribute-root .media-root .field-error,
+.contribute-root .media-upload .field-error {
+  font-size: 14px;
+}
+.contribute-root .media-root .field-error {
+  display: block;
+}
+.contribute-root .media-file-field input[type="file"] {
+  max-width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.contribute-root .media-root input:focus-visible,
+.contribute-root .media-root .btn:focus-visible,
+.contribute-root .media-open:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.contribute-root .media-file-preview {
+  margin: 0;
+  max-width: 420px;
+}
+.contribute-root .media-file-preview img,
+.contribute-root .media-preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  background: var(--raised);
+}
+.contribute-root .media-file-preview figcaption {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.contribute-root .media-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.contribute-root .media-upload .media-actions {
+  margin-top: 0;
+}
+.contribute-root .media-progress {
+  display: grid;
+  gap: 4px;
+  min-width: 180px;
+  font-size: 14px;
+}
+.contribute-root .media-progress progress {
+  width: 100%;
+  accent-color: var(--action);
+}
+.contribute-root .media-alert {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--error);
+  border-radius: 8px;
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+}
+.contribute-root .media-list {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.contribute-root .media-row {
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.contribute-root .media-row-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.contribute-root .media-row .media-meta {
+  margin: 6px 0 0;
+}
+.contribute-root .media-open {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.contribute-root .media-state {
+  font-size: 14px;
+}
+.contribute-root .media-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 10px;
+  border: 1px solid var(--brass);
+  border-radius: 999px;
+  color: var(--brass);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+.contribute-root .media-row-main .media-badge {
+  margin-left: 0;
+}
+.contribute-root .media-detail-head {
+  display: grid;
+  gap: 14px;
+  justify-items: start;
+}
+.contribute-root .media-preview {
+  margin: 16px 0;
+  max-width: 640px;
+}
+.contribute-root .media-placeholder {
+  padding: 24px 18px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 14px;
+}
+.contribute-root .media-placeholder p {
+  margin: 0 0 10px;
+}
+.contribute-root .media-needed {
+  color: var(--brass);
+  font-weight: 400;
+}
+.contribute-root .media-versions ul {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.contribute-root .media-add {
+  margin-top: 8px;
+}
+@media (max-width: 380px) {
+  .contribute-root .media-actions .btn,
+  .contribute-root .media-detail-head .btn,
+  .contribute-root .media-versions > .btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .contribute-root .media-panel,
+  .contribute-root .media-detail {
+    padding: 16px 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .contribute-root .media-progress progress {
+    transition: none;
+    animation: none;
+  }
+}

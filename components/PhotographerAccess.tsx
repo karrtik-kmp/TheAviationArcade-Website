@@ -3,7 +3,7 @@
 import { Camera } from "@phosphor-icons/react";
 import { useEffect, useRef, useState } from "react";
 import { SiteLink } from "@/components/SiteLink";
-import { accountHeaders } from "@/lib/account";
+import { accountHeaders, accountSignInPath } from "@/lib/account";
 import { sitePath } from "@/lib/paths";
 import type { OwnRole, RoleSnapshot } from "@/lib/request/roles";
 import "./contribute.css";
@@ -20,6 +20,7 @@ export function PhotographerAccess({
   mock,
   emailVerified,
   sessionKey,
+  hideEarlier = false,
 }: {
   /** The account's photographer role row, or null when it never asked. */
   row: OwnRole | null;
@@ -28,6 +29,8 @@ export function PhotographerAccess({
   mock: boolean;
   emailVerified: boolean;
   sessionKey: string;
+  /** Backend media mode: the earlier website proposals are closed, so don't link to them. */
+  hideEarlier?: boolean;
 }) {
   const [row, setRow] = useState(initialRow);
   const [busy, setBusy] = useState(false);
@@ -152,10 +155,44 @@ export function PhotographerAccess({
               Try again
             </button>
           )}
-          <SiteLink className="btn secondary" href="/contribute?view=mine">
-            Your earlier submissions
-          </SiteLink>
+          {!hideEarlier && (
+            <SiteLink className="btn secondary" href="/contribute?view=mine">
+              Your earlier submissions
+            </SiteLink>
+          )}
         </div>
+      </section>
+    </main>
+  );
+}
+
+/**
+ * /contribute when photographer submissions are not open through the website: the website's own
+ * proposal routes are closed to members (D-2 amended), and backend media needs the photo service.
+ * A guest with `signInRequired` is asked to sign in instead (backend mode).
+ */
+export function SubmissionsClosed({ signedIn, signInRequired = false }: { signedIn: boolean; signInRequired?: boolean }) {
+  return (
+    <main id="main" className="wrap contribute-root">
+      <section className="page-intro">
+        <p className="eyebrow">COMMUNITY PHOTOGRAPHY</p>
+        <h1>Bring your view of aviation.</h1>
+      </section>
+      <section className="signin-panel photographer-access" aria-labelledby="submissions-closed-title">
+        <Camera size={28} weight="duotone" aria-hidden="true" />
+        <h2 id="submissions-closed-title">{signInRequired ? "Sign in to continue" : "Photo submissions aren't open yet"}</h2>
+        <p>
+          {signInRequired
+            ? "Sign in to send photos or ask for photographer access."
+            : "Photo submissions open here once the Airplane Games photo service is connected."}
+        </p>
+        {signInRequired && !signedIn && (
+          <div className="actions">
+            <SiteLink className="btn" href={accountSignInPath("/contribute")}>
+              Sign in
+            </SiteLink>
+          </div>
+        )}
       </section>
     </main>
   );

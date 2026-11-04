@@ -20,6 +20,7 @@ import {
   ClipboardText,
   ClockCounterClockwise,
   ImageSquare,
+  Images,
   Newspaper,
   ShieldCheck,
   SquaresFour,
@@ -33,6 +34,7 @@ import { useAccountSession } from "@/components/AccountSession";
 import { Brand, ThemeToggle } from "@/components/PublicShell";
 import { AccountActions } from "@/components/AccessGate";
 import { MilitaryWorkspace } from "@/components/MilitaryWorkspace";
+import { MediaDesk } from "@/components/MediaDesk";
 import { UsersDesk } from "@/components/UsersDesk";
 import "@/components/admin.css";
 import {
@@ -72,6 +74,7 @@ type Section =
   | "Aircraft Identifier"
   | "Plane of the Day"
   | "Military readiness"
+  | "Media"
   | "Users"
   | "Activity";
 type AuditEvent = {
@@ -89,6 +92,7 @@ const navItems: { label: Section; icon: typeof SquaresFour }[] = [
   { label: "Aircraft Identifier", icon: AirplaneInFlight },
   { label: "Plane of the Day", icon: ImageSquare },
   { label: "Military readiness", icon: AirplaneTilt },
+  { label: "Media", icon: Images },
   { label: "Users", icon: UsersThree },
   { label: "Activity", icon: ClockCounterClockwise },
 ];
@@ -800,10 +804,14 @@ export function AdminApp({
                     ({ label }) =>
                       label !== "Submissions" &&
                       label !== "Military readiness" &&
+                      label !== "Media" &&
                       label !== "Users" &&
                       label !== "Activity",
                   )
-                : navItems.filter(({ label }) => manageRoles || label !== "Users")
+                : navItems.filter(
+                    ({ label }) =>
+                      manageRoles || (label !== "Users" && label !== "Media"),
+                  )
               ).map(({ label, icon: Icon }) => (
                 <button
                   key={label}
@@ -957,6 +965,9 @@ export function AdminApp({
                       onOpen={openMilitary}
                       onSave={saveMilitary}
                     />
+                  )}
+                  {section === "Media" && !readOnly && manageRoles && (
+                    <MediaDesk sessionKey={user.sessionKey} onBlocked={blockAccess} />
                   )}
                   {section === "Users" && !readOnly && manageRoles && (
                     <UsersDesk sessionKey={user.sessionKey} onBlocked={blockAccess} />

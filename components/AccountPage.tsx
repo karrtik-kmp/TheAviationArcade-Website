@@ -223,13 +223,13 @@ export function AccountPage({
             </section>
             <section className="account-destination">
               <span className="eyebrow">Photography community</span>
-              <h2>My submissions</h2>
+              <h2>Photo area</h2>
               <p>
-                Review proposals you’ve sent to the Airplane Games photography
-                collection.
+                See your photographer access and, once approved, the photos
+                you&apos;ve sent to the Airplane Games photography collection.
               </p>
-              <SiteLink className="text-link" href="/contribute?view=mine">
-                View my submissions <ArrowRight size={16} />
+              <SiteLink className="text-link" href="/contribute">
+                Open the photo area <ArrowRight size={16} />
               </SiteLink>
             </section>
             {account.isStaff && (
