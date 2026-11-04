@@ -12,12 +12,12 @@ Contract: `contracts/openapi.yaml` (Backend API 0.17.0, `168897f`). Base: roles 
    service is connected. Admins can still read existing D1 proposals until they are **migrated to backend media**
    (needs a backend import path that keeps the original owner; raised with backend-9a). The Aircraft Identifier and
    Plane of the Day desks lose their "from a submission" source until content linking (C1).
-3. **Rights statement**: drafted below by Claude; the user (or Josh) approves the exact words before this ships.
+3. **Rights statement**: wording below approved by the user on 2026-11-04.
    Recorded as the audit `note` on the photo's first licence save until the backend has a field (raised with
    backend-9a, user to rule).
 4. **Licence name is free text** (1–200), hinted as the photographer's usage offer.
 
-### Draft rights statement (awaiting approval; kept in `lib/media-form.ts` as one constant)
+### Rights statement v1 (approved 2026-11-04; kept in `lib/media-form.ts` as one constant)
 
 - Radio, required — "Who holds the rights to this photo?"
   - "I took this photo and hold the rights to it."
@@ -26,6 +26,14 @@ Contract: `contracts/openapi.yaml` (Backend API 0.17.0, `168897f`). Base: roles 
   under the licence and credit I give for it."
 - Audit note sent with the first licence save: `Rights statement v1: own work` or
   `Rights statement v1: authorised by the rights holder`.
+
+### Later rulings (user, 2026-11-04)
+
+- **Guests may see published images** on the public website. The backend adds an anonymous, published-only read
+  (backend-9a's recommendation: no website secret, per-IP limits); the website builds public display against it
+  once that contract ships.
+- **The backend gets real fields for the photo description and the rights statement.** Until they ship, the rights
+  statement stays in the audit note; afterwards the website sends both fields and the media import fills them.
 
 ## Contract facts the build relies on
 

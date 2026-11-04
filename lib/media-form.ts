@@ -10,7 +10,7 @@ export const MEDIA_MAX_BYTES = 5242880;
 export const MEDIA_MAX_SIDE = 4096;
 
 /**
- * DRAFT wording, awaiting approval by the user or Josh. Kept as one constant so the words change in one place.
+ * Wording approved by the user on 2026-11-04. Kept as one constant so the words change in one place.
  * `auditNote` is sent as the `note` of the photo's first licence save.
  */
 export type RightsChoice = "own" | "authorised";
