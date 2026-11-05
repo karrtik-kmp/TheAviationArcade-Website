@@ -178,7 +178,9 @@ export function StorePurchases({
   return (
     <div>
       <p className="store-view-intro">
-        Purchase records from the game backend, newest first. Staff only; nothing here can be changed.
+        Purchase records from the game backend, newest first. Staff only; nothing here can be changed. A Sandbox
+        badge marks a store test purchase: it still granted its contents to the player. Unbadged rows are real
+        purchases.
       </p>
 
       {notice && (
