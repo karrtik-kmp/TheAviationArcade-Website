@@ -30,6 +30,7 @@ import { route, type Route, type RouteContext } from "./router.ts";
 import { roleRoutes } from "./role-routes.ts";
 import { mediaRoutes } from "./media-routes.ts";
 import { storeRoutes } from "./store-routes.ts";
+import { storePurchaseRoutes } from "./store-purchase-routes.ts";
 
 type Ctx = RouteContext<"member">;
 type PublicCtx = RouteContext<"public">;
@@ -341,4 +342,5 @@ export const routes: Route[] = [
   ...roleRoutes,
   ...mediaRoutes,
   ...storeRoutes,
+  ...storePurchaseRoutes,
 ];

@@ -77,7 +77,7 @@ type Section =
   | "Plane of the Day"
   | "Military readiness"
   | "Media"
-  | "Store catalog"
+  | "Store"
   | "Users"
   | "Activity";
 type AuditEvent = {
@@ -96,7 +96,7 @@ const navItems: { label: Section; icon: typeof SquaresFour }[] = [
   { label: "Plane of the Day", icon: ImageSquare },
   { label: "Military readiness", icon: AirplaneTilt },
   { label: "Media", icon: Images },
-  { label: "Store catalog", icon: Storefront },
+  { label: "Store", icon: Storefront },
   { label: "Users", icon: UsersThree },
   { label: "Activity", icon: ClockCounterClockwise },
 ];
@@ -809,13 +809,13 @@ export function AdminApp({
                       label !== "Submissions" &&
                       label !== "Military readiness" &&
                       label !== "Media" &&
-                      label !== "Store catalog" &&
+                      label !== "Store" &&
                       label !== "Users" &&
                       label !== "Activity",
                   )
                 : navItems.filter(
                     ({ label }) =>
-                      manageRoles || (label !== "Users" && label !== "Media" && label !== "Store catalog"),
+                      manageRoles || (label !== "Users" && label !== "Media" && label !== "Store"),
                   )
               ).map(({ label, icon: Icon }) => (
                 <button
@@ -974,7 +974,7 @@ export function AdminApp({
                   {section === "Media" && !readOnly && manageRoles && (
                     <MediaDesk sessionKey={user.sessionKey} onBlocked={blockAccess} />
                   )}
-                  {section === "Store catalog" && !readOnly && manageRoles && (
+                  {section === "Store" && !readOnly && manageRoles && (
                     <StoreDesk sessionKey={user.sessionKey} onBlocked={blockAccess} />
                   )}
                   {section === "Users" && !readOnly && manageRoles && (

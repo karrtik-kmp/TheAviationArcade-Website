@@ -1,5 +1,5 @@
 /**
- * Backend store catalog routes (openapi 0.20.0). Admins read the catalog, create and edit products
+ * Backend store catalog routes (openapi 0.21.0). Admins read the catalog, create and edit products
  * and retire or restore them through the game backend with their own Firebase ID token. The website
  * sells nothing and records no prices. Only with `ROLES_SOURCE=backend`: on a mock deployment every
  * route is 404 STORE_UNAVAILABLE and no backend call is made (the backend authorises with its own
@@ -24,7 +24,7 @@ type Ctx = RouteContext<"member">;
 
 const MAX_JSON_BYTES = 4096;
 
-function gate(ctx: Ctx) {
+export function gate(ctx: Ctx) {
   const { roles } = ctx.principal;
   if (roles.status === "ok" && roles.source === "mock")
     throw new HttpError(404, "The store catalog is not available on this website yet.", codes.STORE_UNAVAILABLE);
@@ -81,7 +81,7 @@ async function viaBackend<T>(schema: ZodType<T>, run: () => Promise<unknown>): P
   return parsed.data;
 }
 
-const invalid = (message: string) => new HttpError(400, message, codes.INVALID_REQUEST);
+export const invalid = (message: string) => new HttpError(400, message, codes.INVALID_REQUEST);
 const tooLarge = () => new HttpError(413, "That request is too large.", codes.TOO_LARGE);
 
 /** Reads the body, cancelling as soon as it passes `limit`; a lying Content-Length cannot get past this. */
@@ -109,7 +109,7 @@ async function readCounted(request: Request, limit: number) {
   return joined;
 }
 
-async function jsonBody(ctx: Ctx): Promise<unknown> {
+export async function jsonBody(ctx: Ctx): Promise<unknown> {
   const declared = ctx.request.headers.get("content-length");
   if (declared !== null && /^[0-9]{1,15}$/.test(declared.trim()) && Number(declared) > MAX_JSON_BYTES) throw tooLarge();
   const bytes = await readCounted(ctx.request, MAX_JSON_BYTES);
@@ -121,7 +121,7 @@ async function jsonBody(ctx: Ctx): Promise<unknown> {
 }
 
 /** None of these routes takes a query parameter. */
-function noQuery(ctx: Ctx) {
+export function noQuery(ctx: Ctx) {
   if ([...new URL(ctx.request.url).searchParams.keys()].length)
     throw invalid("That request has a parameter this website does not accept.");
 }

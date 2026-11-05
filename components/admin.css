@@ -1838,3 +1838,60 @@
     margin: 6px 0 0;
   }
 }
+
+/* Store desk: shell, Purchases and Player pass views (backend 0.21.0) */
+.store-view-heading {
+  margin-bottom: 8px;
+}
+.store-view-heading > p,
+.store-view-intro {
+  margin: 0 0 12px;
+  color: var(--muted);
+}
+.store-start-again {
+  margin: 0 8px 8px;
+}
+.store-more {
+  padding: 12px 14px;
+}
+.store-view-pass {
+  display: block;
+  margin-top: 6px;
+}
+.store-ref {
+  display: block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.admin-table.store-table td[data-label="Product id"] .store-id + small {
+  display: block;
+}
+.store-player-facts {
+  padding: 4px 14px 12px;
+}
+.store-player-facts > div {
+  min-width: 0;
+}
+.store-subs-title {
+  margin: 8px 14px;
+}
+.store-player-result > .store-view-intro {
+  padding: 0 14px;
+}
+@media (max-width: 767px) {
+  .admin-table.store-table td[data-label="Product id"] {
+    min-width: 0;
+  }
+  .admin-table.store-table td[data-label="Product id"]::before,
+  .admin-table.store-table td[data-label="Player"]::before {
+    content: attr(data-label) " · ";
+    color: var(--muted);
+  }
+}
+/* "Google" / "Apple" never break mid-word in the narrow store column (desktop table). */
+@media (min-width: 768px) {
+  .admin-app td[data-label="Store"] {
+    white-space: nowrap;
+  }
+}

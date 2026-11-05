@@ -82,10 +82,13 @@ test("AdminStoreProduct accepts the contract's shapes and refuses everything els
   assert.equal(parse({ ...pack, version: 0 }), false);
   assert.equal(parse({ ...pack, title: "" }), false);
   assert.equal(parse({ ...pack, title: "x".repeat(101) }), false);
+  assert.equal(parse({ ...pack, title: "\u{1F680}".repeat(100) }), true, "100 code points (200 UTF-16 units) is valid");
+  assert.equal(parse({ ...pack, title: "\u{1F680}".repeat(101) }), false);
   assert.equal(parse({ ...pack, createdAt: "yesterday" }), false);
   assert.equal(store.adminStoreProductListSchema.safeParse({ products: [pack, pass] }).success, true);
   assert.equal(store.adminStoreProductListSchema.safeParse({ products: [pack], extra: 1 }).success, false);
   assert.equal(parse({ ...pack, title: "Odd\ttitle\u0000" }), true, "a stored odd title still parses");
+  assert.equal(parse({ ...pack, title: "Legacy\u0085row\n" }), true, "a legacy row with control characters still lists");
 });
 
 test("product id pattern", () => {
@@ -117,18 +120,22 @@ test("StoreProductRequest: strict keys, kind rules, title and version limits", (
   assert.equal(parse({ ...create, version: 2147483648 }), false);
   assert.equal(parse({ ...create, version: 1.5 }), false);
   assert.equal(parse({ ...create, title: "" }), false);
-  for (const title of ["a\nb", "a\tb", "a\u0000b", "a\u007fb"]) assert.equal(parse({ ...create, title }), false, JSON.stringify(title));
+  for (const title of ["a\nb", "a\tb", "a\u0000b", "a\u007fb", "a\u0080b", "a\u0085b", "a\u009fb", "   ", "\n"]) assert.equal(parse({ ...create, title }), false, JSON.stringify(title));
 });
 
-test("title length counts UTF-16 units, as the backend does", () => {
+test("title length counts code points and trims first, as the backend does", () => {
   const parse = (title) => store.storeProductRequestSchema.safeParse({ kind: "hint_pack", title, hints: 5, demo: false }).success;
   assert.equal(parse("x".repeat(100)), true);
   assert.equal(parse("x".repeat(101)), false);
-  // 50 emoji are 100 units; 51 are 102.
-  assert.equal(parse("\u{1F680}".repeat(50)), true);
-  assert.equal(parse("\u{1F680}".repeat(51)), false);
+  // 100 emoji are 200 UTF-16 units but 100 code points.
+  assert.equal(parse("\u{1F680}".repeat(100)), true);
+  assert.equal(parse("\u{1F680}".repeat(101)), false);
+  assert.equal(parse(`  ${"x".repeat(100)}  `), true, "length is checked after trimming");
+  assert.equal(store.codePointLength("a\u{1F680}"), 2);
   assert.equal(store.hasControlCharacter("a\nb"), true);
   assert.equal(store.hasControlCharacter("a b"), false);
+  for (const c of ["\u0000", "\u001f", "\u007f", "\u0080", "\u0085", "\u009f"]) assert.equal(store.hasControlCharacter(c), true, JSON.stringify(c));
+  for (const c of ["\u00a0", "\u00e9", "\u2028"]) assert.equal(store.hasControlCharacter(c), false, JSON.stringify(c));
 });
 
 test("website error codes equal their keys", () => {
@@ -148,6 +155,8 @@ test("website error codes equal their keys", () => {
     "CONTENT_INVALID",
     "TOO_LARGE",
     "RATE_LIMITED",
+    "CURSOR_STALE",
+    "PLAYER_NOT_FOUND",
   ])
     assert.ok(store.storeErrorCodes[code], code);
 });
@@ -322,10 +331,12 @@ test("list forwards the staff token to the exact path and passes the answer on",
 
 test("a stored odd title parses in the list, while the same title is refused in a request", async () => {
   const odd = { ...pack, title: "Odd\ttitle\u0000" };
-  const { call, backend } = harness({ reply: () => ({ products: [odd] }) });
+  const emoji = { ...pack, productId: "hints.emoji", title: "\u{1F680}".repeat(60) };
+  const { call, backend } = harness({ reply: () => ({ products: [odd, emoji] }) });
   const res = await call("GET", base);
   assert.equal(res.status, 200);
   assert.equal(res.body.products[0].title, odd.title);
+  assert.equal(res.body.products[1].title, emoji.title, "60 emoji (120 units) is a valid stored title");
   const refused = await call("PUT", `${base}/hints.pack_5`, { body: { ...edit, title: odd.title } });
   assert.deepEqual([refused.status, refused.body.code], [400, "INVALID_REQUEST"]);
   assert.equal(backend.calls.length, 1, "only the list reached the backend");
@@ -372,6 +383,7 @@ test("PUT body validation refuses bad bodies before any backend call", async () 
     { ...edit, title: "x".repeat(101) },
     { ...edit, title: "line\nbreak" },
     { ...edit, title: "tab\there" },
+    { ...edit, title: "c1\u0085here" },
     { ...edit, version: 0 },
     { ...edit, version: 2147483648 },
     { ...edit, version: "1" },
@@ -386,13 +398,13 @@ test("PUT body validation refuses bad bodies before any backend call", async () 
   assert.equal(backend.calls.length, 0);
 });
 
-test("PUT length is counted in UTF-16 units", async () => {
+test("PUT length is counted in code points", async () => {
   const { call, backend } = harness({ reply: () => ({ __status: 200, body: pack }) });
   const rocket = "\u{1F680}";
-  const over = await call("PUT", `${base}/hints.pack_5`, { body: { ...edit, title: rocket.repeat(51) } });
+  const over = await call("PUT", `${base}/hints.pack_5`, { body: { ...edit, title: rocket.repeat(101) } });
   assert.equal(over.status, 400);
   assert.equal(backend.calls.length, 0);
-  const fits = await call("PUT", `${base}/hints.pack_5`, { body: { ...edit, title: rocket.repeat(50) } });
+  const fits = await call("PUT", `${base}/hints.pack_5`, { body: { ...edit, title: rocket.repeat(100) } });
   assert.equal(fits.status, 200);
   assert.equal(backend.calls.length, 1);
 });

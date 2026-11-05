@@ -31,12 +31,16 @@ import {
   type StoreErrors,
   type StoreField,
 } from "@/lib/store-form";
+import { whenLabel as when, type Reply } from "@/lib/store-view";
+import { StorePlayer } from "@/components/StorePlayer";
+import { StorePurchases } from "@/components/StorePurchases";
 
 /**
- * Store catalog (openapi 0.20.0): the products the game app can offer, as the game backend records
- * them. Staff create a product, edit its staff label and contents, and retire or restore it. Prices
- * live in the app stores; this website sells nothing. Every write sends the version the admin saw;
- * when someone else changed the product first the list reloads and nothing is resent or overwritten.
+ * Store desk (openapi 0.21.0), staff only, three views. Products: the catalog the game app can offer,
+ * as the game backend records it; staff create a product, edit its staff label and contents, and
+ * retire or restore it. Purchases and Player pass: read-only records. Prices live in the app stores;
+ * this website sells nothing. Every product write sends the version the admin saw; when someone else
+ * changed the product first the list reloads and nothing is resent or overwritten.
  */
 
 type Notice = { kind: "error" | "success"; text: string } | null;
@@ -45,7 +49,6 @@ type Panel =
   | { type: "edit"; id: string }
   | { type: "confirm"; id: string; action: "retire" | "restore" }
   | null;
-type Reply = { status: number; code: string; error: string; retryAfter: string | null; body: Record<string, unknown> };
 
 const kindChoices: { value: StoreProductKind; label: string }[] = [
   { value: "hint_pack", label: storeProductLabel("hint_pack") },
@@ -75,13 +78,6 @@ async function callStore(sessionKey: string, path: string, method = "GET", json?
   }
 }
 
-function when(value: string) {
-  const date = new Date(value);
-  return Number.isNaN(date.valueOf())
-    ? value
-    : new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" }).format(date);
-}
-
 /** Why a write failed, in words an admin can act on. */
 function failureText(reply: Reply, fallback: string) {
   if (reply.status === 0) return "The change could not be sent. Check your connection and try again.";
@@ -92,7 +88,7 @@ function failureText(reply: Reply, fallback: string) {
   return reply.error || fallback;
 }
 
-export function StoreDesk({
+function ProductsView({
   sessionKey,
   onBlocked,
 }: {
@@ -516,15 +512,11 @@ export function StoreDesk({
 
   return (
     <div ref={rootRef}>
-      <div className="admin-heading">
-        <div>
-          <p className="eyebrow">MONETIZATION</p>
-          <h1>Store catalog</h1>
-          <p>
-            Products the game app can offer, as the game backend records them. Prices are set in App Store Connect and
-            Google Play, not here; this website sells nothing.
-          </p>
-        </div>
+      <div className="admin-heading store-view-heading">
+        <p>
+          Products the game app can offer, as the game backend records them. Prices are set in App Store Connect and
+          Google Play, not here; this website sells nothing.
+        </p>
         <div className="admin-heading-actions">
           <Button data-opener="new" icon={<Plus />} disabled={locked || load === "loading"} onClick={openCreate}>
             New product
@@ -688,6 +680,91 @@ export function StoreDesk({
         Kind and the placeholder flag are fixed when a product is created. Hint packs hold {storeHintsMin} to{" "}
         {storeHintsMax} hints. The staff label is for this workspace only.
       </p>
+    </div>
+  );
+}
+
+type View = "products" | "purchases" | "player";
+const views: { view: View; label: string }[] = [
+  { view: "products", label: "Products" },
+  { view: "purchases", label: "Purchases" },
+  { view: "player", label: "Player pass" },
+];
+
+/**
+ * The Store desk: one heading and three views. Keyed on the account session, so nothing chosen under
+ * one account (a pass lookup, filters, results) carries over to the next.
+ */
+export function StoreDesk(props: {
+  sessionKey: string;
+  /** The workspace's account fence: clears private data and reports the access change. */
+  onBlocked: (status: number) => void;
+}) {
+  return <StoreShell key={props.sessionKey} {...props} />;
+}
+
+/** Views already opened stay mounted (hidden) so results survive a switch. */
+function StoreShell({
+  sessionKey,
+  onBlocked,
+}: {
+  sessionKey: string;
+  onBlocked: (status: number) => void;
+}) {
+  const [view, setView] = useState<View>("products");
+  const [opened, setOpened] = useState<View[]>(["products"]);
+  const [passRequest, setPassRequest] = useState<{ principal: string; nonce: number } | null>(null);
+  const call = useCallback(
+    (path: string, method?: string, json?: unknown) => callStore(sessionKey, path, method, json),
+    [sessionKey],
+  );
+
+  function show(next: View) {
+    setView(next);
+    setOpened((old) => (old.includes(next) ? old : [...old, next]));
+  }
+  const viewPass = useCallback((principal: string) => {
+    setPassRequest((old) => ({ principal, nonce: (old?.nonce ?? 0) + 1 }));
+    setView("player");
+    setOpened((old) => (old.includes("player") ? old : [...old, "player"]));
+  }, []);
+
+  return (
+    <div>
+      <div className="admin-heading">
+        <div>
+          <p className="eyebrow">MONETIZATION</p>
+          <h1>Store</h1>
+        </div>
+      </div>
+      <div className="users-views" role="group" aria-label="Store views">
+        {views.map((v) => (
+          <button
+            key={v.view}
+            type="button"
+            aria-pressed={view === v.view}
+            className={`users-view ${view === v.view ? "active" : ""}`}
+            onClick={() => show(v.view)}
+          >
+            {v.label}
+          </button>
+        ))}
+      </div>
+      {opened.includes("products") && (
+        <div hidden={view !== "products"}>
+          <ProductsView key={sessionKey} sessionKey={sessionKey} onBlocked={onBlocked} />
+        </div>
+      )}
+      {opened.includes("purchases") && (
+        <div hidden={view !== "purchases"}>
+          <StorePurchases key={sessionKey} call={call} onBlocked={onBlocked} onViewPass={viewPass} />
+        </div>
+      )}
+      {opened.includes("player") && (
+        <div hidden={view !== "player"}>
+          <StorePlayer key={sessionKey} call={call} onBlocked={onBlocked} request={passRequest} />
+        </div>
+      )}
     </div>
   );
 }

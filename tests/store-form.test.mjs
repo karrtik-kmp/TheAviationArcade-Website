@@ -57,6 +57,13 @@ test("create validation: id, title, hints", () => {
   assert.deepEqual(validateDraft({ ...ok, title: "x".repeat(100) }, "create"), {});
   // Length is counted after trimming, as the body is sent.
   assert.deepEqual(validateDraft({ ...ok, title: ` ${"x".repeat(100)} ` }, "create"), {});
+  // Code points, not UTF-16 units: 100 emoji fit, 101 do not; C1 controls (U+0085) and DEL are refused.
+  assert.deepEqual(validateDraft({ ...ok, title: "\u{1F6E9}".repeat(100) }, "create"), {});
+  assert.ok(validateDraft({ ...ok, title: "\u{1F6E9}".repeat(101) }, "create").title);
+  assert.ok(validateDraft({ ...ok, title: "a\u0085b" }, "create").title);
+  assert.ok(validateDraft({ ...ok, title: "a\u007fb" }, "create").title);
+  assert.ok(validateDraft({ ...ok, title: "a\u009fb" }, "create").title);
+  assert.deepEqual(validateDraft({ ...ok, title: "café  x" }, "create"), {});
   for (const bad of ["", "0", "1001", "2.5", "-3"]) assert.ok(validateDraft({ ...ok, hints: bad }, "create").hints, bad);
   assert.deepEqual(validateDraft({ ...ok, hints: "1" }, "create"), {});
   assert.deepEqual(validateDraft({ ...ok, hints: "1000" }, "create"), {});
@@ -75,6 +82,8 @@ test("edit does not check the id; an untouched title is flagged only for control
   const legacy = { ...pack, title: "odd\ttitle" };
   const draft = { ...draftOf(legacy), hints: "6" };
   assert.match(validateDraft(draft, "edit", legacy).title, /Retype it on one line/, "the server would refuse it, so say so here");
+  const legacyC1 = { ...pack, title: "odd\u0085title" };
+  assert.match(validateDraft({ ...draftOf(legacyC1), hints: "6" }, "edit", legacyC1).title, /Retype it/, "C1 controls count too");
   assert.deepEqual(validateDraft({ ...draft, title: "odd title" }, "edit", legacy), {});
   assert.ok(validateDraft({ ...draft, title: "odd\ttitle!" }, "edit", legacy).title);
   assert.deepEqual(validateDraft({ ...draftOf(pack), productId: "" }, "edit", pack), {});

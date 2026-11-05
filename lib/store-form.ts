@@ -4,6 +4,7 @@
  * loads under plain `node --test`. The website records no prices and sells nothing.
  */
 import {
+  codePointLength,
   hasControlCharacter,
   storeHintsMax,
   storeHintsMin,
@@ -94,7 +95,7 @@ export function validateDraft(draft: StoreDraft, mode: StoreMode, row?: AdminSto
     const title = draft.title.trim();
     if (!title) errors.title = "Enter a staff label.";
     else if (hasControlCharacter(title)) errors.title = "The staff label must be on one line, with no control characters.";
-    else if (title.length > storeTitleMax) errors.title = `The staff label must be ${storeTitleMax} characters or fewer.`;
+    else if (codePointLength(title) > storeTitleMax) errors.title = `The staff label must be ${storeTitleMax} characters or fewer.`;
   }
   if (draft.kind === "hint_pack") {
     const hints = parseHints(draft.hints);
