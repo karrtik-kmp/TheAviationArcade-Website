@@ -13,6 +13,7 @@ import {
   referencesLabel,
   storeNameLabel,
   subscriptionReference,
+  subscriptionStateLabel,
   subscriptionStatusLabel,
   viewPassPrincipal,
   whenLabel,
@@ -63,6 +64,21 @@ test("subscription labels", () => {
   assert.equal(subscriptionReference({ originalTransactionId: "77", originalFingerprint: null }), "77");
   assert.equal(subscriptionReference({ originalTransactionId: null, originalFingerprint: "abcdef012345" }), "fingerprint abcdef012345…");
   assert.equal(subscriptionReference({ originalTransactionId: null, originalFingerprint: null }), "—");
+});
+
+test("subscription state: a chain past expiresAt reads as lapsed, with the store's last report", () => {
+  const at = "2026-11-05T09:00:00.000Z";
+  const past = "2026-09-30T13:14:35.000Z";
+  assert.equal(
+    subscriptionStateLabel({ status: "active", expiresAt: past }, at),
+    `Expired ${whenLabel(past)} (store last reported: active)`,
+  );
+  assert.match(subscriptionStateLabel({ status: "grace", expiresAt: past }, at), /\(store last reported: grace period\)$/);
+  assert.match(subscriptionStateLabel({ status: "active", expiresAt: at }, at), /^Expired /, "expiresAt equal to evaluatedAt has lapsed");
+  assert.equal(subscriptionStateLabel({ status: "active", expiresAt: "2026-12-04T00:00:00.000Z" }, at), "Active");
+  assert.equal(subscriptionStateLabel({ status: "expired", expiresAt: past }, at), "Expired");
+  assert.equal(subscriptionStateLabel({ status: "revoked", expiresAt: past }, at), "Revoked");
+  assert.equal(subscriptionStateLabel({ status: "active", expiresAt: "not a date" }, at), "Active");
 });
 
 test("filters become a body without empty keys", () => {

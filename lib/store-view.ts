@@ -104,6 +104,24 @@ export function subscriptionStatusLabel(status: string): string {
   return statusLabels[status] ?? status;
 }
 
+/**
+ * A subscription's status as staff should read it (contract 0.21.1). `status` is the store-reported
+ * state and is never re-judged against the clock, so a chain whose `expiresAt` is at or before
+ * `evaluatedAt` reads as lapsed, with the store's last word in brackets. Expired and revoked chains,
+ * and dates that don't parse, show the status as reported.
+ */
+export function subscriptionStateLabel(
+  sub: Pick<StaffStoreSubscription, "status" | "expiresAt">,
+  evaluatedAt: string,
+): string {
+  const reported = subscriptionStatusLabel(sub.status);
+  if (sub.status === "expired" || sub.status === "revoked") return reported;
+  const expires = Date.parse(sub.expiresAt);
+  const at = Date.parse(evaluatedAt);
+  if (Number.isNaN(expires) || Number.isNaN(at) || expires > at) return reported;
+  return `Expired ${whenLabel(sub.expiresAt)} (store last reported: ${reported.toLowerCase()})`;
+}
+
 /** The reference a subscription is known by: Apple original transaction id or Google token fingerprint. */
 export function subscriptionReference(sub: Pick<StaffStoreSubscription, "originalTransactionId" | "originalFingerprint">): string {
   if (sub.originalTransactionId) return sub.originalTransactionId;

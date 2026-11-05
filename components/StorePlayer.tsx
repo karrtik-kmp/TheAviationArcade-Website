@@ -9,7 +9,7 @@ import {
   readFailureText,
   storeNameLabel,
   subscriptionReference,
-  subscriptionStatusLabel,
+  subscriptionStateLabel,
   whenLabel,
   type Reply,
 } from "@/lib/store-view";
@@ -243,7 +243,7 @@ export function StorePlayer({
                         <td data-label="Product id">
                           <b className="store-id">{sub.productId}</b>
                         </td>
-                        <td data-label="Status">{subscriptionStatusLabel(sub.status)}</td>
+                        <td data-label="Status">{subscriptionStateLabel(sub, result.evaluatedAt)}</td>
                         <td data-label="Expires">{whenLabel(sub.expiresAt)}</td>
                         <td data-label="Last event">{whenLabel(sub.lastEventAt)}</td>
                         <td data-label="Original reference">
