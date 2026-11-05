@@ -1,5 +1,5 @@
 /**
- * Store contract (openapi 0.21.0): the staff catalog (`/v1/admin/store/products`) and the read-only
+ * Store contract (openapi 0.22.0): the staff catalog (`/v1/admin/store/products`) and the read-only
  * staff views of purchases and one player's First Class Pass (`/v1/admin/store/purchases`,
  * `/v1/admin/store/players/{principal}/entitlements`). The website records no prices and sells
  * nothing. Browser safe:
@@ -8,7 +8,7 @@
 import { z } from "zod";
 
 export const storeProductIdPattern = /^[a-z0-9][a-z0-9._]{0,99}$/;
-export const storeProductKinds = ["hint_pack", "first_class_pass"] as const;
+export const storeProductKinds = ["hint_pack", "miles_pack", "first_class_pass"] as const;
 export const storePassPeriods = ["P1M", "P1Y"] as const;
 export const storeProductStatuses = ["active", "retired"] as const;
 
@@ -19,6 +19,8 @@ export type StoreProductStatus = (typeof storeProductStatuses)[number];
 export const storeTitleMax = 100;
 export const storeHintsMin = 1;
 export const storeHintsMax = 1000;
+export const storeMilesMin = 1;
+export const storeMilesMax = 1000000;
 const storeVersionMax = 2147483647;
 
 /** Website error codes; each value equals its key. */
@@ -63,6 +65,7 @@ export const adminStoreProductSchema = z
     productId,
     kind,
     hints: z.number().int().min(storeHintsMin).max(storeHintsMax).nullable().optional(),
+    miles: z.number().int().min(storeMilesMin).max(storeMilesMax).nullable().optional(),
     passPeriod: passPeriod.nullable().optional(),
     title: z.string().refine(titleOk),
     demo: z.boolean(),
@@ -77,8 +80,9 @@ export type AdminStoreProduct = z.infer<typeof adminStoreProductSchema>;
 export const adminStoreProductListSchema = z.object({ products: z.array(adminStoreProductSchema) }).strict();
 
 /**
- * PUT body. No `version` creates, `version` edits. A hint pack needs hints and no period; a pass
- * needs a period and no hints. Title: as the backend does, trimmed first, then 1..100 code points
+ * PUT body. No `version` creates, `version` edits. A hint pack needs hints and neither miles nor a
+ * period; a Miles pack needs miles and neither hints nor a period; a pass needs a period and neither
+ * hints nor miles. Title: as the backend does, trimmed first, then 1..100 code points
  * with no control character (U+0000 to U+001F, U+007F to U+009F).
  */
 export const storeProductRequestSchema = z
@@ -87,14 +91,17 @@ export const storeProductRequestSchema = z
     kind,
     title: z.string().refine((text) => titleOk(text.trim()) && !controlCharacter.test(text.trim())),
     hints: z.number().int().min(storeHintsMin).max(storeHintsMax).optional(),
+    miles: z.number().int().min(storeMilesMin).max(storeMilesMax).optional(),
     passPeriod: passPeriod.optional(),
     demo: z.boolean(),
   })
   .strict()
   .refine((body) =>
     body.kind === "hint_pack"
-      ? body.hints !== undefined && body.passPeriod === undefined
-      : body.passPeriod !== undefined && body.hints === undefined,
+      ? body.hints !== undefined && body.miles === undefined && body.passPeriod === undefined
+      : body.kind === "miles_pack"
+        ? body.miles !== undefined && body.hints === undefined && body.passPeriod === undefined
+        : body.passPeriod !== undefined && body.hints === undefined && body.miles === undefined,
   );
 export type StoreProductRequest = z.infer<typeof storeProductRequestSchema>;
 
@@ -145,15 +152,17 @@ const storeName = z.enum(storeNames);
 const nullableText = z.string().nullable();
 
 const hintsGrant = z.object({ type: z.literal("hints"), hints: z.number().int().min(1) }).strict();
+const milesGrant = z.object({ type: z.literal("miles"), miles: z.number().int().min(1) }).strict();
 const passGrant = z.object({ type: z.literal("first_class_pass"), until: isoDate }).strict();
 /** A grant type this website does not know yet is shown raw. A known type with the wrong shape still fails. */
 const unknownGrant = z
   .object({ type: z.string().min(1).max(64) })
   .passthrough()
-  .refine((grant) => grant.type !== "hints" && grant.type !== "first_class_pass");
-export const storeGrantSchema = z.union([hintsGrant, passGrant, unknownGrant]);
+  .refine((grant) => grant.type !== "hints" && grant.type !== "miles" && grant.type !== "first_class_pass");
+export const storeGrantSchema = z.union([hintsGrant, milesGrant, passGrant, unknownGrant]);
 export type StaffStoreGrant =
   | { type: "hints"; hints: number }
+  | { type: "miles"; miles: number }
   | { type: "first_class_pass"; until: string }
   | { type: string; [key: string]: unknown };
 

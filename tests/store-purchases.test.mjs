@@ -92,6 +92,7 @@ test("staff purchase schemas list the contract's keys, enums and paths", () => {
   const grant = block("StaffStoreGrant");
   assert.ok(grant.includes("required: [type, hints]") && grant.includes("required: [type, until]"));
   assert.ok(grant.includes("const: hints") && grant.includes("const: first_class_pass"));
+  assert.ok(grant.includes("required: [type, miles]") && grant.includes("const: miles"));
   for (const path of ["/v1/admin/store/purchases:", "/v1/admin/store/players/{principal}/entitlements:"])
     assert.ok(yaml.includes(`\n  ${path}\n`), path);
 });
@@ -100,7 +101,11 @@ test("grant variants: known shapes are strict, an unknown type passes through", 
   const parse = (grant) => store.storeGrantSchema.safeParse(grant).success;
   assert.equal(parse({ type: "hints", hints: 5 }), true);
   assert.equal(parse({ type: "first_class_pass", until }), true);
-  assert.equal(parse({ type: "miles", miles: 100, extra: { a: 1 } }), true, "a type the website does not know yet");
+  assert.equal(parse({ type: "miles", miles: 100 }), true);
+  assert.equal(parse({ type: "miles" }), false, "a known type without its field is off contract");
+  assert.equal(parse({ type: "miles", miles: 0 }), false);
+  assert.equal(parse({ type: "miles", miles: 100, extra: 1 }), false);
+  assert.equal(parse({ type: "stickers", count: 3, extra: { a: 1 } }), true, "a type the website does not know yet");
   assert.equal(parse({ type: "hints" }), false, "a known type without its field is off contract");
   assert.equal(parse({ type: "hints", hints: 0 }), false);
   assert.equal(parse({ type: "hints", hints: 5, extra: 1 }), false);
@@ -118,6 +123,7 @@ test("purchase, list, subscription and entitlements schemas", () => {
   assert.equal(purchase(hintsPurchase), true);
   assert.equal(purchase(passPurchase), true);
   assert.equal(purchase({ ...hintsPurchase, kind: "miles_pack" }), true, "kind is open");
+  assert.equal(purchase({ ...hintsPurchase, kind: "stickers_pack" }), true, "an unknown kind is open too");
   assert.equal(purchase({ ...hintsPurchase, kind: "" }), false);
   assert.equal(purchase({ ...hintsPurchase, environment: "staging" }), false);
   assert.equal(purchase({ ...hintsPurchase, store: "amazon" }), false);
@@ -445,15 +451,20 @@ test("search takes no query parameter on the website URL, and a body over 4 KB i
   assert.equal(backend.calls.length, 0);
 });
 
-test("an unknown grant type and an unknown kind pass through; a known type without its field is 502", async () => {
-  const miles = { ...hintsPurchase, id: 9, kind: "miles_pack", grant: { type: "miles", miles: 250, note: { a: 1 } } };
+test("a miles grant and an unknown grant type pass through; a known type without its field is 502", async () => {
+  const miles = { ...hintsPurchase, id: 9, kind: "miles_pack", grant: { type: "miles", miles: 250 } };
+  const sticker = { ...hintsPurchase, id: 10, kind: "sticker_pack", grant: { type: "stickers", count: 3, note: { a: 1 } } };
   const { call } = harness({ reply: () => ({ purchases: [miles, hintsPurchase], nextCursor: "next_1" }) });
   const res = await call("POST", search, { body: {} });
   assert.equal(res.status, 200);
   assert.deepEqual(res.body.purchases[0].grant, miles.grant);
   assert.equal(res.body.purchases[0].kind, "miles_pack");
   assert.equal(res.body.nextCursor, "next_1");
-  for (const grant of [{ type: "hints" }, { type: "first_class_pass" }, { type: "hints", hints: 5, extra: 1 }, { type: "" }, "hints", null]) {
+  const other = harness({ reply: () => ({ purchases: [sticker], nextCursor: null }) });
+  const shown = await other.call("POST", search, { body: {} });
+  assert.equal(shown.status, 200);
+  assert.deepEqual(shown.body.purchases[0].grant, sticker.grant);
+  for (const grant of [{ type: "hints" }, { type: "miles" }, { type: "miles", miles: 0 }, { type: "first_class_pass" }, { type: "hints", hints: 5, extra: 1 }, { type: "" }, "hints", null]) {
     const bad = harness({ reply: () => ({ purchases: [{ ...hintsPurchase, grant }], nextCursor: null }) });
     const off = await bad.call("POST", search, { body: {} });
     assert.deepEqual([off.status, off.body.code], [502, "BACKEND_CONTRACT"], JSON.stringify(grant));

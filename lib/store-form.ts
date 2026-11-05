@@ -8,6 +8,8 @@ import {
   hasControlCharacter,
   storeHintsMax,
   storeHintsMin,
+  storeMilesMax,
+  storeMilesMin,
   storePassPeriods,
   storeProductIdPattern,
   storeTitleMax,
@@ -27,34 +29,43 @@ export type StoreDraft = {
   kind: StoreProductKind;
   title: string;
   hints: string;
+  miles: string;
   passPeriod: StorePassPeriod | "";
 };
-export type StoreField = "productId" | "title" | "hints" | "passPeriod";
+export type StoreField = "productId" | "title" | "hints" | "miles" | "passPeriod";
 export type StoreErrors = Partial<Record<StoreField, string>>;
 
 /** Order the fields appear in the form, for focusing the first invalid one. */
-export const storeFields: readonly StoreField[] = ["productId", "title", "hints", "passPeriod"];
+export const storeFields: readonly StoreField[] = ["productId", "title", "hints", "miles", "passPeriod"];
 
 export function storeProductLabel(kind: StoreProductKind): string {
-  return kind === "hint_pack" ? "Hint pack" : "First Class Pass";
+  if (kind === "hint_pack") return "Hint pack";
+  if (kind === "miles_pack") return "Miles pack";
+  return "First Class Pass";
 }
 
 export function termLabel(period: StorePassPeriod): string {
   return period === "P1M" ? "Monthly term" : "Yearly term";
 }
 
-/** What a product contains, for the table: "5 hints", "Monthly term", or a dash when the record has none. */
-export function contentsLabel(row: Pick<AdminStoreProduct, "kind" | "hints" | "passPeriod">): string {
+/** "5,000 Miles" with a fixed locale so the text is the same everywhere. */
+export function milesLabel(miles: number): string {
+  return `${miles.toLocaleString("en-US")} Miles`;
+}
+
+/** What a product contains, for the table: "5 hints", "5,000 Miles", "Monthly term", or a dash when the record has none. */
+export function contentsLabel(row: Pick<AdminStoreProduct, "kind" | "hints" | "miles" | "passPeriod">): string {
   if (row.kind === "hint_pack") {
     if (typeof row.hints !== "number") return "—";
     return `${row.hints} ${row.hints === 1 ? "hint" : "hints"}`;
   }
+  if (row.kind === "miles_pack") return typeof row.miles === "number" ? milesLabel(row.miles) : "—";
   return row.passPeriod ? termLabel(row.passPeriod) : "—";
 }
 
 /** A blank draft for the create panel. */
 export function emptyDraft(): StoreDraft {
-  return { productId: "", kind: "hint_pack", title: "", hints: "", passPeriod: "" };
+  return { productId: "", kind: "hint_pack", title: "", hints: "", miles: "", passPeriod: "" };
 }
 
 /** A stored product as edit-form values. */
@@ -64,6 +75,7 @@ export function draftOf(row: AdminStoreProduct): StoreDraft {
     kind: row.kind,
     title: row.title,
     hints: typeof row.hints === "number" ? String(row.hints) : "",
+    miles: typeof row.miles === "number" ? String(row.miles) : "",
     passPeriod: row.passPeriod ?? "",
   };
 }
@@ -73,6 +85,14 @@ export function parseHints(text: string): number | null {
   const trimmed = text.trim();
   if (!/^\d{1,6}$/.test(trimmed)) return null;
   return Number(trimmed);
+}
+
+/** Whole number of Miles from typed text (up to 7 digits), or null when it is not one. */
+export function parseMiles(text: string): number | null {
+  const trimmed = text.trim();
+  // Plain digits, or thousands grouped the way the desk shows them ("25,000"), so a copied amount works.
+  if (!/^\d{1,7}$/.test(trimmed) && !/^\d{1,3}(,\d{3}){1,2}$/.test(trimmed)) return null;
+  return Number(trimmed.replaceAll(",", ""));
 }
 
 /**
@@ -101,6 +121,10 @@ export function validateDraft(draft: StoreDraft, mode: StoreMode, row?: AdminSto
     const hints = parseHints(draft.hints);
     if (hints === null || hints < storeHintsMin || hints > storeHintsMax)
       errors.hints = `Enter a whole number of hints from ${storeHintsMin} to ${storeHintsMax}.`;
+  } else if (draft.kind === "miles_pack") {
+    const miles = parseMiles(draft.miles);
+    if (miles === null || miles < storeMilesMin || miles > storeMilesMax)
+      errors.miles = `Enter a whole number of Miles from ${storeMilesMin} to ${storeMilesMax.toLocaleString("en-US")}.`;
   } else if (!storePassPeriods.includes(draft.passPeriod as StorePassPeriod)) {
     errors.passPeriod = "Choose a monthly or yearly term.";
   }
@@ -117,11 +141,17 @@ export function requestBody(draft: StoreDraft, row?: AdminStoreProduct): { body:
   const content =
     draft.kind === "hint_pack"
       ? { hints: parseHints(draft.hints) as number }
-      : { passPeriod: draft.passPeriod as StorePassPeriod };
+      : draft.kind === "miles_pack"
+        ? { miles: parseMiles(draft.miles) as number }
+        : { passPeriod: draft.passPeriod as StorePassPeriod };
   if (!row) return { body: { kind: draft.kind, title, ...content, demo: false } };
   const same =
     title === row.title &&
-    ("hints" in content ? content.hints === row.hints : content.passPeriod === row.passPeriod);
+    ("hints" in content
+      ? content.hints === row.hints
+      : "miles" in content
+        ? content.miles === row.miles
+        : content.passPeriod === row.passPeriod);
   if (same) return { none: true };
   return { body: { version: row.version, kind: row.kind, title, ...content, demo: row.demo } };
 }

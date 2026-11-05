@@ -7,6 +7,7 @@ import {
   emptyDraft,
   outcomeOf,
   parseHints,
+  parseMiles,
   requestBody,
   storeProductLabel,
   validateDraft,
@@ -17,6 +18,7 @@ const pack = {
   productId: "hint_pack_5",
   kind: "hint_pack",
   hints: 5,
+  miles: null,
   passPeriod: null,
   title: "Five hints",
   demo: true,
@@ -25,11 +27,16 @@ const pack = {
   createdAt: "2026-11-01T00:00:00.000Z",
   updatedAt: "2026-11-02T00:00:00.000Z",
 };
+const milesPack = { ...pack, productId: "miles_pack_5000", kind: "miles_pack", hints: null, miles: 5000, title: "Miles", demo: false };
 const pass = { ...pack, productId: "first_class_pass_monthly", kind: "first_class_pass", hints: null, passPeriod: "P1M", title: "Monthly pass", demo: false };
 
 test("labels", () => {
   assert.equal(storeProductLabel("hint_pack"), "Hint pack");
   assert.equal(storeProductLabel("first_class_pass"), "First Class Pass");
+  assert.equal(storeProductLabel("miles_pack"), "Miles pack");
+  assert.equal(contentsLabel(milesPack), "5,000 Miles");
+  assert.equal(contentsLabel({ ...milesPack, miles: 1000000 }), "1,000,000 Miles");
+  assert.equal(contentsLabel({ kind: "miles_pack", miles: null }), "—");
   assert.equal(contentsLabel(pack), "5 hints");
   assert.equal(contentsLabel({ ...pack, hints: 1 }), "1 hint");
   assert.equal(contentsLabel(pass), "Monthly term");
@@ -41,6 +48,37 @@ test("labels", () => {
 test("parseHints accepts whole numbers only", () => {
   assert.equal(parseHints(" 12 "), 12);
   for (const bad of ["", "1.5", "-1", "+1", "1e3", "abc", "1 2", "1234567"]) assert.equal(parseHints(bad), null, bad);
+});
+
+test("parseMiles accepts whole numbers up to seven digits, plain or with thousands commas", () => {
+  assert.equal(parseMiles(" 5000 "), 5000);
+  assert.equal(parseMiles("1000000"), 1000000);
+  assert.equal(parseMiles("5,000"), 5000, "as the desk shows it");
+  assert.equal(parseMiles("25,000"), 25000);
+  assert.equal(parseMiles("1,000,000"), 1000000);
+  for (const bad of ["", "1.5", "-1", "+1", "1e3", "50,00", ",500", "5,000,", "1,0000", "1 2", "12345678"])
+    assert.equal(parseMiles(bad), null, bad);
+  assert.equal(parseMiles("10,000,000"), 10000000, "well formed; the range check in validateDraft refuses it");
+});
+
+test("miles pack: validation, create body and edit body", () => {
+  const draft = { ...emptyDraft(), productId: "miles_pack_5000", kind: "miles_pack", title: " Miles ", miles: " 5000 ", hints: "9" };
+  assert.deepEqual(validateDraft(draft, "create"), {});
+  assert.equal(validateDraft({ ...draft, hints: "" }, "create").hints, undefined, "hints box is ignored");
+  for (const bad of ["", "0", "1000001", "1,000,001", "10,000,000", "2.5", "-3", "50,00"]) assert.ok(validateDraft({ ...draft, miles: bad }, "create").miles, bad);
+  assert.deepEqual(validateDraft({ ...draft, miles: "5,000" }, "create"), {});
+  assert.equal(validateDraft({ ...draft, miles: "0" }, "create").miles, "Enter a whole number of Miles from 1 to 1,000,000.");
+  assert.deepEqual(validateDraft({ ...draft, miles: "1" }, "create"), {});
+  assert.deepEqual(validateDraft({ ...draft, miles: "1000000" }, "create"), {});
+  const out = requestBody(draft);
+  assert.deepEqual(out, { body: { kind: "miles_pack", title: "Miles", miles: 5000, demo: false } });
+  assert.ok(!("hints" in out.body) && !("passPeriod" in out.body));
+  assert.equal(draftOf(milesPack).miles, "5000");
+  assert.equal(draftOf(pack).miles, "");
+  assert.deepEqual(requestBody(draftOf(milesPack), milesPack), { none: true });
+  assert.deepEqual(requestBody({ ...draftOf(milesPack), miles: "6000" }, milesPack), {
+    body: { version: 3, kind: "miles_pack", title: "Miles", miles: 6000, demo: false },
+  });
 });
 
 test("create validation: id, title, hints", () => {

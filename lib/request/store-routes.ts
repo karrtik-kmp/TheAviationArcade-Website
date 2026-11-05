@@ -1,5 +1,5 @@
 /**
- * Backend store catalog routes (openapi 0.21.0). Admins read the catalog, create and edit products
+ * Backend store catalog routes (openapi 0.22.0). Admins read the catalog, create and edit products
  * and retire or restore them through the game backend with their own Firebase ID token. The website
  * sells nothing and records no prices. Only with `ROLES_SOURCE=backend`: on a mock deployment every
  * route is 404 STORE_UNAVAILABLE and no backend call is made (the backend authorises with its own
@@ -56,7 +56,7 @@ function backendFailure(error: unknown, hadVersion: boolean): never {
       if (code === "content_invalid")
         throw new HttpError(
           422,
-          "The game backend refused these values. A product's kind and placeholder setting are fixed once it exists, a hint pack needs 1 to 1000 hints, a First Class Pass needs a term, and placeholder products can't be created in production.",
+          "The game backend refused these values. A product's kind and placeholder setting are fixed once it exists, a hint pack needs 1 to 1000 hints, a Miles pack 1 to 1,000,000 Miles, a First Class Pass needs a term, and placeholder products can't be created in production.",
           codes.CONTENT_INVALID,
         );
       throw contract();

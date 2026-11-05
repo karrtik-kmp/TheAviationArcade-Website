@@ -32,6 +32,7 @@ const pack = {
   productId: "hints.pack_5",
   kind: "hint_pack",
   hints: 5,
+  miles: null,
   passPeriod: null,
   title: "Five hints",
   demo: false,
@@ -40,6 +41,7 @@ const pack = {
   createdAt: created,
   updatedAt: created,
 };
+const milesPack = { ...pack, productId: "miles.pack_5000", kind: "miles_pack", hints: null, miles: 5000, title: "Five thousand Miles" };
 const pass = { ...pack, productId: "pass.monthly", kind: "first_class_pass", hints: null, passPeriod: "P1M", title: "Monthly pass" };
 
 test("store schemas list the contract's keys, enums and id pattern", () => {
@@ -48,17 +50,20 @@ test("store schemas list the contract's keys, enums and id pattern", () => {
   assert.deepEqual(list(block("StoreProductStatus"), "enum", 6), [...store.storeProductStatuses].sort());
   const productBlock = block("AdminStoreProduct");
   assert.deepEqual(propertyNames(productBlock).sort(), keys(store.adminStoreProductSchema));
-  // hints and passPeriod are properties but not required.
-  assert.deepEqual([...list(productBlock, "required"), "hints", "passPeriod"].sort(), keys(store.adminStoreProductSchema));
+  // hints, miles and passPeriod are properties but not required.
+  assert.deepEqual([...list(productBlock, "required"), "hints", "miles", "passPeriod"].sort(), keys(store.adminStoreProductSchema));
   assert.deepEqual(list(block("AdminStoreProductList"), "required"), keys(store.adminStoreProductListSchema));
   const requestBlock = block("AdminStoreProductRequest");
   assert.deepEqual(list(requestBlock, "required"), ["demo", "kind", "title"]);
-  assert.deepEqual(propertyNames(requestBlock).sort(), ["demo", "hints", "kind", "passPeriod", "title", "version"]);
+  assert.deepEqual(propertyNames(requestBlock).sort(), ["demo", "hints", "kind", "miles", "passPeriod", "title", "version"]);
   assert.deepEqual(list(block("StoreProductVersionRequest"), "required"), keys(store.storeVersionRequestSchema));
   assert.ok(block("StoreProductId").includes(`pattern: "${store.storeProductIdPattern.source}"`));
   assert.ok(requestBlock.includes("maxLength: 100") && requestBlock.includes("maximum: 1000") && requestBlock.includes("maximum: 2147483647"));
   assert.equal(store.storeTitleMax, 100);
   assert.deepEqual([store.storeHintsMin, store.storeHintsMax], [1, 1000]);
+  assert.deepEqual([store.storeMilesMin, store.storeMilesMax], [1, 1000000]);
+  assert.ok(requestBlock.includes("maximum: 1000000"));
+  assert.deepEqual(store.storeProductKinds, ["hint_pack", "miles_pack", "first_class_pass"]);
   for (const path of [
     "/v1/admin/store/products:",
     "/v1/admin/store/products/{productId}:",
@@ -72,8 +77,12 @@ test("AdminStoreProduct accepts the contract's shapes and refuses everything els
   const parse = (value) => store.adminStoreProductSchema.safeParse(value).success;
   assert.equal(parse(pack), true);
   assert.equal(parse(pass), true);
-  const { hints, passPeriod, ...bare } = pack;
-  assert.equal(parse(bare), true, "hints and passPeriod may be absent");
+  assert.equal(parse(milesPack), true);
+  assert.equal(parse({ ...milesPack, miles: 0 }), false);
+  assert.equal(parse({ ...milesPack, miles: 1000001 }), false);
+  assert.equal(parse({ ...milesPack, miles: 1.5 }), false);
+  const { hints, miles, passPeriod, ...bare } = pack;
+  assert.equal(parse(bare), true, "hints, miles and passPeriod may be absent");
   assert.equal(parse({ ...pack, extra: 1 }), false);
   assert.equal(parse({ ...pack, kind: "coins" }), false);
   assert.equal(parse({ ...pack, status: "deleted" }), false);
@@ -113,6 +122,19 @@ test("StoreProductRequest: strict keys, kind rules, title and version limits", (
   assert.equal(parse({ ...create, hints: 1001 }), false);
   assert.equal(parse({ ...create, hints: 1.5 }), false);
   assert.equal(parse({ ...create, passPeriod: "P2M", hints: undefined }), false);
+  const milesCreate = { kind: "miles_pack", title: "Miles", miles: 5000, demo: false };
+  assert.equal(parse(milesCreate), true);
+  assert.equal(parse({ ...milesCreate, version: 2 }), true);
+  assert.equal(parse({ ...milesCreate, miles: undefined }), false, "a Miles pack needs miles");
+  assert.equal(parse({ ...milesCreate, hints: 5 }), false, "a Miles pack takes no hints");
+  assert.equal(parse({ ...milesCreate, passPeriod: "P1M" }), false, "a Miles pack takes no period");
+  assert.equal(parse({ ...create, miles: 5000 }), false, "a hint pack takes no miles");
+  assert.equal(parse({ kind: "first_class_pass", title: "Pass", passPeriod: "P1M", miles: 5000, demo: false }), false);
+  assert.equal(parse({ ...milesCreate, miles: 0 }), false);
+  assert.equal(parse({ ...milesCreate, miles: 1 }), true);
+  assert.equal(parse({ ...milesCreate, miles: 1000000 }), true);
+  assert.equal(parse({ ...milesCreate, miles: 1000001 }), false);
+  assert.equal(parse({ ...milesCreate, miles: 2.5 }), false);
   assert.equal(parse({ ...create, demo: "no" }), false);
   assert.equal(parse({ kind: "hint_pack", title: "x", hints: 5 }), false, "demo is required");
   assert.equal(parse({ ...create, version: 0 }), false);

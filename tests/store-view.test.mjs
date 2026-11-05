@@ -23,10 +23,13 @@ test("grant label: hints, pass, unknown as truncated JSON", () => {
   assert.equal(grantLabel({ type: "hints", hints: 5 }), "5 hints");
   assert.equal(grantLabel({ type: "hints", hints: 1 }), "1 hint");
   assert.match(grantLabel({ type: "first_class_pass", until: "2026-12-01T00:00:00.000Z" }), /^Pass until .*2026|^Pass until /);
-  assert.equal(grantLabel({ type: "miles", miles: 500 }), 'miles: {"type":"miles","miles":500}');
-  const long = grantLabel({ type: "miles", note: "x".repeat(500) });
+  assert.equal(grantLabel({ type: "miles", miles: 5000 }), "5,000 Miles");
+  assert.equal(grantLabel({ type: "miles", miles: 1 }), "1 Miles");
+  assert.equal(grantLabel({ type: "stickers", count: 3 }), 'stickers: {"type":"stickers","count":3}');
+  const long = grantLabel({ type: "stickers", note: "x".repeat(500) });
   assert.ok(long.endsWith("…"));
-  assert.ok(long.length <= "miles: ".length + grantTextMax + 1);
+  assert.ok(long.length <= "stickers: ".length + grantTextMax + 1);
+  assert.equal(grantLabel({ type: "miles" }), 'miles: {"type":"miles"}');
   // A known type missing its field is shown raw instead of throwing.
   assert.equal(grantLabel({ type: "hints" }), 'hints: {"type":"hints"}');
 });
@@ -34,7 +37,8 @@ test("grant label: hints, pass, unknown as truncated JSON", () => {
 test("kind, store and environment labels", () => {
   assert.equal(kindLabel("hint_pack"), "Hint pack");
   assert.equal(kindLabel("first_class_pass"), "First Class Pass");
-  assert.equal(kindLabel("miles_pack"), "miles_pack");
+  assert.equal(kindLabel("miles_pack"), "Miles pack");
+  assert.equal(kindLabel("stickers_pack"), "stickers_pack");
   assert.equal(storeNameLabel("apple"), "Apple");
   assert.equal(storeNameLabel("google"), "Google");
   assert.equal(environmentBadge("production"), null);

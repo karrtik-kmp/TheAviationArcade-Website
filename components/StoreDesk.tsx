@@ -9,6 +9,8 @@ import { sitePath } from "@/lib/paths";
 import {
   storeHintsMax,
   storeHintsMin,
+  storeMilesMax,
+  storeMilesMin,
   storePassPeriods,
   storeTitleMax,
   type AdminStoreProduct,
@@ -36,7 +38,7 @@ import { StorePlayer } from "@/components/StorePlayer";
 import { StorePurchases } from "@/components/StorePurchases";
 
 /**
- * Store desk (openapi 0.21.0), staff only, three views. Products: the catalog the game app can offer,
+ * Store desk (openapi 0.22.0), staff only, three views. Products: the catalog the game app can offer,
  * as the game backend records it; staff create a product, edit its staff label and contents, and
  * retire or restore it. Purchases and Player pass: read-only records. Prices live in the app stores;
  * this website sells nothing. Every product write sends the version the admin saw; when someone else
@@ -52,6 +54,7 @@ type Panel =
 
 const kindChoices: { value: StoreProductKind; label: string }[] = [
   { value: "hint_pack", label: storeProductLabel("hint_pack") },
+  { value: "miles_pack", label: storeProductLabel("miles_pack") },
   { value: "first_class_pass", label: storeProductLabel("first_class_pass") },
 ];
 const apiBase = "/api/admin/store/products";
@@ -432,7 +435,7 @@ function ProductsView({
                   <RadioGroup
                     layout="horizontal"
                     value={draft.kind}
-                    onChange={(_, data) => patch({ kind: data.value as StoreProductKind }, ["hints", "passPeriod"])}
+                    onChange={(_, data) => patch({ kind: data.value as StoreProductKind }, ["hints", "miles", "passPeriod"])}
                   >
                     {kindChoices.map((choice) => (
                       <Radio key={choice.value} value={choice.value} label={choice.label} />
@@ -474,6 +477,24 @@ function ProductsView({
                   A whole number from {storeHintsMin} to {storeHintsMax}.
                 </small>
                 {fieldError("hints")}
+              </div>
+            ) : kind === "miles_pack" ? (
+              <div className="admin-field">
+                <label htmlFor={`${uid}-miles`}>
+                  <span>Miles in the pack</span>
+                </label>
+                <Input
+                  id={`${uid}-miles`}
+                  value={draft.miles}
+                  inputMode="numeric"
+                  autoComplete="off"
+                  {...errorProps("miles")}
+                  onChange={(_, data) => patch({ miles: data.value }, ["miles"])}
+                />
+                <small className="field-hint" id={`${uid}-miles-hint`}>
+                  A whole number from {storeMilesMin} to {storeMilesMax.toLocaleString("en-US")}.
+                </small>
+                {fieldError("miles")}
               </div>
             ) : (
               <fieldset className="store-fieldset">
@@ -678,7 +699,7 @@ function ProductsView({
       </section>
       <p className="users-footnote">
         Kind and the placeholder flag are fixed when a product is created. Hint packs hold {storeHintsMin} to{" "}
-        {storeHintsMax} hints. The staff label is for this workspace only.
+        {storeHintsMax} hints and Miles packs hold {storeMilesMin} to {storeMilesMax.toLocaleString("en-US")} Miles. The staff label is for this workspace only.
       </p>
     </div>
   );

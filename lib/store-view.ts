@@ -1,11 +1,11 @@
 /**
- * Browser-safe, pure helpers for the Store desk's Purchases and Player pass views (openapi 0.21.0):
+ * Browser-safe, pure helpers for the Store desk's Purchases and Player pass views (openapi 0.22.0):
  * labels, the filters-to-request-body mapping and the shared reply shape. Relative imports only, so
  * this loads under plain `node --test`. Read-only records; the website sells nothing.
  */
 import { parsePlayerRef, projectOfPrincipal } from "./request/store.ts";
 import type { StaffStoreGrant, StaffStorePurchase, StaffStoreSubscription } from "./request/store.ts";
-import { waitText } from "./store-form.ts";
+import { milesLabel, waitText } from "./store-form.ts";
 
 /** What a call to the website's store routes returned. `status` 0 means the request never got an answer. */
 export type Reply = { status: number; code: string; error: string; retryAfter: string | null; body: Record<string, unknown> };
@@ -31,12 +31,15 @@ export function readFailureText(reply: Reply, fallback: string): string {
 export const grantTextMax = 80;
 
 /**
- * What a purchase granted: "5 hints", "Pass until <date>"; an unknown grant type shows its type and
+ * What a purchase granted: "5 hints", "5,000 Miles", "Pass until <date>"; an unknown grant type shows its type and
  * its raw JSON, truncated, so a new backend grant never hides or breaks the row.
  */
 export function grantLabel(grant: StaffStoreGrant): string {
   if (grant.type === "hints" && typeof grant.hints === "number") {
     return `${grant.hints} ${grant.hints === 1 ? "hint" : "hints"}`;
+  }
+  if (grant.type === "miles" && typeof grant.miles === "number") {
+    return milesLabel(grant.miles);
   }
   if (grant.type === "first_class_pass" && typeof grant.until === "string") {
     return `Pass until ${whenLabel(grant.until)}`;
@@ -54,6 +57,7 @@ export function grantLabel(grant: StaffStoreGrant): string {
 /** Product kind for a purchase row; a kind this site doesn't know is shown raw. */
 export function kindLabel(kind: string): string {
   if (kind === "hint_pack") return "Hint pack";
+  if (kind === "miles_pack") return "Miles pack";
   if (kind === "first_class_pass") return "First Class Pass";
   return kind;
 }
