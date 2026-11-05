@@ -1,5 +1,5 @@
-/** Builds the principal's dependencies from the Worker environment. Server-only. */
-import { env } from "cloudflare:workers";
+/** Builds the principal's dependencies from the server environment. Server-only. */
+import { runtime } from "#runtime";
 import { firebaseSettings } from "@/lib/firebase-config";
 import { productCookieName } from "@/lib/product-auth";
 import { firebaseTokenVerifier } from "@/lib/request/firebase-token-verifier";
@@ -9,12 +9,12 @@ import { mockRoles, parseEmailList, readOwnRoles, rolesSource } from "@/lib/requ
 
 /** The game backend as this member, from `GAME_API_BASE_URL`. */
 export function backendAs(bearer: Bearer, timeoutMs?: number) {
-  return backendClient({ baseUrl: env.GAME_API_BASE_URL, timeoutMs }, bearer);
+  return backendClient({ baseUrl: runtime.setting("GAME_API_BASE_URL"), timeoutMs }, bearer);
 }
 
 /** Where roles come from on this deployment (`ROLES_SOURCE`); mock until the backend is hosted. */
 export function deploymentRolesSource() {
-  return rolesSource(env.ROLES_SOURCE);
+  return rolesSource(runtime.setting("ROLES_SOURCE"));
 }
 
 /**
@@ -24,8 +24,8 @@ export function deploymentRolesSource() {
 export async function rolesOf(bearer: Bearer, user: { email: string; emailVerified: boolean }) {
   if (deploymentRolesSource() === "backend") return readOwnRoles(backendAs(bearer, 4000));
   return mockRoles(user, {
-    admins: parseEmailList(env.MOCK_ADMIN_EMAILS),
-    photographers: parseEmailList(env.MOCK_PHOTOGRAPHER_EMAILS),
+    admins: parseEmailList(runtime.setting("MOCK_ADMIN_EMAILS")),
+    photographers: parseEmailList(runtime.setting("MOCK_PHOTOGRAPHER_EMAILS")),
   });
 }
 
@@ -38,8 +38,8 @@ export function principalDeps(host: string): PrincipalDeps {
         : null,
     cookieName: productCookieName(host),
     roles: rolesOf,
-    projectId: env.FIREBASE_PROJECT_ID,
-    demoUid: env.DEMO_ACCOUNT_UID,
+    projectId: runtime.setting("FIREBASE_PROJECT_ID"),
+    demoUid: runtime.setting("DEMO_ACCOUNT_UID"),
   };
 }
 

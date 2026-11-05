@@ -1,4 +1,5 @@
 import vinext from "vinext";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import hostingConfig from "./.openai/hosting.json";
 import { readExecutionProfile } from "./scripts/execution-profile.mjs";
@@ -44,6 +45,13 @@ export default defineConfig(async ({ command }) => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
+    resolve: {
+      alias: {
+        // The server-environment port (lib/runtime/types.ts). Explicit, with no fallback: this build
+        // runs on Cloudflare Workers, so it gets the Worker adapter.
+        "#runtime": fileURLToPath(new URL("./lib/runtime/worker.ts", import.meta.url)),
+      },
+    },
     server: {
       ...(managedLinux
         ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] }

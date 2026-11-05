@@ -59,6 +59,7 @@ These are implementation requirements, not a claim that those features have ship
 | Production staff capabilities/MFA                | Open                             | Roles are admin/photographer only; MFA and finer capabilities remain open                                       |
 | Public-launch media and privacy hardening        | Open                             | Full decode/re-encode, abuse controls, approved rights and retention/deletion workflow                          |
 | Mobile loading optimization                      | Follow-up                        | Historical pre-Firebase Lighthouse: performance 82, accessibility 100, best practices 100, LCP 4.1s             |
+| Server hosting (brief `../docs/briefs/website-admin-hosting.md`, revised 11-05) | A1 runtime seam done; rest planned | Website and Admin move to the Hostinger server as Node processes (`SITE_SURFACE`), dev sites first (`dev.`, `dev.admin.`). Plan passed the review gate with changes (11-05). Backend content gaps briefed: [briefs/backend-content-gaps-for-server-hosting.md](briefs/backend-content-gaps-for-server-hosting.md), accepted by `backend-5e`. User 11-05: demo admin stays view-only, audit desk stays. Next: A2 Node build |
 | Military readiness desk and batch release        | Implemented and locally verified | Client's 31-question sheet, stages, release checks, sample Trips; EditorialStore seam (W1); Trainee short       |
 
 ## Verification contract
@@ -649,3 +650,20 @@ Every backend call from the website's server now sends `X-Client: web` (and neve
 openapi 0.5.0). It is not a credential; the member's Bearer is still verified. A 426 therefore no
 longer applies to `/play`. Test: `tests/backend-client.test.mjs` (header on progress and other calls).
 Verification: TypeScript; 134/134 unit tests.
+
+## Runtime seam (2026-11-05, server hosting A1)
+
+Server code no longer imports `cloudflare:workers` directly. `lib/runtime/types.ts` is the port
+(`runtime.setting(key)`, `d1()`, `r2Bucket()`, with `SETTING_KEYS` matching `cloudflare-env.d.ts`).
+`lib/runtime/worker.ts` is the only `cloudflare:workers` importer; `lib/runtime/node.ts` reads `process.env`
+and has no D1 or R2 (A2 will use it). `#runtime` is an explicit alias in `vite.config.ts` and `tsconfig.json`
+with no fallback, so a build without it fails to resolve. Switched: `lib/server.ts`, `db/index.ts`,
+`lib/demo-server.ts`, `lib/firebase-config.ts`, `lib/progress/worker.ts`, `lib/request/worker.ts`. No behaviour
+change on the Worker; roles, demo, account fence and draft rules untouched.
+
+Verification (local, 2026-11-05, Node 24.22.0): TypeScript; 353/353 unit tests (`tests/runtime.test.mjs` new: sole
+importer, Node adapter, key list, alias). `npm run build` completes; the Worker bundle contains the Worker adapter and
+not the Node one. Against `demo:preview` (5186, Auth Emulator, mock roles): api-qa pass, role-auth-qa 10/10 (no
+prefix), demo-admin-qa, session-return-qa, military-qa, military-release-qa, frontend-ui-qa pass, browser-qa 8/8;
+`test:auth` against the same demo profile on 5173: 13 passed, 1 skipped (Google popup), 0 failed. Code review: ship (3 minors; bundle check becomes an automated post-build test in A2). Evidence files the
+suites rewrote were not committed. Nothing deployed; hosted and live Google sign-in not tested.

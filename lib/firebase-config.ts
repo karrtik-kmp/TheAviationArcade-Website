@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { runtime } from "#runtime";
 
 export type FirebaseClientConfig = {
   apiKey: string;
@@ -68,12 +68,11 @@ function parseEmulatorUrl(value: string): string | null {
   }
 }
 
-/** Read public Firebase client settings from Cloudflare's server environment. */
+/** Read public Firebase client settings from the server environment. */
 export function firebaseSettings(host: string): FirebaseSettings {
-  const bindings = env as unknown as Record<string, string | undefined>;
   const values = ENV_KEYS.reduce<Record<string, string | undefined>>(
     (all, key) => {
-      const value = bindings[key];
+      const value = runtime.setting(key);
       all[key] =
         typeof value === "string" && value.trim() ? value.trim() : undefined;
       return all;

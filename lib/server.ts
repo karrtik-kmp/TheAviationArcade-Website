@@ -1,34 +1,37 @@
-import { env } from "cloudflare:workers";
+import { runtime } from "#runtime";
 import { BunnyPhotoStorage } from "@/lib/bunny-storage";
 import type { PhotoStorage } from "@/lib/photo-storage";
 export { HttpError, sameOrigin, respond, failure, limitedForm } from "@/lib/errors";
 import { HttpError } from "@/lib/errors";
 export function database(): D1Database {
-  if (!env.DB)
+  const db = runtime.d1();
+  if (!db)
     throw new HttpError(
       503,
       "The content database is unavailable. Please try again.",
     );
-  return env.DB;
+  return db;
 }
 export function bucket(): PhotoStorage {
-  if (env.PHOTO_STORAGE_PROVIDER === "bunny") {
+  const provider = runtime.setting("PHOTO_STORAGE_PROVIDER");
+  if (provider === "bunny") {
     try {
       return new BunnyPhotoStorage({
-        zone: env.BUNNY_STORAGE_ZONE ?? "",
-        endpoint: env.BUNNY_STORAGE_ENDPOINT ?? "",
-        region: env.BUNNY_STORAGE_REGION ?? "",
-        password: env.BUNNY_STORAGE_PASSWORD ?? "",
+        zone: runtime.setting("BUNNY_STORAGE_ZONE") ?? "",
+        endpoint: runtime.setting("BUNNY_STORAGE_ENDPOINT") ?? "",
+        region: runtime.setting("BUNNY_STORAGE_REGION") ?? "",
+        password: runtime.setting("BUNNY_STORAGE_PASSWORD") ?? "",
       });
     } catch {
       throw new HttpError(503, "Photo storage is unavailable. Please try again.");
     }
   }
-  if (env.PHOTO_STORAGE_PROVIDER && env.PHOTO_STORAGE_PROVIDER !== "r2")
+  if (provider && provider !== "r2")
     throw new HttpError(503, "Photo storage is unavailable. Please try again.");
-  if (!env.BUCKET)
+  const r2 = runtime.r2Bucket();
+  if (!r2)
     throw new HttpError(503, "Photo storage is unavailable. Please try again.");
-  return env.BUCKET;
+  return r2;
 }
 export function audit(
   actor: string,
