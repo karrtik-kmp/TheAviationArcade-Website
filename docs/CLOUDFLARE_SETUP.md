@@ -1,5 +1,8 @@
 # Direct Cloudflare deployment — 2026-10-23
 
+> **Retired (2026-11-05).** The website no longer builds or deploys to Cloudflare Workers; it runs as a Node
+> server (README, "Node server deployment"). This page is kept as history of the Cloudflare prototype.
+
 The user chose Cloudflare hosting first and asked that the Vercel setup be saved separately.
 Vercel bootstrap commit `590a271` is on `codex/vercel-setup`; it is intentionally not merged here.
 This branch is `codex/cloudflare-prototype`. No remote Git push was performed.

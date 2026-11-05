@@ -15,11 +15,10 @@
     "test:auth": "node scripts/firebase-auth-qa.mjs",
     "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
     "build": "node scripts/run-framework.mjs build",
-    "deploy": "node scripts/deploy-cloudflare.mjs",
-    "start": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",
+    "build:node": "node scripts/build-node.mjs",
+    "start": "node --env-file-if-exists=.dev.vars dist-node/server.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
-    "cloudflare:prepare": "node scripts/prepare-cloudflare-deploy.mjs",
     "bunny:check": "node scripts/check-bunny-storage.mjs",
     "media:export": "node scripts/export-d1-media.mjs"
   },
@@ -55,7 +54,6 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.37.1",
     "@cloudflare/workers-types": "4.20260515.1",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",

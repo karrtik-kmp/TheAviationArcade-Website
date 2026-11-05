@@ -15,9 +15,9 @@ const defaults = await readFile(new URL("../.dev.vars.example", import.meta.url)
 if (!defaults.includes("FIREBASE_PROJECT_ID=demo-airplane-games")) throw new Error("Local example no longer targets the demo project.");
 await writeFile(new URL("../.dev.vars.demo-preview", import.meta.url), defaults +
   `\nDEMO_ACCOUNT_UID=${result.localId}\nDEMO_LOGIN_EMAIL=${user.email}\nDEMO_LOGIN_PASSWORD=${demoPassword}\n`, { mode: 0o600 });
-const child = spawn(process.execPath, ["--import", "./scripts/sites-env.mjs", "./node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5186", "--strictPort"], {
+const child = spawn(process.execPath, ["./node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5186", "--strictPort"], {
   cwd: new URL("../", import.meta.url), stdio: "inherit", windowsHide: true,
-  env: { ...process.env, CLOUDFLARE_ENV: "demo-preview" },
+  env: { ...process.env, DEV_VARS_PROFILE: "demo-preview" },
 });
 child.on("error", (error) => { console.error(error.message); process.exitCode = 1; });
 child.on("exit", (code) => { process.exitCode = code ?? 1; });

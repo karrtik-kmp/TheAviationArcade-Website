@@ -11,6 +11,7 @@
 
 # Generated builds and framework state
 /dist/
+/dist-node/
 /.next/
 /.vinext/
 /out/
@@ -28,6 +29,10 @@ yarn-error.log*
 
 # Local environment and keys
 .env*
+# A filled copy of web.env.example holds secrets.
+web.env
+*.env
+!web.env.example
 .dev.vars*
 !.dev.vars.example
 !.dev.vars.cloudflare.example

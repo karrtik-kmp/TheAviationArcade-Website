@@ -39,30 +39,19 @@ Web SDK fields can be resolved from the existing ignored `outputs/firebase-web-c
 Keep this deployment file separate from `.dev.vars`, which still uses the local Auth emulator.
 `FIREBASE_AUTH_EMULATOR_HOST` is rejected in the deployment file. Never commit or paste passwords.
 
-## Verify and prepare
+## Verify
 
 ```powershell
 npm run bunny:check
-npm run build
-npm run cloudflare:prepare
-npm run deploy -- --dry-run
-npm run deploy
 ```
 
 The live check uploads one small random `setup-checks/` object, downloads and compares its bytes,
 then deletes it. It does not list, change or delete existing photos. Without a password it exits
 before sending a request. It never prints credentials.
 
-Preparation creates ignored `outputs/cloudflare-deploy/wrangler.json` and derives ignored
-`outputs/cloudflare-secrets.json` from the current private settings. Both password and staff
-allowlist must be filled before deployment; blank settings also clear any old generated values.
-The public config contains no Bunny password. The direct config omits R2 and
-uses the explicit `workersDev` source target option and always disables preview URLs.
-The current target enables only the approved hostname protected by Cloudflare Access;
-the option defaults to false when absent. Access is provisioned separately.
-Do not edit or commit generated outputs. `npm run deploy` rebuilds/re-prepares and supplies the
-ignored secrets file automatically. The portable build also restores Bunny as Wrangler's default
-target after the framework generates its config; it requires the production Firebase Web settings.
+On the Node server the `BUNNY_STORAGE_*` settings and `PHOTO_STORAGE_PROVIDER=bunny` go in the server's
+settings file (see `web.env.example`); there is no separate deploy step. The Cloudflare preparation and
+deploy commands this page used to list were retired on 2026-11-05.
 
 The live Bunny check passed on 2026-10-23: upload, identical-byte download and deletion.
 The Worker is live with Bunny and D1 behind the approved private Access gate; preview URLs

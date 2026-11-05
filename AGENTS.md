@@ -35,6 +35,9 @@ docs/TASKS.md, then inspect actual Git status. Unity is a reference source for t
 - Publishing requires approval and applicable usage offers; demo content is nonpublishable.
 - Preserve current Site identity and audience. Native Site source/version/deploy workflow applies
   to runtime changes; do not create another Site or attach the product domain without scope.
+- The site runs as a Node server (`npm run build:node`, `dist-node/server.mjs`), not Cloudflare Workers.
+  Server settings come from the process environment through `lib/settings.ts` only (`web.env.example`).
+  `SITE_SURFACE` (public | admin) is routing, never authorization. There is no D1: its routes answer 503.
 
 Use Luna for predefined implementation jobs and 6.1 Sol low/medium for complex planning/review.
 Give workers separate file ownership. Review their integration, record actual verification and

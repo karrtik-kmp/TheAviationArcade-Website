@@ -26,9 +26,6 @@
     "paths": {
       "@/*": [
         "./*"
-      ],
-      "#runtime": [
-        "./lib/runtime/worker.ts"
       ]
     },
     "types": [

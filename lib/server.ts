@@ -1,38 +1,36 @@
-import { runtime } from "#runtime";
+import { setting } from "@/lib/settings";
 import { BunnyPhotoStorage } from "@/lib/bunny-storage";
 import type { PhotoStorage } from "@/lib/photo-storage";
 export { HttpError, sameOrigin, respond, failure, limitedForm } from "@/lib/errors";
 import { HttpError } from "@/lib/errors";
+
+/**
+ * The old Cloudflare D1 content database. The Node server has none: every route that still reads or writes
+ * D1 answers 503 until its desk moves to the game backend (server hosting A3).
+ */
 export function database(): D1Database {
-  const db = runtime.d1();
-  if (!db)
-    throw new HttpError(
-      503,
-      "The content database is unavailable. Please try again.",
-    );
-  return db;
+  throw new HttpError(
+    503,
+    "This desk is moving to the game backend and is unavailable for now.",
+  );
 }
+
+/** Bunny private photo storage, from the `BUNNY_STORAGE_*` settings. */
 export function bucket(): PhotoStorage {
-  const provider = runtime.setting("PHOTO_STORAGE_PROVIDER");
-  if (provider === "bunny") {
-    try {
-      return new BunnyPhotoStorage({
-        zone: runtime.setting("BUNNY_STORAGE_ZONE") ?? "",
-        endpoint: runtime.setting("BUNNY_STORAGE_ENDPOINT") ?? "",
-        region: runtime.setting("BUNNY_STORAGE_REGION") ?? "",
-        password: runtime.setting("BUNNY_STORAGE_PASSWORD") ?? "",
-      });
-    } catch {
-      throw new HttpError(503, "Photo storage is unavailable. Please try again.");
-    }
+  if (setting("PHOTO_STORAGE_PROVIDER") !== "bunny")
+    throw new HttpError(503, "Photo storage is unavailable. Please try again.");
+  try {
+    return new BunnyPhotoStorage({
+      zone: setting("BUNNY_STORAGE_ZONE") ?? "",
+      endpoint: setting("BUNNY_STORAGE_ENDPOINT") ?? "",
+      region: setting("BUNNY_STORAGE_REGION") ?? "",
+      password: setting("BUNNY_STORAGE_PASSWORD") ?? "",
+    });
+  } catch {
+    throw new HttpError(503, "Photo storage is unavailable. Please try again.");
   }
-  if (provider && provider !== "r2")
-    throw new HttpError(503, "Photo storage is unavailable. Please try again.");
-  const r2 = runtime.r2Bucket();
-  if (!r2)
-    throw new HttpError(503, "Photo storage is unavailable. Please try again.");
-  return r2;
 }
+
 export function audit(
   actor: string,
   entity: string,

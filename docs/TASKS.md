@@ -59,7 +59,7 @@ These are implementation requirements, not a claim that those features have ship
 | Production staff capabilities/MFA                | Open                             | Roles are admin/photographer only; MFA and finer capabilities remain open                                       |
 | Public-launch media and privacy hardening        | Open                             | Full decode/re-encode, abuse controls, approved rights and retention/deletion workflow                          |
 | Mobile loading optimization                      | Follow-up                        | Historical pre-Firebase Lighthouse: performance 82, accessibility 100, best practices 100, LCP 4.1s             |
-| Server hosting (brief `../docs/briefs/website-admin-hosting.md`, revised 11-05) | A1 runtime seam done; rest planned | Website and Admin move to the Hostinger server as Node processes (`SITE_SURFACE`), dev sites first (`dev.`, `dev.admin.`). Plan passed the review gate with changes (11-05). Backend content gaps briefed: [briefs/backend-content-gaps-for-server-hosting.md](briefs/backend-content-gaps-for-server-hosting.md), accepted by `backend-5e`. User 11-05: demo admin stays view-only, audit desk stays. Next: A2 Node build |
+| Server hosting (brief `../docs/briefs/website-admin-hosting.md`, revised 11-05) | A1 runtime seam, A2 Node build done; A3 next | Website and Admin move to the Hostinger server as Node processes (`SITE_SURFACE`), dev sites first (`dev.`, `dev.admin.`). Plan passed the review gate with changes (11-05). Backend content gaps briefed: [briefs/backend-content-gaps-for-server-hosting.md](briefs/backend-content-gaps-for-server-hosting.md), accepted by `backend-5e`. User 11-05: demo admin stays view-only, audit desk stays; Cloudflare Workers removed with A2 (D1 desks answer 503 until A3). Next: A3 D1 out, desk by desk; admin account-menu links to `/account` and `/contribute` must point at the public site (they 404 on the admin host) |
 | Military readiness desk and batch release        | Implemented and locally verified | Client's 31-question sheet, stages, release checks, sample Trips; EditorialStore seam (W1); Trainee short       |
 
 ## Verification contract
@@ -651,7 +651,54 @@ openapi 0.5.0). It is not a credential; the member's Bearer is still verified. A
 longer applies to `/play`. Test: `tests/backend-client.test.mjs` (header on progress and other calls).
 Verification: TypeScript; 134/134 unit tests.
 
-## Runtime seam (2026-11-05, server hosting A1)
+## Node build, Cloudflare Workers removed (2026-11-05, server hosting A2)
+
+User ruling 11-05: Cloudflare Workers will be removed, so build the Node version and delete the Worker adapter in
+the same step (the A1 `#runtime` seam is gone with it). The site still builds with Vinext, now without the
+Cloudflare plugin: `npm run build:node` writes `dist/` plus `dist-node/server.mjs` (from
+`scripts/node-server.mjs`), started with `node --env-file=<file> dist-node/server.mjs` per the server contract.
+Settings come from the process environment through `lib/settings.ts`; `web.env.example` lists every key.
+`npm run dev` copies `.dev.vars` (or `.dev.vars.<DEV_VARS_PROFILE>`, used by `demo:preview`) into the process
+environment and listens on 127.0.0.1:5173.
+
+- `SITE_SURFACE` (`lib/surface.ts`, `proxy.ts`, plus a second check on the decoded segments in the API
+  catch-all): `public` serves everything but `/admin` and `/api/admin`; `admin` serves `/admin`, `/sign-out`
+  and only the API the desks call (`/api/admin`, `/api/auth`, `/api/account`, `/api/media`,
+  `GET /api/submissions/:id/photo`, `/api/health`). Paths are decoded, slash-collapsed, dot-resolved and
+  lower-cased before the decision. Routing only, never authorization. The server refuses to start without
+  a valid `SITE_SURFACE` or `PORT`; `GET /api/health` is 200; SIGTERM closes within 15 s; `VINEXT_TRUST_PROXY=1`
+  trusts `X-Forwarded-Proto` from the one nginx hop (X-Forwarded-Host stays untrusted).
+- Every app response sets `frame-ancestors 'none'`, `X-Frame-Options: DENY`, `nosniff` and
+  `Referrer-Policy: strict-origin-when-cross-origin` (nginx adds HSTS only). A full page CSP is still open.
+- No D1 and no R2: `database()` answers 503 ("This desk is moving to the game backend…") until A3; photo storage
+  is Bunny only. The D1 store code, `@cloudflare/workers-types` (its types) and Wrangler plus
+  `npm run media:export` (the read-only D1 export for A3) stay until A3.
+- Removed: `@cloudflare/vite-plugin`, `worker/index.ts`, `lib/runtime/*`, `cloudflare-env.d.ts`,
+  `db/index.ts` (unused), the OpenAI Sites connector files, `scripts/deploy-cloudflare.mjs`,
+  `scripts/prepare-cloudflare-deploy.mjs`, `npm run deploy` / `cloudflare:prepare`, and their tests.
+
+**Open before the admin host goes live:** the admin workspace loads submissions, content, audit and military
+(all D1) together, so it shows "Could not load the workspace" and the backend-only Media, Store and Users desks
+are unreachable too. Either degrade per desk or wait for A3. The admin account menu links to `/account` and
+`/contribute`, which 404 on the admin host. Firebase `authorizedDomains` (firebase.json) still lists only the
+prototype hosts (A4).
+
+Verification (local, 2026-11-05, Node 24.22.0): TypeScript clean; `npm test` all pass (new
+`tests/node-hosting.test.mjs`: no `cloudflare:workers`/`#runtime` imports, settings, `web.env.example` keys,
+surface rules incl. encoded/dotted paths, server refuses bad `SITE_SURFACE`/`PORT`). `npm run build:node`
+completes. Production server, both surfaces, with local `.dev.vars`: each answers 404 for the other's pages and
+API, health 200, `/admin` 307 to sign-in, signed-out admin API 401, D1 routes 503, same-origin accepts the https
+origin via `X-Forwarded-Proto` and refuses a foreign one, SIGTERM exits. Browser suites against the Node dev
+server (5173, demo-preview settings, Auth Emulator, mock roles): role-auth-qa 10/10 (no prefix),
+session-return-qa pass, demo-admin-qa pass, frontend-ui-qa all 64 layout checks pass but fails on console
+503s from the D1 featured photo; browser-qa 3 pass then stops at staff sign-in because the workspace's D1 loads
+answer 503; api-qa fails at `/api/admin/submissions` 503 (D1); `test:auth` 5 passed then stops at the staff
+check (D1 503). The military suites were not run (all D1). Every failure is a D1 route answering the
+expected 503. Code review: ship after fixes; encoded-path bypass, admin sign-out, framing headers, `web.env`
+ignore and stale docs fixed; workspace degradation left open (above). Evidence files the suites rewrote were not
+committed. Nothing deployed; hosted and live Google sign-in not tested.
+
+## Runtime seam (2026-11-05, server hosting A1; superseded by A2 the same day)
 
 Server code no longer imports `cloudflare:workers` directly. `lib/runtime/types.ts` is the port
 (`runtime.setting(key)`, `d1()`, `r2Bucket()`, with `SETTING_KEYS` matching `cloudflare-env.d.ts`).

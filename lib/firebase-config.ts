@@ -1,4 +1,4 @@
-import { runtime } from "#runtime";
+import { setting } from "@/lib/settings";
 
 export type FirebaseClientConfig = {
   apiKey: string;
@@ -72,7 +72,7 @@ function parseEmulatorUrl(value: string): string | null {
 export function firebaseSettings(host: string): FirebaseSettings {
   const values = ENV_KEYS.reduce<Record<string, string | undefined>>(
     (all, key) => {
-      const value = runtime.setting(key);
+      const value = setting(key);
       all[key] =
         typeof value === "string" && value.trim() ? value.trim() : undefined;
       return all;

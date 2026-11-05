@@ -5,8 +5,7 @@ Run every command below from this directory. It contains the branded homepage, e
 photographer submissions and admin tools for Aircraft Identifier and Plane of the Day.
 
 Product login uses **Firebase email/password and Google only**. Account controls include My account,
-My submissions, staff-only editorial access, email verification, password reset and logout. The
-Cloudflare preview is publicly viewable; account and editorial actions still require product login.
+My submissions, staff-only editorial access, email verification, password reset and logout.
 
 ## Demo account
 
@@ -59,15 +58,10 @@ There is no website allowlist. `ROLES_SOURCE` picks where roles come from:
   admins use the backend grant route, and the website has no grant UI). If the backend can't be
   reached there are no admins: admin routes answer 503 (`ROLES_UNAVAILABLE` or `BACKEND_NOT_CONNECTED`).
 
-On a **fresh checkout/local database only**, build once and apply the content schema:
-
-```powershell
-npm run build
-node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1 execute DB --local --config dist/server/wrangler.json --persist-to .wrangler/state --file drizzle/0000_charming_spitfire.sql
-```
-
-Do not replay that SQL against an already-initialized database. Local D1/R2 content lives in the
-ignored `.wrangler/state` directory. Firebase Auth is a separate emulator.
+The website runs on plain Node (dev server and production). There is no D1 database any more:
+routes that still read or write D1 (the Military, Aircraft Identifier and Plane of the Day desks, the old
+submissions, the audit log and the featured photo) answer 503 until each moves to the game backend
+(server hosting A3). Firebase Auth is a separate emulator.
 
 ## Start the local servers
 
@@ -280,30 +274,29 @@ Further context: [task board](docs/TASKS.md), [account review](docs/AUTH_FLOW_RE
 [scope](docs/PROTOTYPE_SCOPE.md), [security review](docs/SECURITY_REVIEW.md), and
 [asset provenance](docs/ASSET_PROVENANCE.md).
 
-## Direct Cloudflare deployment with Bunny
+## Node server deployment
+
+The website and the admin run as Node processes on our Hostinger server (brief
+`../docs/briefs/website-admin-hosting.md`, server scripts in `../server/`). One build serves either surface:
+
+```powershell
+npm run build:node          # Vinext build in dist/ plus the server entry dist-node/server.mjs
+node --env-file=<settings file> dist-node/server.mjs
+```
+
+Settings come from the process environment only; [web.env.example](web.env.example) lists every key.
+`SITE_SURFACE=public` serves the website and `admin` serves only `/admin` and the API the desks call; each
+answers 404 for the other's paths, and the server refuses to start without a valid `SITE_SURFACE` or `PORT`.
+`GET /api/health` answers 200. The server trusts `X-Forwarded-Proto` from the one nginx hop in front of it
+(hosting headers never authorize anything). Locally, `npm start` runs the built server with `.dev.vars`; set
+`SITE_SURFACE` and `PORT` first.
 
 Private Bunny photo storage is supported for zone `aviation-arcade-website`, Frankfurt (`de`),
-at `https://de-s3.storage.bunnycdn.com`. Copy `.dev.vars.cloudflare.example` to ignored
-`.dev.vars.cloudflare`, then fill the read-write zone password and the game backend `GAME_API_BASE_URL`
-locally (the backend is local-only today, so a deployed site has no admins until it is reachable). The existing `.dev.vars` local emulator workflow remains separate.
+at `https://de-s3.storage.bunnycdn.com` (`PHOTO_STORAGE_PROVIDER=bunny` and the `BUNNY_STORAGE_*` settings;
+see [Bunny setup](docs/BUNNY_STORAGE_SETUP.md)). `npm run bunny:check` runs a private upload/read/delete probe.
 
-Moving old D1 photo proposals into the game backend's media store is a read-only export (`npm run media:export`); operator steps are in [Migrating D1 proposals](docs/MEDIA_PLAN.md#migrating-d1-proposals-operator).
-
-Run `npm run bunny:check` for a private upload/read/delete probe, then `npm run build` and
-`npm run cloudflare:prepare`. Direct configuration uses the new D1 database and Bunny with no
-R2 binding. The direct hostname is a public preview. Follow
-[Bunny setup](docs/BUNNY_STORAGE_SETUP.md) and [Cloudflare setup](docs/CLOUDFLARE_SETUP.md).
-
-Use `npm run deploy -- --dry-run` to verify, then `npm run deploy` to rebuild and upload with the
-recorded Bunny config and ignored secrets file. Portable builds automatically restore Bunny as
-Wrangler's default deployment target and require the production Firebase Web settings described
-above. Local `npm run start` continues using the emulator config.
-
-The live Bunny probe passed. The [Cloudflare prototype](https://aviation-arcade-website.karrtik-kmphitech.workers.dev)
-is public to anyone with the link after the user approved removing its Cloudflare Access gate.
-Firebase sign-in and staff permissions still protect account, submission and editorial actions.
-Cloudflare's version-specific preview URLs remain disabled. Public pages/assets return 200;
-six private API probes return 401 without sign-in. See the
-[public preview evidence](docs/evidence/cloudflare-public-preview-smoke.json).
-Full upload/editorial browser regression remains to be checked on this host.
-The original owner-private Site remains available.
+Cloudflare Workers is retired as a deployment target: the Worker adapter, the Cloudflare Vite plugin and the
+deploy scripts are gone. The old Cloudflare prototype stays up as last deployed until it is switched off;
+[Cloudflare setup](docs/CLOUDFLARE_SETUP.md) is kept as history. Moving old D1 photo proposals into the game
+backend's media store is a read-only export that still uses Wrangler (`npm run media:export`); operator steps
+are in [Migrating D1 proposals](docs/MEDIA_PLAN.md#migrating-d1-proposals-operator).
