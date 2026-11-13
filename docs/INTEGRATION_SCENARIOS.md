@@ -26,6 +26,9 @@ says where it can be proven: **L** = local (Node build, local backend, Auth emul
 
 Each needs a yes from the user; the recommendation is listed first.
 
+**Locked 2026-11-13 (user):** I-1 separate Admin repo · I-2 `dev` → dev sites, `main` → prod · I-3 adopt WC-1.
+I-4 … I-7: the user wants to discuss them before they are locked.
+
 | # | Question | Recommendation | Why it blocks |
 |---|---|---|---|
 | **I-1** | **Which repo serves the Admin?** The 11-05 ruling made the Admin its own repo, but A2 (16 minutes later) still builds it from the website via `SITE_SURFACE=admin`, and `web-deploy.sh` expects that | Keep the separate Admin repo (the user's ruling). Port A1/A2 into it, then remove `/admin`, admin API routes and `SITE_SURFACE=admin` from the website. Server: an `ADMIN_REPO`/`ADMIN_BRANCH` and a third deploy key (`id_admin`) in `setup.conf` | Every A3 desk would otherwise be built twice or in the wrong repo |
@@ -43,12 +46,12 @@ Each needs a yes from the user; the recommendation is listed first.
 | # | Scenario | Expected | Proof |
 |---|---|---|---|
 | A1 | `GET /api/health` on each web process | 200, no auth | L, D |
-| A2 | Process started with no or unknown `SITE_SURFACE` (website build) | Refuses to start | L |
+| A2 | Website build started with `SITE_SURFACE` other than `public`; Admin build with anything but `admin` | Refuses to start (each build serves only its own site since I-1) | L |
 | A3 | Public host asked for `/admin`, `/api/admin/*`; Admin host asked for `/contribute`, `/account`, `/api/featured` | 404, including encoded paths (`/api/%61dmin`) | L, D |
 | A4 | Admin host `/` | nginx redirects to `/admin` | D |
 | A5 | Signed in on `dev.` then open `dev.admin.` | Separate host-only cookies: not signed in on the other host; no `Domain=` cookie | D |
 | A6 | `SIGTERM` | Clean exit within 20 s; pm2 restarts it | L |
-| A7 | Admin account menu "Account" / "Contribute" | Links go to the public host, not the admin host (known bug, TASKS) | L, D |
+| A7 | Admin account menu "Account" / "Contribute"; website staff link "Editor workspace" | Each goes to the other host (Admin `37be738`; website `lib/admin-site.ts`), never a path on its own host | L, D |
 | A8 | Any page | Sets its own CSP/frame-ancestors; HSTS from nginx; no Cloudflare request anywhere | D |
 
 ### B. Sign-in and roles (`ROLES_SOURCE=backend`)
