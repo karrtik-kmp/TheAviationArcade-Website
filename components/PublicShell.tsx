@@ -1,5 +1,6 @@
 "use client";
 import { SiteLink as Link } from "@/components/SiteLink";
+import { AdminWorkspaceLink } from "@/components/AdminWorkspaceLink";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
@@ -121,8 +122,8 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
               <Link href="/how-to-play">Ranks and community</Link>
               <Link href="/contribute">Share a photo</Link>
               <Link href="/about">About</Link>
-              {/* Only the server's staff check shows the way in; /admin guards itself regardless. */}
-              {account?.isStaff && <Link href="/admin">Editor workspace</Link>}
+              {/* Only the server's staff check shows the way in; the Admin guards itself regardless. */}
+              {account?.isStaff && <AdminWorkspaceLink>Editor workspace</AdminWorkspaceLink>}
             </nav>
           </div>
           <div className="footer-bottom">

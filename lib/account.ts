@@ -29,17 +29,15 @@ export function shouldRecheckOnReturn({
 }
 
 /**
- * Who a sign-in is for. Each audience has its own area. Editors sign in on
- * their own page; public sign-in retains the audience from the requested action.
- * All of them share one Firebase identity and one session cookie.
+ * Who a sign-in is for on this website. Each audience has its own area; sign-in retains the audience
+ * from the requested action. Editors sign in on the Admin, its own repo and host (decision I-1).
  */
-export type Audience = "admin" | "photographer" | "player";
+export type Audience = "photographer" | "player";
 
 export const audiences: Record<
   Audience,
   { home: string; signIn: string; label: string }
 > = {
-  admin: { home: "/admin", signIn: "/admin/sign-in", label: "Editor" },
   photographer: { home: "/contribute", signIn: "/sign-in", label: "Photographer" },
   player: { home: "/play", signIn: "/sign-in", label: "Player" },
 };
@@ -51,20 +49,18 @@ export function isCommunityRole(value: unknown): value is CommunityRole {
   return communityRoles.includes(value as CommunityRole);
 }
 
-/** The audience whose area owns an app path. Anything outside a staff or photographer area is the player's. */
+/** The audience whose area owns an app path. Anything outside the photographer area is the player's. */
 export function audienceFor(path: string): Audience {
   const pathname = path.split(/[?#]/)[0];
-  for (const audience of ["admin", "photographer"] as const) {
-    const home = audiences[audience].home;
-    if (pathname === home || pathname.startsWith(`${home}/`)) return audience;
-  }
-  return "player";
+  const home = audiences.photographer.home;
+  return pathname === home || pathname.startsWith(`${home}/`) ? "photographer" : "player";
 }
 
 const origin = "https://app.local";
 const reserved = new Set([
   "/sign-in",
   "/sign-out",
+  "/admin/sign-in",
   ...Object.values(audiences).map(({ signIn }) => signIn),
   "/signin-with-chatgpt",
   "/signout-with-chatgpt",
@@ -97,7 +93,7 @@ export function safeAccountReturn(value: string | null | undefined): string {
 export function signInPath(audience: Audience, returnTo?: string | null) {
   const safe = safeAccountReturn(returnTo);
   const query = new URLSearchParams();
-  if (audience !== "admin") query.set("as", audience);
+  query.set("as", audience);
   if (returnTo != null && safe !== audiences[audience].home)
     query.set("return_to", safe);
   return `${audiences[audience].signIn}${query.size ? `?${query}` : ""}`;
@@ -140,15 +136,10 @@ export function decideAccess(
   if (!principal.signedIn)
     return { kind: audience === "photographer" ? "guest" : "sign-in" };
   switch (audience) {
-    case "admin":
-      if (principal.demo) return { kind: "granted", readOnly: true };
-      return principal.staff
-        ? { kind: "granted", readOnly: false }
-        : { kind: "denied" };
     case "photographer":
-      // The shared demo account only previews the editorial workspace.
+      // The shared demo account can't send photos; it previews the player area instead.
       return principal.demo
-        ? { kind: "elsewhere", to: audiences.admin.home }
+        ? { kind: "elsewhere", to: audiences.player.home }
         : { kind: "granted", readOnly: false };
     case "player":
       return { kind: "granted", readOnly: principal.demo };
@@ -167,7 +158,7 @@ export function afterSignIn({
   principal: Extract<Principal, { signedIn: true }>;
   signup?: boolean;
 }): string {
-  if (principal.demo) return audiences.admin.home;
+  if (principal.demo) return audiences.player.home;
   const destination = returnTo == null
     ? audiences[audience].home
     : safeAccountReturn(returnTo);

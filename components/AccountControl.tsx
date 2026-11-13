@@ -19,6 +19,7 @@ import {
   useAccountSession,
 } from "@/components/AccountSession";
 import { SiteLink } from "@/components/SiteLink";
+import { AdminWorkspaceLink } from "@/components/AdminWorkspaceLink";
 
 export function AccountControl() {
   const pathname = usePathname() || "/";
@@ -132,9 +133,9 @@ export function AccountControl() {
             Player profile
           </SiteLink>
           {account.isStaff && (
-            <SiteLink href={audiences.admin.home} onClick={() => close()}>
+            <AdminWorkspaceLink onClick={() => close()}>
               Editorial workspace
-            </SiteLink>
+            </AdminWorkspaceLink>
           )}
           <SiteLink
             className="account-menu-signout"

@@ -1,7 +1,7 @@
 /**
  * Backend media routes (MEDIA_PLAN.md, openapi 0.17.0). Photographers and staff upload photos,
  * fill in licences and read their items through the game backend with their own Firebase ID
- * token; admins publish and withdraw. Only with `ROLES_SOURCE=backend`: on a mock deployment every
+ * token; admins publish and withdraw on the Admin (its own repo). Only with `ROLES_SOURCE=backend`: on a mock deployment every
  * route is 404 MEDIA_UNAVAILABLE and no backend call is made. The backend authorises every call
  * again. Backend answers are checked against the contract and passed on; a failure is mapped to a
  * website code, never retried. Zod issues, inputs and URLs are never logged or echoed.
@@ -17,7 +17,6 @@ import {
   mediaIdempotencyKeyPattern,
   mediaItemSchema,
   mediaListSchema,
-  mediaRevisionRequestSchema,
   mediaRightsRequestSchema,
   mediaStates,
   type MediaContentType,
@@ -303,19 +302,6 @@ async function stateRights(ctx: Ctx) {
   );
 }
 
-async function decide(ctx: Ctx, action: "publish" | "withdraw") {
-  gate(ctx, "staff");
-  const id = mediaId(ctx);
-  query(ctx, []);
-  const parsed = mediaRevisionRequestSchema.safeParse(await jsonBody(ctx));
-  if (!parsed.success) throw invalid("Only the photo's revision can be sent.");
-  return respond(
-    await viaBackend(mediaItemSchema, "staff", () =>
-      ctx.backend(ctx.principal.bearer).send("POST", `/v1/admin/media/${id}/${action}`, parsed.data),
-    ),
-  );
-}
-
 export const mediaRoutes = [
   route({ method: "GET", path: "media", audience: "member", run: list }),
   route({ method: "POST", path: "media", audience: "member", mutation: true, run: (ctx) => upload(ctx) }),
@@ -332,6 +318,4 @@ export const mediaRoutes = [
     },
   }),
   route({ method: "PUT", path: "media/:id/rights", audience: "member", mutation: true, run: stateRights }),
-  route({ method: "POST", path: "media/:id/publish", audience: "member", mutation: true, run: (ctx) => decide(ctx, "publish") }),
-  route({ method: "POST", path: "media/:id/withdraw", audience: "member", mutation: true, run: (ctx) => decide(ctx, "withdraw") }),
 ];

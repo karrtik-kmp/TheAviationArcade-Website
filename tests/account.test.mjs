@@ -47,17 +47,15 @@ test("account return paths reject external, ambiguous, control, and auth destina
   assert.equal(safeAccountReturn("admin"), "/");
 });
 
-test("editors get their own sign-in page; public links retain action context", () => {
+test("sign-in links retain action context; editors sign in on the Admin, not here", () => {
   assert.equal(
     accountSignInPath("/contribute?game=aircraft-identifier&view=mine"),
     "/sign-in?as=photographer&return_to=%2Fcontribute%3Fgame%3Daircraft-identifier%26view%3Dmine",
   );
   assert.equal(accountSignInPath("/contribute"), "/sign-in?as=photographer");
-  assert.equal(accountSignInPath("/admin"), "/admin/sign-in");
-  assert.equal(
-    accountSignInPath("/admin?tab=review"),
-    "/admin/sign-in?return_to=%2Fadmin%3Ftab%3Dreview",
-  );
+  // /admin is not a page of this website (decision I-1); it is treated like any other player path.
+  assert.equal(accountSignInPath("/admin"), "/sign-in?as=player&return_to=%2Fadmin");
+  assert.equal(safeAccountReturn("/admin/sign-in"), "/", "the old editors' sign-in page stays reserved");
   assert.equal(accountSignInPath("/play"), "/sign-in?as=player");
   assert.equal(
     accountSignInPath("/account"),
@@ -83,8 +81,7 @@ test("every audience sign-in page is a reserved return destination", () => {
 });
 
 test("areas belong to one audience; everything else is the player's", () => {
-  assert.equal(audienceFor("/admin"), "admin");
-  assert.equal(audienceFor("/admin/sign-in"), "admin");
+  assert.equal(audienceFor("/admin"), "player");
   assert.equal(audienceFor("/administrator"), "player");
   assert.equal(audienceFor("/contribute?view=mine"), "photographer");
   assert.equal(audienceFor("/play"), "player");
@@ -103,19 +100,8 @@ const signedIn = (overrides = {}) => ({
 
 test("access decisions per audience", () => {
   const out = { signedIn: false };
-  assert.deepEqual(decideAccess("admin", out), { kind: "sign-in" });
   assert.deepEqual(decideAccess("player", out), { kind: "sign-in" });
   assert.deepEqual(decideAccess("photographer", out), { kind: "guest" });
-
-  assert.deepEqual(decideAccess("admin", signedIn()), { kind: "denied" });
-  assert.deepEqual(decideAccess("admin", signedIn({ staff: true })), {
-    kind: "granted",
-    readOnly: false,
-  });
-  assert.deepEqual(decideAccess("admin", signedIn({ demo: true })), {
-    kind: "granted",
-    readOnly: true,
-  });
 
   assert.deepEqual(decideAccess("photographer", signedIn()), {
     kind: "granted",
@@ -123,7 +109,11 @@ test("access decisions per audience", () => {
   });
   assert.deepEqual(decideAccess("photographer", signedIn({ demo: true })), {
     kind: "elsewhere",
-    to: "/admin",
+    to: "/play",
+  });
+  assert.deepEqual(decideAccess("player", signedIn({ demo: true })), {
+    kind: "granted",
+    readOnly: true,
   });
   assert.deepEqual(decideAccess("player", signedIn()), {
     kind: "granted",
@@ -133,10 +123,6 @@ test("access decisions per audience", () => {
 
 test("after sign-in lands on the return path, the area home, or email verification", () => {
   assert.equal(
-    afterSignIn({ audience: "admin", returnTo: "/admin?tab=x", principal: signedIn({ staff: true }) }),
-    "/admin?tab=x",
-  );
-  assert.equal(
     afterSignIn({ audience: "player", returnTo: "/", principal: signedIn() }),
     "/",
   );
@@ -145,8 +131,8 @@ test("after sign-in lands on the return path, the area home, or email verificati
     "/",
   );
   assert.equal(
-    afterSignIn({ audience: "player", returnTo: "/play", principal: signedIn({ demo: true }) }),
-    "/admin",
+    afterSignIn({ audience: "photographer", returnTo: "/contribute", principal: signedIn({ demo: true }) }),
+    "/play",
   );
   assert.equal(
     afterSignIn({ audience: "photographer", returnTo: "/contribute", principal: signedIn({ emailVerified: false }) }),

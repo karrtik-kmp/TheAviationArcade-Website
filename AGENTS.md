@@ -1,7 +1,9 @@
 # Airplane Games website guide
 
-Sole website/admin source: `H:/Work/TheAviationArcade/website`. Start with README.md and
-docs/TASKS.md, then inspect actual Git status. Unity is a reference source for this work.
+Public website source: `H:/Work/TheAviationArcade/website`. The Admin (staff desks) is its own repo,
+`H:/Work/TheAviationArcade/Admin` (decision I-1, 2026-11-13): no `/admin` pages or admin API here.
+Shared modules (auth, session, roles, router) are copied between the two repos; a fix lands in both.
+Start with README.md and docs/TASKS.md, then inspect actual Git status. Unity is a reference source.
 
 ## Commands
 
@@ -26,18 +28,20 @@ docs/TASKS.md, then inspect actual Git status. Unity is a reference source for t
   active `admin` row, photographer = an active `photographer` row, each with a verified email and
   never the demo account, read per request with the member's own token. Until the backend is
   hosted, `ROLES_SOURCE=mock` (default) reads `MOCK_ADMIN_EMAILS`/`MOCK_PHOTOGRAPHER_EMAILS` and
-  hides role requests and the Users section. `STAFF_EMAILS` is retired. Unreadable roles fail
+  hides role requests. `STAFF_EMAILS` is retired. Unreadable roles fail
   closed. No client-selected role can grant privileges.
 - Callsign is the community player name tag. It is not a credential. Do not build a competing
   website name registry or silently amend the frozen game account contract.
 - Keep session request generations, account-change fences and captured draft base versions.
   Revalidation may retain unsaved drafts, but must not overwrite another editor's version.
-- Publishing requires approval and applicable usage offers; demo content is nonpublishable.
+- Publishing is an Admin desk (its own repo). Demo content is nonpublishable; the demo account can't send
+  photos here.
 - Preserve current Site identity and audience. Native Site source/version/deploy workflow applies
   to runtime changes; do not create another Site or attach the product domain without scope.
 - The site runs as a Node server (`npm run build:node`, `dist-node/server.mjs`), not Cloudflare Workers.
   Server settings come from the process environment through `lib/settings.ts` only (`web.env.example`).
-  `SITE_SURFACE` (public | admin) is routing, never authorization. There is no D1: its routes answer 503.
+  `SITE_SURFACE` may only be `public` (or unset); the server refuses anything else. Staff links go to the
+  Admin host derived from this host (`lib/admin-site.ts`). There is no D1: its routes answer 503.
 
 Use Luna for predefined implementation jobs and 6.1 Sol low/medium for complex planning/review.
 Give workers separate file ownership. Review their integration, record actual verification and

@@ -2,7 +2,7 @@
  * The site's URL prefix, from `basePath` in next.config ("" when served at the
  * root). Vinext defines this for both the server and the browser bundles.
  *
- * App paths ("/admin", "/api/account") never include the prefix. Anything that
+ * App paths ("/contribute", "/api/account") never include the prefix. Anything that
  * leaves React's router — a native <a>, fetch, location.assign, an <img src> —
  * goes through `sitePath` so the site works under any prefix.
  */

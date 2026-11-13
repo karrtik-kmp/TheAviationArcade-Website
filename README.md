@@ -1,24 +1,24 @@
-# Airplane Games — website and admin
+# Airplane Games — public website
 
 The standalone website repository is **`H:\Work\TheAviationArcade\website`**.
 Run every command below from this directory. It contains the branded homepage, eight-game catalog,
-photographer submissions and admin tools for Aircraft Identifier and Plane of the Day.
+Plane of the Day, the player area and the photographer area (`/contribute`).
+
+**The Admin (staff desks) is its own repo**, `H:\Work\TheAviationArcade\Admin`, served at
+`admin.playairplanegames.com` / `dev.admin.playairplanegames.com` (decision I-1, 2026-11-13). This repo has
+no `/admin` pages or admin API; for staff accounts the account menu links to the Admin host.
 
 Product login uses **Firebase email/password and Google only**. Account controls include My account,
-My submissions, staff-only editorial access, email verification, password reset and logout.
+the photo area, email verification, password reset and logout.
 
 ## Demo account
 
-With the Auth Emulator running, use `npm run demo:preview` and open
-http://127.0.0.1:5186/admin/sign-in. Select **Fill demo login**, then **Sign in**.
+With the Auth Emulator running, use `npm run demo:preview` and open http://127.0.0.1:5186/sign-in.
 The local-only account is `demo-pilot@sites.test`, password `LocalPreview-2026!`.
 This dedicated profile leaves `.dev.vars` and other local servers alone.
 
-The demo account opens a view-only admin with the two admin **Load demo data** sample drafts
-(Aircraft Identifier and Plane of the Day). It cannot edit, review, publish or open submissions.
-The approved hosted demo is available on the
-[preview sign-in page](https://aviation-arcade-website.karrtik-kmphitech.workers.dev/sign-in?return_to=%2Fadmin).
-See [demo setup and boundaries](docs/DEMO_PREVIEW.md).
+On this website the demo account lands in the player area, view only; it can't send photos. The view-only
+demo of the editorial desks is on the Admin (its own repo). See [demo setup and boundaries](docs/DEMO_PREVIEW.md).
 
 ## First-time local setup
 
@@ -88,24 +88,21 @@ Open:
 | Email / Google sign-in      | http://127.0.0.1:5173/sign-in    |
 | Account and logout controls | http://127.0.0.1:5173/account    |
 | Photographer portal         | http://127.0.0.1:5173/contribute |
-| Editorial workspace         | http://127.0.0.1:5173/admin      |
 
-Editors have their own sign-in page. Photographers and players share `/sign-in`, which
-retains the destination from their action without asking them to choose a role. All three
-use the same website Firebase account/session:
+Photographers and players share `/sign-in`, which retains the destination from their action
+without asking them to choose a role. Both use the same website Firebase account/session.
+Editors sign in on the Admin, which has its own host and session cookie:
 
-| Audience       | Sign-in                    | Area          |
-| -------------- | -------------------------- | ------------- |
-| Admin / editor | `/admin/sign-in`           | `/admin`      |
-| Photographer   | `/sign-in?as=photographer` | `/contribute` |
-| Player         | `/sign-in?as=player`       | `/play`       |
+| Audience     | Sign-in                    | Area          |
+| ------------ | -------------------------- | ------------- |
+| Photographer | `/sign-in?as=photographer` | `/contribute` |
+| Player       | `/sign-in?as=player`       | `/play`       |
 
 Legacy `as` links retain their destination area. A safe `return_to` retains the original
 action, including its query and fragment. Bare `/sign-in` returns to the public homepage.
-Only the admin sign-in advertises the configured
-view-only demo account, and it offers no self-registration. Audience hints never grant
-staff access: authorization remains a server check. `/sign-in?return_to=/admin...` forwards to
-the admin sign-in page.
+Audience hints never grant anything: authorization remains a server check. `/admin` is not a page
+here (404); a staff account's menu links to the Admin derived from the host (`dev.` → `dev.admin.`,
+apex → `admin.`; none on local hosts).
 The player area displays sample stats and a sample name tag. App profile linking is
 coming soon; it will use the existing Callsign. No app login, activity or linkage is claimed.
 
@@ -121,8 +118,7 @@ The Auth Emulator runs at `127.0.0.1:9099`. Demo accounts share the **local-only
 The seed command is repeatable and creates verified local accounts. Re-run it after restarting an
 empty Auth Emulator. It never connects to a real Firebase project. Google accounts and email links
 are simulated by the emulator; verification/reset links appear in terminal 1. These credentials have
-no production meaning. Use **Load demo data** in admin for sample editorial content; samples cannot
-be published. Old host-owned records are not automatically transferred to Firebase users.
+no production meaning. Old host-owned records are not automatically transferred to Firebase users.
 
 Stop each server with **Ctrl+C** in its terminal. If port 5173 or 9099 is occupied, stop the server
 that owns it before restarting. Do not kill unrelated Node processes or the Unity Editor.
@@ -152,14 +148,14 @@ The default is an empty string (site root). Use a leading slash and no trailing 
 $env:SITE_BASE_PATH='/arcade'
 npm run dev
 # Homepage: http://127.0.0.1:5173/arcade
-# Admin sign-in: http://127.0.0.1:5173/arcade/admin/sign-in
+# Sign-in: http://127.0.0.1:5173/arcade/sign-in
 ```
 
 Rebuild when changing this value for deployment. It is not a Cloudflare request-time
 binding. To return to the root in the current shell:
 `Remove-Item Env:SITE_BASE_PATH -ErrorAction SilentlyContinue`.
 
-Code keeps application paths unprefixed: pass `/admin` to `SiteLink`, `sitePath` or
+Code keeps application paths unprefixed: pass `/contribute` to `SiteLink`, `sitePath` or
 `navigateTo`. `sitePath` always adds the configured prefix, even when the app route
 starts with the same word. Convert a browser pathname back with `appPath` before
 using it as an application path. Next/Vinext server `redirect()` receives app paths
@@ -197,31 +193,27 @@ node scripts/role-auth-qa.mjs
 ```
 
 This deliberately uses an application-area name as the prefix: the player route is
-`/play/play` and admin sign-in is `/play/admin/sign-in`. The harness only contacts
+`/play/play`. The harness only contacts
 loopback services, creates/deletes a throwaway emulator user, checks both
 sign-in pages, safe returns, recovery, permissions, themes, assets and logout, and saves evidence in
 `docs/evidence/role-auth/`. Google consent is not exercised by this suite.
 
 With an unprefixed `npm run demo:preview` (port 5186) and the seeded Auth Emulator,
-`node scripts/session-return-qa.mjs` checks tab-return behaviour and
-`node scripts/military-qa.mjs` checks the Military readiness desk. The military suite
-resets and rewrites the A-10/F-22 packages (`mil-a1`, `mil-a3`) in the local D1 only, and saves
-screenshots to the ignored `outputs/military-qa/`. `node scripts/military-release-qa.mjs` checks
-the release checks and sample Trips: it adopts one generated QA photograph per sheet row from earlier
-runs, approves all 31 local packages and expects the release to be refused for the short Trainee Trip.
-It can no longer upload those photographs itself (the website's member submission routes answer
-`404 SUBMISSIONS_CLOSED`, D-2 amended 2026-11-04), so on a database without the 31 fixtures it stops
-with a message saying so. Release and restore writes are covered by `tests/military.test.mjs`.
+`node scripts/session-return-qa.mjs` checks tab-return behaviour. The Military desk suites
+(`military-qa`, `military-release-qa`, `demo-admin-qa`) moved with the desks to the Admin repo.
+
+**Not yet trimmed (2026-11-13):** `browser-qa.mjs`, `role-auth-qa.mjs`, `session-return-qa.mjs`,
+`api-qa.mjs` and `firebase-auth-qa.mjs` still contain admin steps (admin sign-in, `/admin`, `/api/admin/*`)
+from before the Admin left this repo; those steps now meet 404s. Trim them before relying on these suites.
 
 The browser suites above cover mock-roles mode (`ROLES_SOURCE=mock`, the default): the member
 `/api/submissions` routes answer `404 SUBMISSIONS_CLOSED`, `/contribute` shows the closed panel, the account
-page shows the Photo area card, and staff review uses the proposals that `POST /api/admin/demo` seeds.
-`.dev.vars` needs `MOCK_ADMIN_EMAILS` (the example uses `seedy@sites.test`). The old
+page shows the Photo area card. The old
 `submissions-ui-qa.mjs` suite tested the retired proposal form and was deleted.
 
 TODO (not yet covered): browser coverage of `ROLES_SOURCE=backend` needs a running game Backend, so there
 is none yet. It should cover the guest sign-in panel, an approved photographer's `MediaContribute` area,
-the non-photographer `PhotographerAccess` panel and the admin Users and Media sections.
+and the non-photographer `PhotographerAccess` panel.
 
 The Firebase harness is restricted to loopback/demo services. Browser suites create local fixture
 records; they are not cloud tests. Results and screenshots are saved under `docs/evidence`.
@@ -276,8 +268,8 @@ Further context: [task board](docs/TASKS.md), [account review](docs/AUTH_FLOW_RE
 
 ## Node server deployment
 
-The website and the admin run as Node processes on our Hostinger server (brief
-`../docs/briefs/website-admin-hosting.md`, server scripts in `../server/`). One build serves either surface:
+The website runs as a Node process on our Hostinger server (brief `../docs/briefs/website-admin-hosting.md`,
+server scripts in `../server/`). The Admin is its own repo and build (decision I-1):
 
 ```powershell
 npm run build:node          # Vinext build in dist/ plus the server entry dist-node/server.mjs
@@ -285,11 +277,11 @@ node --env-file=<settings file> dist-node/server.mjs
 ```
 
 Settings come from the process environment only; [web.env.example](web.env.example) lists every key.
-`SITE_SURFACE=public` serves the website and `admin` serves only `/admin` and the API the desks call; each
-answers 404 for the other's paths, and the server refuses to start without a valid `SITE_SURFACE` or `PORT`.
+The server refuses to start without a valid `PORT`, or with `SITE_SURFACE` set to anything but `public`
+(an Admin env file used by mistake). There is no admin surface here: `/admin` and `/api/admin/*` are 404.
 `GET /api/health` answers 200. The server trusts `X-Forwarded-Proto` from the one nginx hop in front of it
 (hosting headers never authorize anything). Locally, `npm start` runs the built server with `.dev.vars`; set
-`SITE_SURFACE` and `PORT` first.
+`PORT` first.
 
 Private Bunny photo storage is supported for zone `aviation-arcade-website`, Frankfurt (`de`),
 at `https://de-s3.storage.bunnycdn.com` (`PHOTO_STORAGE_PROVIDER=bunny` and the `BUNNY_STORAGE_*` settings;

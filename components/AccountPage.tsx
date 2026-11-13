@@ -20,6 +20,7 @@ import {
   useAccountSession,
 } from "@/components/AccountSession";
 import { SiteLink } from "@/components/SiteLink";
+import { useAdminWorkspaceUrl } from "@/components/AdminWorkspaceLink";
 import { getFirebaseClient, syncFirebaseSession } from "@/lib/firebase-client";
 import { sendEmailVerification } from "firebase/auth";
 
@@ -38,6 +39,7 @@ export function AccountPage({
 }: AccountPageProps) {
   const pathname = usePathname() || "/account";
   const { state, account, refresh } = useAccountSession();
+  const adminWorkspace = useAdminWorkspaceUrl();
   const [here, setHere] = useState(safeAccountReturn(pathname));
   const [verificationState, setVerificationState] = useState<
     "idle" | "working" | "sent" | "error"
@@ -232,14 +234,14 @@ export function AccountPage({
                 Open the photo area <ArrowRight size={16} />
               </SiteLink>
             </section>
-            {account.isStaff && (
+            {account.isStaff && adminWorkspace && (
               <section className="account-destination">
                 <span className="eyebrow">For the editorial team</span>
                 <h2>Editorial workspace</h2>
                 <p>Review photo proposals and manage the public collection.</p>
-                <SiteLink className="text-link" href={audiences.admin.home}>
+                <a className="text-link" href={adminWorkspace}>
                   Open editor <ArrowRight size={16} />
-                </SiteLink>
+                </a>
               </section>
             )}
           </div>

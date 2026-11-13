@@ -50,7 +50,6 @@ function errorCopy(error: unknown) {
 }
 
 const intro: Record<Audience, string> = {
-  admin: "Editors sign in with an authorized staff account.",
   photographer: "Sign in to propose photos and track their review.",
   player:
     "Sign in to your Airplane Games account.",
@@ -85,7 +84,6 @@ export function AuthForm({
       previousMode.current = mode;
     }
   }, [mode]);
-  const editor = audience === "admin";
   const destination = role === audience ? returnTo : audiences[role].home;
   const [configState, setConfigState] = useState<ConfigState>("checking");
   const [auth, setAuth] = useState<Auth | null>(null);
@@ -93,9 +91,6 @@ export function AuthForm({
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const [demo, setDemo] = useState<{ email: string; password: string } | null>(
-    null,
-  );
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -114,7 +109,6 @@ export function AuthForm({
         const result = (await response.json()) as {
           configured?: boolean;
           emulatorUrl?: string | null;
-          demoLogin?: { email: string; password: string } | null;
         };
         if (!active) return;
         if (!result.configured || !firebaseAuth) {
@@ -122,12 +116,6 @@ export function AuthForm({
           return;
         }
         setAuth(firebaseAuth);
-        if (
-          audience === "admin" &&
-          typeof result.demoLogin?.email === "string" &&
-          typeof result.demoLogin.password === "string"
-        )
-          setDemo(result.demoLogin);
         setEmulator(Boolean(result.emulatorUrl));
         setConfigState("ready");
       } catch {
@@ -248,11 +236,11 @@ export function AuthForm({
   }
 
   return (
-    <section className={`auth-card${editor ? " auth-card-editor" : ""}${!editor ? " community-auth-card" : ""}`}>
+    <section className="auth-card community-auth-card">
       <span className="eyebrow">
-        {editor ? "Staff access" : `Airplane Games · ${audiences[role].label}`}
+        {`Airplane Games · ${audiences[role].label}`}
       </span>
-      <h1 ref={headingRef} tabIndex={-1}>{editor && mode === "signin" ? "Editor sign in" : title}</h1>
+      <h1 ref={headingRef} tabIndex={-1}>{title}</h1>
       {roles && mode !== "reset" && (
         <fieldset className="auth-roles" disabled={busy}>
           <legend>I’m signing in as</legend>
@@ -288,34 +276,6 @@ export function AuthForm({
           Local demo: accounts and email actions use the Firebase emulator.
           Google sign-in is simulated.
         </p>
-      )}
-      {demo && mode === "signin" && (
-        <aside className="auth-setup-notice">
-          <strong>Explore the demo</strong>
-          <p>
-            View the sample editorial content. The demo account is view only.
-          </p>
-          <p>
-            Email: <code>{demo.email}</code>
-            <br />
-            Password: <code>{demo.password}</code>
-          </p>
-          <button
-            className="btn secondary"
-            type="button"
-            disabled={!configured || busy}
-            onClick={() => {
-              setEmail(demo.email);
-              setPassword(demo.password);
-              setError("");
-              setNotice(
-                "Demo credentials filled. Select Sign in to open the demo.",
-              );
-            }}
-          >
-            Fill demo login
-          </button>
-        </aside>
       )}
       {configState === "missing" && (
         <p className="auth-setup-notice" role="status">
@@ -416,8 +376,7 @@ export function AuthForm({
       <div className="auth-mode-links">
         {mode === "signin" && (
           <>
-            {/* Editor accounts are invited by the team, never self-registered here. */}
-            {!editor && <button
+            <button
               type="button"
               disabled={busy}
               onClick={() => {
@@ -428,7 +387,7 @@ export function AuthForm({
               }}
             >
               Create an account
-            </button>}
+            </button>
             <button
               type="button"
               disabled={busy}
@@ -470,11 +429,9 @@ export function AuthForm({
           </button>
         )}
       </div>
-      {!editor && (
-        <SiteLink className="auth-back-link" href="/account">
-          Back to my account
-        </SiteLink>
-      )}
+      <SiteLink className="auth-back-link" href="/account">
+        Back to my account
+      </SiteLink>
     </section>
   );
 }

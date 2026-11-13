@@ -177,7 +177,6 @@ const { routes } = await import("../lib/request/routes.ts");
 const { resolvePrincipal, accountSessionKey } = await import("../lib/request/principal.ts");
 const { BackendError, BackendNotConnected } = await import("../lib/request/backend.ts");
 const { d1Sqlite } = await import("./support/d1-sqlite.mjs");
-const { memoryEditorialStore } = await import("../lib/editorial/memory-store.ts");
 const { d1ContentStore } = await import("../lib/editorial/content-d1.ts");
 
 const project = "demo-airplane-games";
@@ -230,7 +229,6 @@ function fakeBackend(reply) {
 function mediaHarness({ roles = "backend", reply = () => item } = {}) {
   const backend = fakeBackend((call) => reply(call));
   const db = d1Sqlite();
-  const editorial = memoryEditorialStore();
   const handle = dispatch(routes, {
     principal: (request) =>
       resolvePrincipal(request.headers, {
@@ -255,9 +253,7 @@ function mediaHarness({ roles = "backend", reply = () => item } = {}) {
     photos: () => {
       throw new Error("photo storage is not used in these tests");
     },
-    editorial: () => editorial,
     content: () => d1ContentStore(db),
-    references: async () => ({ airports: [] }),
     backend: (bearer) => backend.as(bearer),
   });
   /** `body`: an object (JSON) or a Uint8Array (raw). */
@@ -293,8 +289,6 @@ const mediaCalls = [
   ["GET", "media/med-1"],
   ["PATCH", "media/med-1", { body: edit }],
   ["POST", "media/med-1/versions?revision=1", upload()],
-  ["POST", "media/med-1/publish", { as: "staff", body: { revision: 1 } }],
-  ["POST", "media/med-1/withdraw", { as: "staff", body: { revision: 1 } }],
 ];
 
 test("on a mock deployment every media route is 404 MEDIA_UNAVAILABLE and the backend is never called", async () => {
@@ -333,15 +327,10 @@ test("no backend is 503 BACKEND_NOT_CONNECTED, unreadable roles 503 ROLES_UNAVAI
     assert.equal(backend.calls.length, 0);
   }
   const { call, backend } = mediaHarness();
-  for (const [method, path, opts] of mediaCalls.slice(0, 5)) {
+  for (const [method, path, opts] of mediaCalls) {
     const res = await call(method, path, { ...opts, as: "member" });
     assert.deepEqual([res.status, res.body.code], [403, "PHOTOGRAPHER_REQUIRED"], `${method} ${path}`);
   }
-  for (const [method, path, opts] of mediaCalls.slice(5))
-    for (const as of ["member", "photographer"]) {
-      const res = await call(method, path, { ...opts, as });
-      assert.deepEqual([res.status, res.body.code], [403, "FORBIDDEN"], `${as} ${method} ${path}`);
-    }
   assert.equal(backend.calls.length, 0);
 });
 
@@ -357,7 +346,6 @@ test("ids, revisions, states, cursors and parameters are checked before any back
     for (const [method, tail, opts] of [
       ["GET", "", undefined],
       ["PATCH", "", { body: edit }],
-      ["POST", "/publish", { as: "staff", body: { revision: 1 } }],
     ]) {
       const res = await call(method, `media/${id}${tail}`, opts);
       assert.deepEqual([res.status, res.body.code], [404, "NOT_FOUND"], `${method} ${id}${tail}`);
@@ -410,25 +398,23 @@ test("the list forwards only checked filters and always limit=50", async () => {
   assert.ok(backend.calls.every((c) => c.token === "photographer"), "the member's own token");
 });
 
-test("detail, edit, publish and withdraw call the matching backend paths", async () => {
+test("detail and edit call the matching backend paths; publish and withdraw are Admin routes, not here", async () => {
   const { call, backend } = mediaHarness({ reply: (c) => (c.method === "GET" ? detailAnswer : item) });
   assert.deepEqual((await call("GET", "media/med-7")).body, detailAnswer);
   const note = "Rights statement v1: own work";
   assert.equal((await call("PATCH", "media/med-7", { body: { ...edit, note } })).status, 200);
-  assert.equal((await call("POST", "media/med-7/publish", { as: "staff", body: { revision: 3 } })).status, 200);
-  assert.equal((await call("POST", "media/med-7/withdraw", { as: "staff", body: { revision: 4 } })).status, 200);
+  for (const action of ["publish", "withdraw"])
+    assert.equal((await call("POST", `media/med-7/${action}`, { as: "staff", body: { revision: 3 } })).status, 404, action);
   assert.deepEqual(
     backend.calls.map((c) => [c.method, c.path, c.body]),
     [
       ["GET", "/v1/admin/media/med-7", undefined],
       ["PATCH", "/v1/admin/media/med-7", { ...edit, note }],
-      ["POST", "/v1/admin/media/med-7/publish", { revision: 3 }],
-      ["POST", "/v1/admin/media/med-7/withdraw", { revision: 4 }],
     ],
   );
 });
 
-test("edit bodies are strict; publish and withdraw take only a revision", async () => {
+test("edit bodies are strict", async () => {
   const { call, backend } = mediaHarness();
   for (const body of [
     { revision: 1 },
@@ -445,11 +431,6 @@ test("edit bodies are strict; publish and withdraw take only a revision", async 
     const res = await call("PATCH", "media/med-1", { body });
     assert.deepEqual([res.status, res.body.code], [400, "INVALID_REQUEST"], JSON.stringify(body));
   }
-  for (const action of ["publish", "withdraw"])
-    for (const body of [{}, { revision: 1, note: "no" }, { revision: "1" }, { revision: 2147483648 }]) {
-      const res = await call("POST", `media/med-1/${action}`, { as: "staff", body });
-      assert.deepEqual([res.status, res.body.code], [400, "INVALID_REQUEST"], `${action} ${JSON.stringify(body)}`);
-    }
   const notJson = await call("PATCH", "media/med-1", { body: new TextEncoder().encode("{nope") });
   assert.equal(notJson.status, 400);
   const big = await call("PATCH", "media/med-1", { body: { revision: 1, licence: { attributionText: "x".repeat(17000) } } });
@@ -555,13 +536,6 @@ test("backend failures map to website codes, and nothing is retried", async () =
       assert.deepEqual([res.status, res.body.code], [want, wantCode], `${status} ${code} ${method} ${path}`);
       assert.equal(backend.calls.length, 1, "never retried");
     }
-  const refused = mediaHarness({
-    reply: () => {
-      throw new BackendError(403, "forbidden");
-    },
-  });
-  const publish = await refused.call("POST", "media/med-1/publish", { as: "staff", body: { revision: 1 } });
-  assert.deepEqual([publish.status, publish.body.code], [403, "FORBIDDEN"]);
   const gone = mediaHarness({
     reply: () => {
       throw new BackendNotConnected();
@@ -609,7 +583,7 @@ test("answers off the contract are 502 BACKEND_CONTRACT, including a non-https i
   assert.equal(oddStatus.status, 502);
 });
 
-test("in backend mode the member D1 submission routes are closed; staff still read the photo", async () => {
+test("in backend mode the D1 submission routes are closed to everyone", async () => {
   for (const roles of ["backend", "down", "not-connected"]) {
     const { call } = mediaHarness({ roles });
     for (const [method, path] of [
@@ -618,15 +592,11 @@ test("in backend mode the member D1 submission routes are closed; staff still re
       ["PUT", "submissions/x-1"],
       ["GET", "submissions/x-1/photo"],
     ])
-      for (const as of ["member", "photographer"]) {
+      for (const as of ["member", "photographer", "staff"]) {
         const res = await call(method, path, { as, body: method === "GET" ? undefined : {} });
         assert.deepEqual([res.status, res.body?.code], [404, "SUBMISSIONS_CLOSED"], `${roles} ${as} ${method} ${path}`);
       }
   }
-  const { call } = mediaHarness();
-  const staffPhoto = await call("GET", "submissions/x-1/photo", { as: "staff" });
-  assert.notEqual(staffPhoto.body?.code, "SUBMISSIONS_CLOSED", "admins reviewing existing proposals keep access");
-  assert.equal((await call("GET", "admin/submissions", { as: "staff" })).status, 200);
 });
 
 test("in mock mode the member D1 submission routes are closed too (D-2 amended 11-04)", async () => {
@@ -731,8 +701,6 @@ test("rights errors: rights_already_stated and a stale revision are different 40
   assert.deepEqual([notOwner.status, notOwner.body.code], [403, "FORBIDDEN"]);
   const missing = await fail(404, "not_found").call("PUT", "media/med-1/rights", { body: rights });
   assert.equal(missing.body.code, "NOT_FOUND");
-  const publish = await fail(422, "content_invalid").call("POST", "media/med-1/publish", { as: "staff", body: { revision: 1 } });
-  assert.deepEqual([publish.status, publish.body.code], [422, "LICENCE_INCOMPLETE"]);
 });
 
 test("PATCH: licence and/or description; description is normalised before it is forwarded", async () => {

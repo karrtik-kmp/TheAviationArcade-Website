@@ -4,7 +4,7 @@ import { requireArea } from "@/lib/access";
 
 export const dynamic = "force-dynamic";
 
-/** The photographer area. Guests see the public landing; the demo account is sent to /admin. */
+/** The photographer area. Guests see the public landing; the demo account is sent to the player area. */
 export default async function ContributeLayout({
   children,
 }: {

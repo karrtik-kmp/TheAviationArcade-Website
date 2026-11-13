@@ -5,12 +5,13 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const SURFACES = new Set(["public", "admin"]);
 const SHUTDOWN_GRACE_MS = 15_000;
 
+// This build is the public website only; the Admin is its own repo and build (decision I-1, 2026-11-13).
+// SITE_SURFACE is optional; anything but "public" means the env file belongs to another site.
 const surface = process.env.SITE_SURFACE;
-if (!SURFACES.has(surface)) {
-  console.error("SITE_SURFACE must be public or admin. Refusing to start.");
+if (surface !== undefined && surface !== "" && surface !== "public") {
+  console.error("This is the public website build; SITE_SURFACE may only be public. Refusing to start.");
   process.exit(1);
 }
 const host = process.env.HOST || "127.0.0.1";
@@ -28,7 +29,7 @@ process.env.VINEXT_TRUST_PROXY ??= "1";
 const { startProdServer } = await import("vinext/server/prod-server");
 const outDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "dist");
 const { server } = await startProdServer({ host, port, outDir });
-console.log(`Serving the ${surface} surface on http://${host}:${port}`);
+console.log(`Serving the public website on http://${host}:${port}`);
 
 let stopping = false;
 function stop(signal) {
