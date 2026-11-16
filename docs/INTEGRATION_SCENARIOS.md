@@ -123,8 +123,9 @@ The table below is the question as it was asked on 11-13.
 
 ## 4. Order
 
-1. Lock I-1 … I-7 (done 11-13 and 11-16). User now: `dev` DNS to the server. Briefs: the Backend seed script
-   (E4) and new project ID, and Unity if the game signs in with Firebase.
+1. Lock I-1 … I-7 (done 11-13 and 11-16). User now: `dev` DNS to the server. Briefs (11-16, in
+   [`briefs/`](briefs/)): `backend-firebase-project-and-demo-seed.md` (new project ID, E4 seed script),
+   `admin-firebase-project-and-demo.md`, `unity-firebase-project.md`.
 2. Vendor contract 0.26.0 into the repo(s) that I-1 names; if the Admin stays separate, port A1/A2 into it first.
 3. A3 desk by desk, each a focused commit with unit tests: Plane of the Day (desk + public read) → Aircraft
    Identifier → Military preparation → Military releases → audit. Delete the matching D1 code with each desk.
