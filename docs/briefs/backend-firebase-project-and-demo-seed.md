@@ -63,28 +63,48 @@ A new npm script (name it as you see fit, e.g. `demo:seed-content`) for the **de
   photos land as drafts. The user approves and publishes in the Admin. The script never publishes or activates a
   release.
 
-## Aircraft Identifier and Plane of the Day (checked 2026-11-16)
+## Aircraft Identifier and Plane of the Day: the 2026-09-28 delivery, for now (user, 2026-11-16)
 
-Root `docs/content-sources.md` has the details.
+**Ruling:** for the demo, seed only the small set of files we already have. That's Josh's 2026-09-28 delivery, kept
+in the Unity repo at `C:\Unity\Projects\AviationArcade_v2\docs\client-content\2026-09-28\`. The extracted photos
+are tracked there; the zips are local only. The seed takes the delivery folder as a path and reads it **read-only**.
 
-- **Aircraft Identifier: delivered as a Google Sheet, not a file.** "Airplane Identifier"
+- **Aircraft Identifier:** `Airplane Identifier v1.xlsx` plus 31 photos (`Airplane Identifier-…/Airplane Identifier/`,
+  `ai-a1.jpg`…`ai-a31.jpg`). **Match Unity's import result** (`Tools/ContentImport/import_client_content.py`, report in
+  Unity `docs/implementation/CLIENT_CONTENT_IMPORT.md`), so the website and the game hold the same 31 questions:
+  - Rows 11 (`ai-a8`) and 18 (`ai-a14`) are left out for duplicate answers.
+  - The logged spelling fixes apply ("Boing" → "Boeing", `ai-a23/jpg` → `ai-a23.jpg`).
+  - `ai-a11` and `ai-a18` are each shared by two questions.
+
+  Use the same ids. Credit is Josh M (@iamjoshmark), per Unity's ruling of 2026-09-29; the client hasn't confirmed it
+  yet. Ask the user for the licence before publishing.
+- **Plane of the Day:** 5 entries, `pod-4`…`pod-8`, from `Airplane Games - Game Play.xlsx` (header row "image #")
+  plus `Plane of the Day-…/Plane of the Day/pod-N.jpg`. Each has a title, make, model, description, photographer
+  Josh M, credit @iamjoshmark and Instagram link, as in Unity's `potd.json`. The seed loads them as drafts; the user
+  publishes and schedules one. Real photographers' uploads on `dev.` can be added later.
+- **Photos** go up under the staff photographer account, like the Military ones.
+
+There is **no import module yet** for Aircraft Identifier or Plane of the Day: `src/content/modules/` has
+`airport-spotter` and `military` only. Add them on the same xlsx path.
+
+### Later, not in this seed: the full Google Sheet
+
+- **Aircraft Identifier: the full set is a Google Sheet, not a file.** "Airplane Identifier"
   (`1vbost9phqEwrWPEX331XLwp0sjcL97FZmXvV6DZTAn0`, link in `content-sources.md`), 241 questions in rows 4–244.
   Columns: Level (rank name), Correct Answer, Wrong Answer 1–3, file, Image Link (a Google Photos share link on every
   row).
-  - **There is no import module for it yet**: `src/content/modules/` has `airport-spotter` and `military` only. Add one
-    on the same xlsx path, reading an `.xlsx` export of the sheet that the user saves into root `docs/`, so the
+  - The same Identifier module reads an `.xlsx` export of the sheet that the user saves into root `docs/`, so the
     import stays a file like the others.
   - **Photos:** don't scrape Google Photos. The user (or Josh) exports the albums into a folder in root `docs/`. The
     seed matches photos by file name, but only rows 4–36 have one (`ai-a1`…`ai-a31`), so the rest need a mapping
     from Josh first. Until then, those rows import with no photo, and their photo-less state is reported, not filled.
   - **Licence and credit aren't stated** in the sheet. Ask the user before publishing them; that's a client question.
   - **Data issues** (wrong answers that repeat, spelling, a photo shared by two questions; listed in
-    `content-sources.md`): import as delivered and report each one. Don't correct client text. A question whose
+    `content-sources.md`): apply only the kinds of fix Unity's import already logs for the client, and report each
+    one; never rewrite answers beyond that. A question whose
     wrong answers aren't 3 distinct values can't be published (scenario D5), so the desk shows it as blocked.
-- **Plane of the Day:** by design it's photographer content (concept deck: the photographer's image,
-  make/model/variant, description, name and Instagram), so there is **no client file to seed**. It comes from the
-  real photographers' uploads on `dev.`. The user publishes one and schedules it in the Admin. Nothing to build in
-  the seed.
+- When Josh supplies the photos, the full sheet's 241 questions replace the 2026-09-28 set. Its rows 4–36 carry the
+  same file names (`ai-a1`…`ai-a31`); check that their answers match before replacing.
 
 **Never fill any desk with made-up or stock content.** The Unity session keeps the one client-question list
 (`docs/implementation/CLIENT_CONTENT_IMPORT.md`); the Unity brief asks it to log these.
@@ -95,10 +115,11 @@ Root `docs/content-sources.md` has the details.
   It refuses one from `airplane-games-auth-20261022`.
 - On the dev database, the seed's dry run lists:
   - the 31 Military rows and their 30 photos (C-17 missing)
-  - the 241 Aircraft Identifier questions, with the photo and data issues reported
+  - the 31 Aircraft Identifier questions with 31 photos (2026-09-28 delivery, the same ids and exclusions as Unity)
+  - the 5 Plane of the Day entries
   - the role grants
 
   `--yes` applies them, and a second run changes nothing.
-- The Admin's Military and Aircraft Identifier desks on `dev.admin.` show the rows, waiting for approval.
+- On `dev.admin.`, the Military, Aircraft Identifier and Plane of the Day desks show the rows, waiting for approval.
 - Tests cover the refusals: production, demo project, demo account, foreign-project UID.
 - Report what was verified and what wasn't (e.g. `ugs:check --live` waits on the user's UGS change).

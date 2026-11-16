@@ -35,13 +35,16 @@ Admin, Backend, game; dev and prod). The old project is retired with the Google 
 The Aircraft Identifier Google Sheet (241 questions) was checked on 2026-11-16. Root `docs/content-sources.md` lists
 the details. Please log these as client questions:
 
+Your 2026-09-28 import already logs rows 11, 18, `ai-a23/jpg` and the shared `ai-a11`/`ai-a18`. These are new, from
+the full sheet's rows 37–244:
+
 1. **Photos:** please send the photos as files, or tell us which photo goes with each row. Rows 37–244 have no file
-   name; `ai-a23/jpg` on row 28 looks like a typo.
+   name, only a Google Photos link.
 2. **Licence and credit** for those photos.
-3. **Wrong answers that repeat** the correct answer or each other: rows 11, 18, 71, 95, and two more (listed in
+3. **Wrong answers that repeat** the correct answer or each other: rows 71, 95, and two more (listed in
    `content-sources.md`).
-4. **Spelling** in answers: "Boing", "Bowing", "Aribus", "A321cep", and others.
-5. **Shared photos:** may two questions share one photo? (rows 14/15, 22/23, 64/65)
+4. **Spelling** in answers: "Bowing", "Boeig", "Boieng", "Goeing", "Aribus", "Airbuz", "A321cep", and others.
+5. **Shared photo:** rows 64/65 share one link.
 
 ## Done when
 
