@@ -38,8 +38,10 @@ export reads owners who signed in through the old project, so it must keep namin
 - **D1:** nothing is migrated (I-4). The user exports D1 to a backup, and D1 is deleted after the demo works. So the
   desks' D1 code can go with A3, without keeping a reader for old records. Keep `npm run media:export` until the
   backup exists.
-- **Content gap ⚠️:** Josh has delivered no Aircraft Identifier photos and no Plane of the Day content. Those desks must
-  work, but may be empty at the demo. Never fill them with made-up content.
+- **Aircraft Identifier:** the seed also loads Josh's 241 questions (Google Sheet). Rows without a photo yet, and
+  rows whose wrong answers aren't 3 distinct values, must show as blocked with the reason, not fail the desk.
+- **Plane of the Day:** photographer content by design, with no client file. The user publishes a real photographer's
+  upload from `dev.` and schedules it. Never fill a desk with made-up content.
 
 ## Done when
 

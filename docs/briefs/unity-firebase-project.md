@@ -30,6 +30,19 @@ Admin, Backend, game; dev and prod). The old project is retired with the Google 
 2. In the UGS dashboard, change the `oidc-firebase` provider's Client ID and issuer to the new project (root
    `docs/ugs-setup.md`, flagged ⚠️). The Backend re-runs `ugs:check --live`.
 
+## Client questions to log (you own `docs/implementation/CLIENT_CONTENT_IMPORT.md`)
+
+The Aircraft Identifier Google Sheet (241 questions) was checked on 2026-11-16. Root `docs/content-sources.md` lists
+the details. Please log these as client questions:
+
+1. **Photos:** please send the photos as files, or tell us which photo goes with each row. Rows 37–244 have no file
+   name; `ai-a23/jpg` on row 28 looks like a typo.
+2. **Licence and credit** for those photos.
+3. **Wrong answers that repeat** the correct answer or each other: rows 11, 18, 71, 95, and two more (listed in
+   `content-sources.md`).
+4. **Spelling** in answers: "Boing", "Bowing", "Aribus", "A321cep", and others.
+5. **Shared photos:** may two questions share one photo? (rows 14/15, 22/23, 64/65)
+
 ## Done when
 
 - The game signs in on device against `airplane-games-9fe1e`.

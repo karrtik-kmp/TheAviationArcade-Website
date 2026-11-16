@@ -63,26 +63,42 @@ A new npm script (name it as you see fit, e.g. `demo:seed-content`) for the **de
   photos land as drafts. The user approves and publishes in the Admin. The script never publishes or activates a
   release.
 
-## ⚠️ Gaps: no client content to load
+## Aircraft Identifier and Plane of the Day (checked 2026-11-16)
 
-Per root `docs/content-sources.md`:
+Root `docs/content-sources.md` has the details.
 
-- **Aircraft Identifier:** the client has a Google Sheet (questions), but its photos are still "Needed", from the
-  photographer collective.
-- **Plane of the Day:** no client content at all.
+- **Aircraft Identifier: delivered as a Google Sheet, not a file.** "Airplane Identifier"
+  (`1vbost9phqEwrWPEX331XLwp0sjcL97FZmXvV6DZTAn0`, link in `content-sources.md`), 241 questions in rows 4–244.
+  Columns: Level (rank name), Correct Answer, Wrong Answer 1–3, file, Image Link (a Google Photos share link on every
+  row).
+  - **There is no import module for it yet**: `src/content/modules/` has `airport-spotter` and `military` only. Add one
+    on the same xlsx path, reading an `.xlsx` export of the sheet that the user saves into root `docs/`, so the
+    import stays a file like the others.
+  - **Photos:** don't scrape Google Photos. The user (or Josh) exports the albums into a folder in root `docs/`. The
+    seed matches photos by file name, but only rows 4–36 have one (`ai-a1`…`ai-a31`), so the rest need a mapping
+    from Josh first. Until then, those rows import with no photo, and their photo-less state is reported, not filled.
+  - **Licence and credit aren't stated** in the sheet. Ask the user before publishing them; that's a client question.
+  - **Data issues** (wrong answers that repeat, spelling, a photo shared by two questions; listed in
+    `content-sources.md`): import as delivered and report each one. Don't correct client text. A question whose
+    wrong answers aren't 3 distinct values can't be published (scenario D5), so the desk shows it as blocked.
+- **Plane of the Day:** by design it's photographer content (concept deck: the photographer's image,
+  make/model/variant, description, name and Instagram), so there is **no client file to seed**. It comes from the
+  real photographers' uploads on `dev.`. The user publishes one and schedules it in the Admin. Nothing to build in
+  the seed.
 
-So the seed can fill only the **Military** desk with Josh's own material. The user's intent says Josh should also see
-Aircraft Identifier items and a scheduled Plane of the Day. Whether those come from the Sheet without photos, from
-the real photographers' uploads on `dev.`, or wait for Josh is a question for the user and Josh. **Don't fill them with
-made-up or stock content.** Log it in Unity `docs/implementation/CLIENT_CONTENT_IMPORT.md` if it becomes a client
-question.
+**Never fill any desk with made-up or stock content.** The Unity session keeps the one client-question list
+(`docs/implementation/CLIENT_CONTENT_IMPORT.md`); the Unity brief asks it to log these.
 
 ## Done when
 
 - The dev backend boots with `FIREBASE_PROJECT_ID=airplane-games-9fe1e` and accepts an ID token from that project.
   It refuses one from `airplane-games-auth-20261022`.
-- On the dev database, the seed's dry run lists the 31 Military rows, the 30 photos (C-17 missing) and the role
-  grants. `--yes` applies them, and a second run changes nothing.
-- The Admin's Military desk on `dev.admin.` shows the 31 rows, waiting for approval.
+- On the dev database, the seed's dry run lists:
+  - the 31 Military rows and their 30 photos (C-17 missing)
+  - the 241 Aircraft Identifier questions, with the photo and data issues reported
+  - the role grants
+
+  `--yes` applies them, and a second run changes nothing.
+- The Admin's Military and Aircraft Identifier desks on `dev.admin.` show the rows, waiting for approval.
 - Tests cover the refusals: production, demo project, demo account, foreign-project UID.
 - Report what was verified and what wasn't (e.g. `ugs:check --live` waits on the user's UGS change).
