@@ -39,7 +39,8 @@ User, 2026-11-16: "you can skip licenses like unsplash or client side". All imag
 folders: root `docs/` (Military) and Unity `docs/client-content/2026-09-28/` (Identifier, Plane of the Day).
 - **Dev database only:** the demo's photos can be published with no licence. Production publishing rules don't change.
 - **No made-up licence:** the records say "no licence", so the rule can come back when Josh answers.
-- **Still open:** each Plane of the Day entry's https factual source is not part of this ruling.
+- **Factual source skipped too** (user, same day, "Skip it on dev"): each Plane of the Day entry's https factual source,
+  dev database only. Recorded as "no source", never invented.
 
 ## New ruling: Firebase project
 
