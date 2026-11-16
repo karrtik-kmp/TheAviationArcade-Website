@@ -33,6 +33,14 @@ plus a new ruling on the Firebase project.
   dev hosts to Firebase's authorized domains, turns on Google sign-in, and makes themself the first admin with
   `roles:grant` on the dev backend. Google sign-in on each host is then checked by a person (B2).
 
+## Later the same day: licences skipped for the dev demo
+
+User, 2026-11-16: "you can skip licenses like unsplash or client side". All images are already in the two delivery
+folders: root `docs/` (Military) and Unity `docs/client-content/2026-09-28/` (Identifier, Plane of the Day).
+- **Dev database only:** the demo's photos can be published with no licence. Production publishing rules don't change.
+- **No made-up licence:** the records say "no licence", so the rule can come back when Josh answers.
+- **Still open:** each Plane of the Day entry's https factual source is not part of this ruling.
+
 ## New ruling: Firebase project
 
 `airplane-games-9fe1e` ("Airplane Games", under the new Google account) replaces `airplane-games-auth-20261022`

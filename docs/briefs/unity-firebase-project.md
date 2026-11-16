@@ -24,8 +24,9 @@ Admin, Backend, game; dev and prod). The old project is retired with the Google 
 
 ## Steps that need the user (console)
 
-1. In Firebase `airplane-games-9fe1e`: register the Android and iOS apps with the game's existing package and bundle
-   ids, and download the two config files. Turn on email/password (and Google for Android, per ADR-0006). Add the
+1. In Firebase `airplane-games-9fe1e`: the Android and iOS apps are **already registered**. Their config files are in
+   `H:\Work\TheAviationArcade\firebase-apps\` (`google-services.json`, package `com.airplane.games`, and
+   `GoogleService-Info.plist`, dated 2026-11-06). Copy those in and check that the bundle id matches. Turn on email/password (and Google for Android, per ADR-0006). Add the
    Android signing SHA-1/SHA-256 fingerprints, or Google sign-in fails on device.
 2. In the UGS dashboard, change the `oidc-firebase` provider's Client ID and issuer to the new project (root
    `docs/ugs-setup.md`, flagged ⚠️). The Backend re-runs `ugs:check --live`.
