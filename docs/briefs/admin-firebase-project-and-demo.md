@@ -59,11 +59,26 @@ This comes from the Backend's hand-over note. Plan it into A3:
   - The Plane of the Day factual source is waived the same way.
   - The Media desk and Plane of the Day desk show this as "Published without a licence (dev demo)" and "No source
     (dev demo)". Never show a licence name that isn't there.
-- **Credit:** 4 Military rows give no photographer. On dev, the user ruled "No credit on dev", so those 4 publish with
-  credit not required (never an invented name). Elsewhere, credit stays required, and the desk shows the reason when
+- **Credit:** 4 Military rows (sheet rows 17, 26, 28, 29) give no photographer. On dev, the user ruled "No credit on
+  dev". Under the same switch, the seed sets "credit required" off for those 4 photos only, never writes a name, and
+  the audit records `creditWaived: "dev-demo"`. Elsewhere, credit stays required, and the desk shows the reason when
   it blocks publishing.
-- ⚠️ **Whether the Admin can show the waiver** depends on the Backend build: its last report says the waiver may
-  have no API field. Confirm against the vendored contract before building the label.
+- **How the waiver is visible: there is no new API field.** The Admin parses `MediaVersion`/`MediaLicence` strictly,
+  and the contract has `additionalProperties: false`. The waiver lives in two places:
+  - **Database:** the column `media_versions.licence_waiver = 'dev-demo'`. A Plane of the Day item keeps
+    `factualSource: ""`.
+  - **Audit:** `media_publish` detail `licenceWaived: "dev-demo"`, and `editorial_save` detail
+    `factualSourceWaived: "dev-demo"`. The audit desk (W4) can show these.
+
+  The desks can also infer the labels without anything new: a published version with `licenceName: null` reads
+  "Published without a licence (dev demo)", and a live Plane of the Day item with an empty `factualSource` reads
+  "No source (dev demo)". If you want an explicit field, ask the Backend; it adds one once your parser accepts it.
+- **API 0.27.1** changes descriptions only: a published `ImageRef` or Plane of the Day feature may now carry
+  `licenceName: null`.
+- **The Admin's own pre-checks block the waivers in the browser:** `lib/media-form.ts:278` ("Add a licence name.") and
+  `lib/rules.ts:172` ("Add an https factual source."). They need a dev-only switch on the Admin too, keyed to the
+  same `DEV_DEMO_WAIVER=dev-demo` in the dev Admin's env file and refused on the prod Admin. That switch only relaxes
+  the browser check; the Backend stays the authority and still refuses when its own switch is off.
 - **Shared photos:** `ai-a11`/`ai-a11-2` and `ai-a18`/`ai-a18-2` each share one photo, so the two questions in a pair
   can't be in the same release. If the Identifier release desk is built, it shows this as a refusal reason.
 
