@@ -4,6 +4,11 @@ Firebase Authentication is the product account provider for contributors and sta
 The outer private Sites access gate remains separate. Product content routes use
 Firebase identity and do not authorize requests from hosting headers.
 
+**2026-11-16: the project is now `airplane-games-9fe1e`.** The Google account that owned the project below
+changed, so it is retired and its accounts don't carry over. The new project's authorized domains (`dev.` and
+`dev.admin.` first, per `firebase.json`), Google sign-in and web app config are set again by the user. Record the
+new Web App id here once it exists. The paragraph below is history.
+
 Provisioned on 2026-10-22: project `airplane-games-auth-20261022`, Web App
 `1:657564884414:web:0aa58e8e36a6aa83f2adef` (`Airplane Games Website`). Auth configuration
 deployment succeeded with email/password and Google enabled. The four production

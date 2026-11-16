@@ -33,7 +33,8 @@ accounts. This repo edits only the website; items for the other repos go to thei
 
 ## 1. Starting point (2026-10-29)
 
-- **Identity is shared.** All three use Firebase project `airplane-games-auth-20261022` and the
+- **Identity is shared.** All three use Firebase project `airplane-games-9fe1e` (since 2026-11-16; it was
+  `airplane-games-auth-20261022` when this was written) and the
   principal `firebase:<projectId>:<uid>`, with `demo-airplane-games` locally. The website session
   cookie (`aa_session`) holds the Firebase ID token itself (max 1 h). The backend accepts the same
   token, so the Worker can call it server-to-server without a new trust mechanism.
@@ -52,7 +53,7 @@ accounts. This repo edits only the website; items for the other repos go to thei
 ## 2. Target topology and ownership
 
 ```
-                 Firebase Auth  (airplane-games-auth-20261022)
+                 Firebase Auth  (airplane-games-9fe1e)
                    │ ID token                         │ ID token (cookie, forwarded as Bearer)
                    ▼                                  ▼
    Unity app ──────────────►  Game backend  ◄──────── Website Worker

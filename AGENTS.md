@@ -20,7 +20,8 @@ Start with README.md and docs/TASKS.md, then inspect actual Git status. Unity is
 
 - Product authentication is Firebase email/password and Google only. Hosting's private review
   gate is separate; hosting headers must not authorize product actions.
-- Cloud project is `airplane-games-auth-20261022`. Local tests use `demo-airplane-games` only.
+- Cloud project is `airplane-games-9fe1e` (ruling 2026-11-16; `airplane-games-auth-20261022` is retired and
+  its accounts don't carry over). Local tests use `demo-airplane-games` only.
   Never expose CLI credentials, ID/refresh tokens, service-account keys or .dev.vars in commits.
 - Server principal is namespaced by Firebase project and UID. Never reassign existing content
   ownership by matching an editable contact email, photographer credit or provider display name.

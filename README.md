@@ -250,7 +250,8 @@ Historical Lighthouse results predate the Firebase change and are not a new perf
 
 ## Cloud setup and product boundaries
 
-Firebase project: `airplane-games-auth-20261022`. [Firebase setup and provisioning](docs/FIREBASE_SETUP.md)
+Firebase project: `airplane-games-9fe1e` (since 2026-11-16; it replaced the retired
+`airplane-games-auth-20261022`, see [docs/intent/hosting-dev-demo.md](docs/intent/hosting-dev-demo.md)). [Firebase setup and provisioning](docs/FIREBASE_SETUP.md)
 records the exact workflow. Runtime configuration uses `FIREBASE_PROJECT_ID`, `FIREBASE_WEB_API_KEY`,
 `FIREBASE_AUTH_DOMAIN`, `FIREBASE_APP_ID` and `GAME_API_BASE_URL`. Keep `FIREBASE_AUTH_EMULATOR_HOST` unset
 in production. The deployed app rejects development/unsigned emulator tokens.

@@ -27,7 +27,18 @@ says where it can be proven: **L** = local (Node build, local backend, Auth emul
 Each needs a yes from the user; the recommendation is listed first.
 
 **Locked 2026-11-13 (user):** I-1 separate Admin repo · I-2 `dev` → dev sites, `main` → prod · I-3 adopt WC-1.
-I-4 … I-7: the user wants to discuss them before they are locked.
+
+**Locked 2026-11-16 (user), full text in [`intent/hosting-dev-demo.md`](intent/hosting-dev-demo.md):** the dev sites
+are Josh's demo, showing his real content.
+- **I-4:** nothing is migrated. Export D1 to a local backup, then delete D1 after the demo works, with the user's yes at that point.
+- **I-5:** a Backend script loads the desks from Josh's files and grants photographer by UID after each photographer
+  signs up on `dev.`. The user approves and publishes.
+- **I-6:** a shared IP is fine for dev, and must be fixed before the public launch.
+- **I-7:** the user points `dev` DNS at the server now, then sets up the Firebase domains, Google sign-in and the
+  first admin on the new project.
+- **New ruling:** Firebase project `airplane-games-9fe1e` replaces `airplane-games-auth-20261022` everywhere.
+
+The table below is the question as it was asked on 11-13.
 
 | # | Question | Recommendation | Why it blocks |
 |---|---|---|---|
@@ -58,7 +69,7 @@ I-4 … I-7: the user wants to discuss them before they are locked.
 
 | # | Scenario | Expected | Proof |
 |---|---|---|---|
-| B1 | Email/password sign-up, verify, sign in, sign out, reset on `dev.` | Works against `airplane-games-auth-20261022` | D (L on emulator only) |
+| B1 | Email/password sign-up, verify, sign in, sign out, reset on `dev.` | Works against `airplane-games-9fe1e` | D (L on emulator only) |
 | B2 | Google sign-in on `dev.` and `dev.admin.` | Works on each host; **must be checked by a person**, not inferred from the emulator | D |
 | B3 | Admin with a verified email signs in on `dev.admin.` | All desks visible | L, D |
 | B4 | Signed-in player (no role) opens `dev.admin.` | Denied; nothing staff-only rendered or returned | L, D |
@@ -99,8 +110,9 @@ I-4 … I-7: the user wants to discuss them before they are locked.
 | # | Scenario | Expected | Proof |
 |---|---|---|---|
 | E1 | `git grep` for D1, `cloudflare:workers`, `wrangler` in both repos | No runtime use left; D1 export tool is the only exception until I-4 is done | L |
-| E2 | D1 proposals export → backend `media:import` dry run → apply (dev) | Counts match the 11-04 rehearsal rules (no rejected, credit carried, email left out, over-limit listed for re-upload) | D |
-| E3 | Cloudflare Worker, D1 database and secrets | Deleted **only** after prod migration and an explicit user yes | — |
+| E2 | D1 read-only export (`media:export --remote`) to a local backup | The export file exists and is kept outside the repo. No import (I-4: nothing is migrated) | L |
+| E3 | Cloudflare Worker, D1 database and secrets | Deleted **only** after E2 and the dev demo works, with an explicit user yes at that point | — |
+| E4 | Backend seed script on the dev backend | Desks hold Josh's client files (31 Military rows `mil-a1`…`mil-a31`, his photos under the staff photographer account). Real photographers hold the photographer role by UID after signing up on `dev.`. Nothing Claude-drafted | D |
 
 ### F. Copy rules (unchanged)
 
@@ -111,7 +123,8 @@ I-4 … I-7: the user wants to discuss them before they are locked.
 
 ## 4. Order
 
-1. Lock I-1 … I-7.
+1. Lock I-1 … I-7 (done 11-13 and 11-16). User now: `dev` DNS to the server. Briefs: the Backend seed script
+   (E4) and new project ID, and Unity if the game signs in with Firebase.
 2. Vendor contract 0.26.0 into the repo(s) that I-1 names; if the Admin stays separate, port A1/A2 into it first.
 3. A3 desk by desk, each a focused commit with unit tests: Plane of the Day (desk + public read) → Aircraft
    Identifier → Military preparation → Military releases → audit. Delete the matching D1 code with each desk.
@@ -120,7 +133,8 @@ I-4 … I-7: the user wants to discuss them before they are locked.
    Record the results in `docs/evidence/`.
 6. Plan-review gate on the A5 cut-over steps, then deploy `devwebsite` and `devadmin`; run §3 marked D. Google
    sign-in (B2) is checked by a person on each host.
-7. E2 migration rehearsal on dev. Prod (`website`, `admin`) and Cloudflare retirement wait for a separate go-ahead.
+7. Once Josh has seen the demo: E3 (delete D1, after E2's backup and the user's yes). Prod (`website`, `admin`)
+   waits for a separate go-ahead.
 
 ## 5. What these runs cannot prove
 
