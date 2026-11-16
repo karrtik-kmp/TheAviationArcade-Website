@@ -59,8 +59,11 @@ This comes from the Backend's hand-over note. Plan it into A3:
   - The Plane of the Day factual source is waived the same way.
   - The Media desk and Plane of the Day desk show this as "Published without a licence (dev demo)" and "No source
     (dev demo)". Never show a licence name that isn't there.
-- **Credit is still required.** 4 Military rows give no photographer, so their photos can't be published until an
-  admin sets a credit or turns "credit required" off. The desk must show that reason.
+- **Credit:** 4 Military rows give no photographer. On dev, the user ruled "No credit on dev", so those 4 publish with
+  credit not required (never an invented name). Elsewhere, credit stays required, and the desk shows the reason when
+  it blocks publishing.
+- ⚠️ **Whether the Admin can show the waiver** depends on the Backend build: its last report says the waiver may
+  have no API field. Confirm against the vendored contract before building the label.
 - **Shared photos:** `ai-a11`/`ai-a11-2` and `ai-a18`/`ai-a18-2` each share one photo, so the two questions in a pair
   can't be in the same release. If the Identifier release desk is built, it shows this as a refusal reason.
 

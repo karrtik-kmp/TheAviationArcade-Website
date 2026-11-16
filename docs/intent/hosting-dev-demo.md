@@ -41,6 +41,8 @@ folders: root `docs/` (Military) and Unity `docs/client-content/2026-09-28/` (Id
 - **No made-up licence:** the records say "no licence", so the rule can come back when Josh answers.
 - **Factual source skipped too** (user, same day, "Skip it on dev"): each Plane of the Day entry's https factual source,
   dev database only. Recorded as "no source", never invented.
+- **No credit on dev** (user, same day): the 4 Military photos whose row gives no photographer are published with
+  no credit, dev database only. No photographer name is ever invented.
 
 ## New ruling: Firebase project
 
