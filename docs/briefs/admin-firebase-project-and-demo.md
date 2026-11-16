@@ -59,7 +59,11 @@ This comes from the Backend's hand-over note. Plan it into A3:
   - The Plane of the Day factual source is waived the same way.
   - The Media desk and Plane of the Day desk show this as "Published without a licence (dev demo)" and "No source
     (dev demo)". Never show a licence name that isn't there.
-- **Credit:** 4 Military rows (sheet rows 17, 26, 28, 29) give no photographer. On dev, the user ruled "No credit on
+- **The waiver is built** (Backend `6e3512a`, API 0.27.1 descriptions only, migration 0026). Vendor 0.27.1. On dev,
+  the order is: set the env line, restart the dev backend, then run the seed. A photo seeded before the switch was on
+  keeps credit required until an admin turns it off on the existing route.
+- **Credit:** 4 Military rows give no photographer: `mil-a14` (row 17, CAC Wirraway), `mil-a23` (row 26, T-28 Trojan),
+  `mil-a25` (row 28, TBF/TBM Avenger) and `mil-a26` (row 29, Eurofighter Typhoon). On dev, the user ruled "No credit on
   dev". Under the same switch, the seed sets "credit required" off for those 4 photos only, never writes a name, and
   the audit records `creditWaived: "dev-demo"`. Elsewhere, credit stays required, and the desk shows the reason when
   it blocks publishing.
