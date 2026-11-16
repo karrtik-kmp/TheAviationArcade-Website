@@ -43,6 +43,27 @@ export reads owners who signed in through the old project, so it must keep namin
   Josh M) for the user to publish and schedule. The full 241-question sheet comes later. Never fill a desk with made-up
   content.
 
+## 3. What the Backend built (2026-11-16, Backend `main` up to `89a0740`)
+
+This comes from the Backend's hand-over note. Plan it into A3:
+
+- **Aircraft Identifier lives in the content module `identifier`, not in editorial items.** The Identifier desk reads
+  `GET /v1/admin/content/identifier/items` (API 0.27.0, the same shape as Military) to show the 31 questions. Vendor
+  the contract at 0.27.0 or later.
+- **Order of work for Plane of the Day:** a Plane of the Day draft can only use a published photo, so the seed
+  uploads the 5 photos as drafts. The user publishes each photo in the Media desk, then a second seed run creates the
+  5 Plane of the Day drafts, and the user publishes and schedules one. The desk's empty state should say this.
+- **Licence and source waiver, dev only** (user, 2026-11-16; Backend plan `docs/plans/dev-licence-waiver.md`,
+  in review, not built yet):
+  - On a `_dev` database, a photo can be published with no licence. The version records `licenceWaiver: "dev-demo"`.
+  - The Plane of the Day factual source is waived the same way.
+  - The Media desk and Plane of the Day desk show this as "Published without a licence (dev demo)" and "No source
+    (dev demo)". Never show a licence name that isn't there.
+- **Credit is still required.** 4 Military rows give no photographer, so their photos can't be published until an
+  admin sets a credit or turns "credit required" off. The desk must show that reason.
+- **Shared photos:** `ai-a11`/`ai-a11-2` and `ai-a18`/`ai-a18-2` each share one photo, so the two questions in a pair
+  can't be in the same release. If the Identifier release desk is built, it shows this as a refusal reason.
+
 ## Done when
 
 The Admin repo names `airplane-games-9fe1e` everywhere except the D1 export, and its `firebase.json` domains match the
