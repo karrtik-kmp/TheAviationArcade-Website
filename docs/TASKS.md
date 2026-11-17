@@ -718,3 +718,17 @@ not the Node one. Against `demo:preview` (5186, Auth Emulator, mock roles): api-
 prefix), demo-admin-qa, session-return-qa, military-qa, military-release-qa, frontend-ui-qa pass, browser-qa 8/8;
 `test:auth` against the same demo profile on 5173: 13 passed, 1 skipped (Google popup), 0 failed. Code review: ship (3 minors; bundle check becomes an automated post-build test in A2). Evidence files the
 suites rewrote were not committed. Nothing deployed; hosted and live Google sign-in not tested.
+
+## Review of the Admin removal (2026-11-17, `b0777a6`, I-1)
+
+Code review of `b0777a6` (and the Firebase config in `94670ad`): ship after two fixes, both applied.
+`/api/auth/config` no longer returns `demoLogin`: nothing on the website read it after the admin sign-in card
+went, so a dev env with `DEMO_LOGIN_*` set handed the demo password to every visitor. `demoLogin()`, the two
+settings and their `web.env.example` lines are gone; `demo:preview` writes only `DEMO_ACCOUNT_UID`. The proxy
+matcher has its `favicon\.svg` escape back (the `.` had matched any character, so e.g. `/faviconXsvg` skipped the
+security headers). New tests in `tests/node-hosting.test.mjs` pin both; the matcher test fails on the old proxy.
+Left open (minor): `/sign-in?return_to=/admin…` lands on a 404 after sign-in; no test for the `.local` host
+exclusion in `lib/admin-site.ts`; staff hero copy on `/account` names the workspace on local hosts where its
+link is hidden.
+Verification: typecheck; `npm test` 238/238; `npm run build` completes. Browser suites not run (they still hold admin
+steps). Nothing deployed.

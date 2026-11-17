@@ -1,6 +1,12 @@
 # Demo account
 
-The shared demo account signs in at `/admin/sign-in` with the existing Firebase email/password flow and lands on a
+**Since 2026-11-13 (decision I-1)** the website has no `/admin`. The shared demo account signs in on `/sign-in`
+like anyone else and lands in the player area (`/play`), view only; `/contribute` sends it there too. The
+website never hands out its credentials: `/api/auth/config` returns only the Firebase web config, and
+`DEMO_LOGIN_EMAIL` / `DEMO_LOGIN_PASSWORD` are no longer website settings (removed 2026-11-17). The view-only
+admin demo described below now lives in the Admin repo; the rest of this page is history.
+
+The shared demo account signed in at `/admin/sign-in` with the existing Firebase email/password flow and landed on a
 view-only `/admin`. It shows only the earlier admin **Load demo data** sample drafts, defined once
 in `lib/demo-samples.ts`:
 
@@ -26,12 +32,11 @@ API that requires identity returns 403 for it, including the admin, contributor 
 data routes. It is never staff, even if it is later granted an `admin` role in the backend.
 
 - DEMO_ACCOUNT_UID: the actual Firebase UID; it removes live data capabilities server-side.
-- DEMO_LOGIN_EMAIL / DEMO_LOGIN_PASSWORD: intentionally shared sample credentials exposed by
-  `/api/auth/config` so the sign-in form can prefill them. Never use a private or staff password.
+- (Retired 2026-11-17) DEMO_LOGIN_EMAIL / DEMO_LOGIN_PASSWORD were shared sample credentials exposed by
+  `/api/auth/config` for the admin sign-in card. Nothing on the website reads them; leave them out of its env file.
 
-These bindings are optional and default off. The credential values belong in ignored local
-settings and encrypted Worker bindings, not in source control. To stop advertising the login,
-remove the email/password bindings and keep DEMO_ACCOUNT_UID, which keeps the account blocked.
+DEMO_ACCOUNT_UID is optional and defaults off. Keep it set wherever the demo account exists: it keeps the
+account blocked.
 The hosted account `demo@airplane-games.test` in `airplane-games-auth-20261022` has no staff
 access, and its email verification was not overridden.
 

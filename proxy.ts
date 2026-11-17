@@ -19,5 +19,5 @@ export function proxy() {
 
 export const config = {
   // Built assets and public files are served before the app.
-  matcher: ["/((?!_next/|assets/|fonts/|media/|favicon\.svg).*)"],
+  matcher: ["/((?!_next/|assets/|fonts/|media/|favicon\\.svg).*)"],
 };

@@ -58,6 +58,26 @@ test("the website has no admin pages, admin API or surface switch (the Admin is 
   assert.doesNotMatch(read("proxy.ts"), /surface/i);
 });
 
+test("the proxy skips only the built assets and public files, so every other path gets the security headers", () => {
+  const literal = read("proxy.ts").match(/matcher:\s*(\[[^\]]*\])/)?.[1];
+  assert.ok(literal, "proxy.ts has a matcher");
+  const matchers = JSON.parse(literal).map((source) => new RegExp(`^${source}$`));
+  const proxied = (pathname) => matchers.some((matcher) => matcher.test(pathname));
+  for (const pathname of ["/_next/static/a.js", "/assets/a.png", "/fonts/jost.woff2", "/media/a.webp", "/favicon.svg"])
+    assert.equal(proxied(pathname), false, pathname);
+  for (const pathname of ["/", "/account", "/api/account", "/favicon-svg", "/faviconXsvg"])
+    assert.equal(proxied(pathname), true, pathname);
+});
+
+test("the website never hands out demo sign-in credentials (the demo account only removes capabilities)", () => {
+  assert.doesNotMatch(read("app/api/auth/config/route.ts"), /demo/i);
+  const offenders = ["app", "lib", "components", "scripts"]
+    .flatMap(sources)
+    .concat(["web.env.example"])
+    .filter((file) => /DEMO_LOGIN|demoLogin/.test(read(file)));
+  assert.deepEqual(offenders, []);
+});
+
 test("the server entry refuses to start without a valid PORT or with a SITE_SURFACE other than public", () => {
   const entry = path.join(root, "scripts", "node-server.mjs");
   const run = (env) =>

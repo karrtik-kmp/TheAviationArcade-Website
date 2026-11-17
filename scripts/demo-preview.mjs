@@ -14,7 +14,7 @@ if (!response.ok || typeof result.localId !== "string") throw new Error("Start t
 const defaults = await readFile(new URL("../.dev.vars.example", import.meta.url), "utf8");
 if (!defaults.includes("FIREBASE_PROJECT_ID=demo-airplane-games")) throw new Error("Local example no longer targets the demo project.");
 await writeFile(new URL("../.dev.vars.demo-preview", import.meta.url), defaults +
-  `\nDEMO_ACCOUNT_UID=${result.localId}\nDEMO_LOGIN_EMAIL=${user.email}\nDEMO_LOGIN_PASSWORD=${demoPassword}\n`, { mode: 0o600 });
+  `\nDEMO_ACCOUNT_UID=${result.localId}\n`, { mode: 0o600 });
 const child = spawn(process.execPath, ["./node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", "5186", "--strictPort"], {
   cwd: new URL("../", import.meta.url), stdio: "inherit", windowsHide: true,
   env: { ...process.env, DEV_VARS_PROFILE: "demo-preview" },
