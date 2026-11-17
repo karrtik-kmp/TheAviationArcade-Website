@@ -194,17 +194,21 @@ node scripts/role-auth-qa.mjs
 
 This deliberately uses an application-area name as the prefix: the player route is
 `/play/play`. The harness only contacts
-loopback services, creates/deletes a throwaway emulator user, checks both
-sign-in pages, safe returns, recovery, permissions, themes, assets and logout, and saves evidence in
-`docs/evidence/role-auth/`. Google consent is not exercised by this suite.
+loopback services, creates/deletes a throwaway emulator user, checks the public
+sign-in page, safe returns (an old `/admin` return lands on the homepage), recovery, permissions, the
+demo account, themes, assets and logout, and saves evidence in `docs/evidence/role-auth/`. Google consent
+is not exercised by this suite. From Git Bash, set `MSYS_NO_PATHCONV=1` first, or it rewrites `/play` into a
+Windows path. `QA_BASE_PATH=` (empty) runs it unprefixed.
 
 With an unprefixed `npm run demo:preview` (port 5186) and the seeded Auth Emulator,
-`node scripts/session-return-qa.mjs` checks tab-return behaviour. The Military desk suites
-(`military-qa`, `military-release-qa`, `demo-admin-qa`) moved with the desks to the Admin repo.
-
-**Not yet trimmed (2026-11-13):** `browser-qa.mjs`, `role-auth-qa.mjs`, `session-return-qa.mjs`,
-`api-qa.mjs` and `firebase-auth-qa.mjs` still contain admin steps (admin sign-in, `/admin`, `/api/admin/*`)
-from before the Admin left this repo; those steps now meet 404s. Trim them before relying on these suites.
+`node scripts/session-return-qa.mjs` checks tab-return behaviour on the signed-in `/account` page. The
+editors' suites (`military-qa`, `military-release-qa`, `demo-admin-qa`) moved with the desks to the Admin repo,
+and since 2026-11-17 the suites here have no admin steps: they check only that `/admin` and `/api/admin/*` are
+404s and that a loopback host shows staff no editors' link (it has no known Admin). `npm run test:auth`
+(`firebase-auth-qa.mjs`) runs only on port 5173, so for it start the demo profile there:
+`$env:DEV_VARS_PROFILE='demo-preview'; npm run dev` after `npm run demo:preview` has written the profile.
+`frontend-ui-qa.mjs` passes all its layout checks but fails on console errors until A3: the Plane of the Day
+read (`/api/featured`) answers 503 while that desk moves to the game backend.
 
 The browser suites above cover mock-roles mode (`ROLES_SOURCE=mock`, the default): the member
 `/api/submissions` routes answer `404 SUBMISSIONS_CLOSED`, `/contribute` shows the closed panel, the account

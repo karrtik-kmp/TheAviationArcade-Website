@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile, writeFile } from "node:fs/promises";
-import { signInDemoEditor } from "./seed-auth-emulator.mjs";
+import { signInQaEditor } from "./seed-auth-emulator.mjs";
 const { chromium } = await import(
   process.env.PLAYWRIGHT_MODULE || "playwright"
 );
@@ -11,24 +11,19 @@ const context = await browser.newContext({
   colorScheme: "light",
 });
 try {
-  const loginPage = await context.newPage();
-  await signInDemoEditor(loginPage, origin);
-  await context.request.post(origin + "/api/admin/demo", {
-    headers: { Origin: origin },
-    data: {},
-  });
-  const list = await context.request.get(origin + "/api/admin/submissions");
-  assert.equal(list.status(), 200);
-  const body = await list.json();
-  const sample = body.submissions.find(
-    (s) => s.id === "demo-submission-aircraft",
+  const page = await context.newPage();
+  await signInQaEditor(page, origin);
+  // The Admin is its own repo and host (decision I-1): no admin API here, even for staff.
+  assert.equal(
+    (await context.request.get(origin + "/api/admin/submissions")).status(),
+    404,
   );
-  assert.ok(sample);
   // D-2 amended 11-04: member D1 submission routes are closed in every mode.
   const closed = async (res, label) => {
     assert.equal(res.status(), 404, label);
     assert.equal((await res.json()).code, "SUBMISSIONS_CLOSED", label);
   };
+  const sample = { title: "QA proposal", consent: true };
   await closed(
     await context.request.get(origin + "/api/submissions"),
     "member list closed",
@@ -37,7 +32,7 @@ try {
     await context.request.post(origin + "/api/submissions", {
       headers: { Origin: origin, "Idempotency-Key": crypto.randomUUID() },
       multipart: {
-        data: JSON.stringify({ ...sample.data, consent: true }),
+        data: JSON.stringify(sample),
         photo: {
           name: "qa.jpg",
           mimeType: "image/jpeg",
@@ -48,9 +43,9 @@ try {
     "member create closed",
   );
   await closed(
-    await context.request.put(origin + `/api/submissions/${sample.id}`, {
+    await context.request.put(origin + "/api/submissions/qa-proposal", {
       headers: { Origin: origin },
-      multipart: { data: JSON.stringify(sample.data) },
+      multipart: { data: JSON.stringify(sample) },
     }),
     "member revise closed",
   );
@@ -59,11 +54,10 @@ try {
   );
   assert.equal(badZone.status(), 422);
   assert.match((await badZone.json()).error, /timezone/i);
-  const page = await context.newPage();
-  await page.goto(origin + "/admin", { waitUntil: "domcontentloaded" });
-  await page.getByRole("heading", { name: "Good to have you back." }).waitFor();
+  await page.goto(origin + "/account", { waitUntil: "domcontentloaded" });
+  await page.getByRole("heading", { name: "My account" }).waitFor();
   await page.screenshot({
-    path: "docs/evidence/admin-overview-light.png",
+    path: "docs/evidence/account-light.png",
     fullPage: true,
   });
   assert.equal(
@@ -92,10 +86,11 @@ try {
     JSON.stringify(
       {
         checkedAt: new Date().toISOString(),
+        adminApi: 404,
         memberSubmissionRoutes: "404 SUBMISSIONS_CLOSED",
         contributeClosedPanel: true,
         badTimezone: 422,
-        adminLightOverflow: false,
+        accountLightOverflow: false,
         contributor360Overflow: false,
       },
       null,
@@ -103,7 +98,7 @@ try {
     ) + "\n",
   );
   console.log(
-    "PASS closed member submission routes, closed /contribute panel, invalid timezone, light admin and 360px contributor layout",
+    "PASS no admin API, closed member submission routes, closed /contribute panel, invalid timezone, light account and 360px contributor layout",
   );
 } finally {
   await browser.close();

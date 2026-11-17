@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
-import { signInDemoEditor } from "./seed-auth-emulator.mjs";
+import { signInQaEditor } from "./seed-auth-emulator.mjs";
 const { chromium } = await import(
   process.env.PLAYWRIGHT_MODULE || "playwright"
 );
@@ -28,8 +28,8 @@ async function api(path, method = "GET", data) {
   });
   return { status: response.status(), body: await response.json() };
 }
-let createdId;
-const demoTitle = "KLM on approach [Demo]";
+const overflows = () =>
+  page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
 try {
   await check("Homepage desktop and theme switch", async () => {
     await page.goto(origin, { waitUntil: "domcontentloaded", timeout: 90000 });
@@ -116,36 +116,26 @@ try {
     await page.setViewportSize({ width: 1440, height: 1000 });
   });
   await check(
-    "Anonymous API is denied and local demo staff can sign in",
+    "The website has no admin pages or API, and the local editor signs in as a member",
     async () => {
-      assert.equal((await api("/api/admin/submissions")).status, 401);
-      await signInDemoEditor(page, origin);
+      // The Admin is its own repo and host (decision I-1): /admin and /api/admin/* are plain 404s here.
+      assert.equal((await api("/api/admin/submissions")).status, 404);
+      assert.equal((await page.goto(origin + "/admin")).status(), 404);
       await page
-        .getByRole("heading", { name: "Good to have you back." })
-        .waitFor({ timeout: 60000 });
-      await page
-        .getByRole("button", { name: "Load demo data", exact: true })
-        .click();
-      await page
-        .getByText("Demo records loaded; these cannot be published.")
+        .getByRole("heading", { name: "This destination is unavailable." })
         .waitFor();
+      assert.equal((await api("/api/submissions")).status, 401);
+      await signInQaEditor(page, origin);
+      await page.getByRole("heading", { name: "My account" }).waitFor({ timeout: 60000 });
+      const account = await api("/api/account");
+      assert.equal(account.body.isStaff, true, "the mock role list makes the QA editor staff");
+      // A loopback host has no known Admin, so no editors' link is drawn even for staff.
+      assert.equal(await page.getByRole("link", { name: /workspace|Open editor/i }).count(), 0);
+      assert.equal((await api("/api/admin/submissions")).status, 404, "staff get no admin API here either");
       await page.screenshot({
-        path: "docs/evidence/admin-overview-dark.png",
+        path: "docs/evidence/account-staff-dark.png",
         fullPage: true,
       });
-      const demo = await api("/api/admin/submissions");
-      assert.equal(demo.status, 200);
-      assert.ok(
-        demo.body.submissions.some((s) => s.id === "demo-submission-aircraft"),
-      );
-      assert.equal(
-        (
-          await context.request.post(origin + "/api/admin/demo", {
-            headers: { Origin: "https://untrusted.example" },
-          })
-        ).status(),
-        403,
-      );
     },
   );
   await check(
@@ -187,84 +177,31 @@ try {
     },
   );
   await check(
-    "Staff review of a seeded demo proposal: checks, changes, stale version",
+    "A member write under another account's session key is fenced, and a cross-site write refused",
     async () => {
-      // Member proposals can no longer be created on the website (D-2), so review the proposal
-      // that POST /api/admin/demo seeds. Demo proposals can never be approved or published.
-      createdId = "demo-submission-aircraft";
-      await page.goto(origin + "/admin", { waitUntil: "domcontentloaded" });
-      await page
-        .getByRole("heading", { name: "Good to have you back." })
-        .waitFor();
-      await page
-        .getByRole("navigation", { name: "Admin sections" })
-        .getByRole("button", { name: /^Submissions/ })
-        .click();
-      await page.locator("tr").filter({ hasText: demoTitle }).click();
-      await page
-        .getByRole("button", { name: "Approve submission", exact: true })
-        .click();
-      // The seeded demo proposal has no rights evidence, so approval stops at that rule first.
-      await page
-        .getByText("Record permission or license evidence before approval.")
-        .waitFor();
-      await page
-        .locator(".review-form textarea")
-        .fill("Please add a more precise location for this local test.");
-      const [changeResponse] = await Promise.all([
-        page.waitForResponse(
-          (response) =>
-            response.url() === `${origin}/api/admin/submissions/${createdId}` &&
-            response.request().method() === "PATCH",
-        ),
-        page
-          .getByRole("button", { name: "Request changes", exact: true })
-          .click(),
-      ]);
-      assert.equal(changeResponse.status(), 200, await changeResponse.text());
-      const owned = (await api("/api/admin/submissions")).body.submissions.find(
-        (s) => s.id === createdId,
-      );
-      assert.equal(owned.status, "changes_requested");
-      // Approval is refused server-side: the demo proposal has no rights evidence or source.
-      const approve = await api(`/api/admin/submissions/${createdId}`, "PATCH", {
-        status: "approved",
-        note: "",
-        checks: {
-          identity: true,
-          quality: true,
-          credit: true,
-          rights: true,
-          category: true,
-        },
-        version: owned.version,
+      // The account fence runs before the handler, so it answers even on the closed submission route.
+      const fenced = await context.request.post(origin + "/api/submissions", {
+        headers: { Origin: origin, "X-Account-Session": "another-account-session" },
+        data: {},
       });
-      assert.equal(approve.status, 422);
-      const stale = await api(`/api/admin/submissions/${createdId}`, "PATCH", {
-        status: "rejected",
-        note: "Stale revision should be refused.",
-        checks: owned.checks,
-        version: owned.version - 1,
+      assert.equal(fenced.status(), 409);
+      assert.equal((await fenced.json()).code, "ACCOUNT_CHANGED");
+      const crossSite = await context.request.post(origin + "/api/submissions", {
+        headers: { Origin: "https://untrusted.example" },
+        data: {},
       });
-      assert.equal(stale.status, 409);
+      assert.equal(crossSite.status(), 403);
     },
   );
   await check(
-    "Mobile admin fits viewport and has a usable review list",
+    "Mobile account page fits the viewport",
     async () => {
       await page.setViewportSize({ width: 390, height: 844 });
-      await page.goto(origin + "/admin", { waitUntil: "domcontentloaded" });
-      await page
-        .getByRole("heading", { name: "Good to have you back." })
-        .waitFor();
-      assert.equal(
-        await page.evaluate(
-          () => document.documentElement.scrollWidth > innerWidth,
-        ),
-        false,
-      );
+      await page.goto(origin + "/account", { waitUntil: "domcontentloaded" });
+      await page.getByRole("heading", { name: "Photo area", exact: true }).waitFor();
+      assert.equal(await overflows(), false);
       await page.screenshot({
-        path: "docs/evidence/admin-mobile-dark.png",
+        path: "docs/evidence/account-mobile-dark.png",
         fullPage: true,
       });
     },

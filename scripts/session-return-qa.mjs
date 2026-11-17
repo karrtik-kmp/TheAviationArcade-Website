@@ -1,5 +1,6 @@
-// Returning to a tab re-checks the account in the background, and editorial entry points follow the
-// server's staff check. Local only: run against `npm run demo:preview` with the Auth Emulator seeded.
+// Returning to a tab re-checks the account in the background without blanking the signed-in page, and
+// staff status follows the server's check. The editors' desks are in the Admin repo (decision I-1), so the
+// page watched here is /account. Local only: run against `npm run demo:preview` with the Auth Emulator seeded.
 import assert from "node:assert/strict";
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 const target = new URL(process.env.QA_ORIGIN || "http://127.0.0.1:5186");
@@ -38,73 +39,80 @@ const tabReturn = (page) =>
   });
 const restore = (page) =>
   page.evaluate(() => window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true })));
+const accountTraffic = (calls) => calls.filter((c) => /\/api\/(account|auth\/session)/.test(c));
 
 const context = await browser.newContext();
-const admin = await context.newPage();
-const calls = track(admin);
-await signIn(admin, "/admin/sign-in", "seedy@sites.test");
-await admin.locator(".admin-app").waitFor({ timeout: 30000 });
-await admin.waitForLoadState("networkidle");
-// Anything that remounts the workspace or shows the gate is recorded here.
-await admin.evaluate(() => {
-  window.__gateSeen = false;
-  document.querySelector(".admin-app").dataset.probe = "kept";
+const staff = await context.newPage();
+const calls = track(staff);
+// seedy@sites.test is staff through MOCK_ADMIN_EMAILS in the demo-preview profile.
+await signIn(staff, "/sign-in?return_to=%2Faccount", "seedy@sites.test");
+await staff.waitForURL((url) => url.pathname === "/account", { timeout: 30000 });
+await staff.locator(".account-profile-panel").waitFor({ timeout: 30000 });
+await staff.waitForLoadState("networkidle");
+// Anything that remounts the signed-in panel or shows the checking / signed-out state is recorded here.
+await staff.evaluate(() => {
+  window.__blanked = false;
+  document.querySelector(".account-profile-panel").dataset.probe = "kept";
+  const blank = () =>
+    [...document.querySelectorAll("main .account-panel")].some((panel) =>
+      /Checking your account|Sign in to continue|Account status unavailable/.test(panel.textContent || ""));
   new MutationObserver(() => {
-    if (document.querySelector(".admin-gate")) window.__gateSeen = true;
+    if (blank()) window.__blanked = true;
   }).observe(document.body, { childList: true, subtree: true });
 });
-const probe = () => admin.evaluate(() => ({
-  gateSeen: window.__gateSeen,
-  kept: document.querySelector(".admin-app")?.dataset.probe === "kept",
+const probe = () => staff.evaluate(() => ({
+  blanked: window.__blanked,
+  kept: document.querySelector(".account-profile-panel")?.dataset.probe === "kept",
 }));
 calls.take();
 
-await check("tab switches within a minute keep the workspace and send no account traffic", async () => {
+await check("tab switches within a minute keep the signed-in page and send no account traffic", async () => {
   const other = await context.newPage();
   await other.goto(origin + "/about", { waitUntil: "domcontentloaded" });
   for (let i = 0; i < 3; i++) {
-    await admin.bringToFront(); await tabReturn(admin);
-    await other.bringToFront(); await admin.waitForTimeout(300);
+    await staff.bringToFront(); await tabReturn(staff);
+    await other.bringToFront(); await staff.waitForTimeout(300);
   }
-  await admin.bringToFront(); await tabReturn(admin);
-  await admin.waitForTimeout(1500);
+  await staff.bringToFront(); await tabReturn(staff);
+  await staff.waitForTimeout(1500);
   await other.close();
-  const sent = calls.take().filter((c) => /\/api\/(account|auth\/session|admin)/.test(c));
-  assert.deepEqual(sent, []);
-  assert.deepEqual(await probe(), { gateSeen: false, kept: true });
+  assert.deepEqual(accountTraffic(calls.take()), []);
+  assert.deepEqual(await probe(), { blanked: false, kept: true });
 });
 
 await check("a forced re-check runs once in the background without resending the token", async () => {
-  await restore(admin);
-  await admin.waitForTimeout(1500);
-  const sent = calls.take().filter((c) => /\/api\/(account|auth\/session|admin)/.test(c));
-  assert.deepEqual(sent, ["GET /api/account"]);
-  assert.deepEqual(await probe(), { gateSeen: false, kept: true });
+  await restore(staff);
+  await staff.waitForTimeout(1500);
+  assert.deepEqual(accountTraffic(calls.take()), ["GET /api/account"]);
+  assert.deepEqual(await probe(), { blanked: false, kept: true });
 });
 
-await check("a lost session cookie is mirrored again without blanking the workspace", async () => {
+await check("a lost session cookie is mirrored again without blanking the page", async () => {
   await context.clearCookies();
-  await restore(admin);
-  await admin.waitForTimeout(2500);
-  const sent = calls.take().filter((c) => /\/api\/(account|auth\/session|admin)/.test(c));
-  assert.deepEqual(sent, ["GET /api/account", "POST /api/auth/session", "GET /api/account"]);
-  assert.deepEqual(await probe(), { gateSeen: false, kept: true });
-  const account = await admin.evaluate(async () => (await fetch("/api/account")).json());
+  await restore(staff);
+  await staff.waitForTimeout(2500);
+  assert.deepEqual(accountTraffic(calls.take()), ["GET /api/account", "POST /api/auth/session", "GET /api/account"]);
+  assert.deepEqual(await probe(), { blanked: false, kept: true });
+  const account = await staff.evaluate(async () => (await fetch("/api/account")).json());
   assert.equal(account.isStaff, true);
 });
 
-await check("staff see the footer editor link on public pages", async () => {
+await check("staff get no editors' link on a local host, which has no known Admin", async () => {
   const page = await context.newPage();
   await page.goto(origin + "/about", { waitUntil: "domcontentloaded" });
-  await page.getByRole("link", { name: "Editor workspace" }).waitFor({ timeout: 15000 });
+  await page.getByRole("button", { name: "Account menu" }).waitFor({ timeout: 15000 });
+  assert.equal(await page.getByRole("link", { name: "Editor workspace" }).count(), 0);
+  await page.getByRole("button", { name: "Account menu" }).click();
+  await page.getByRole("link", { name: "My account", exact: true }).waitFor();
+  assert.equal(await page.getByRole("link", { name: "Editorial workspace" }).count(), 0);
   await page.close();
 });
 
-await check("signing out in another tab still clears the workspace immediately", async () => {
+await check("signing out in another tab clears the signed-in page immediately", async () => {
   const other = await context.newPage();
   await other.goto(origin + "/sign-out", { waitUntil: "domcontentloaded" });
-  await admin.locator(".admin-gate").waitFor({ timeout: 15000 });
-  assert.equal(await admin.locator(".admin-app").count(), 0);
+  await staff.getByRole("heading", { name: "Sign in to continue", exact: true }).waitFor({ timeout: 15000 });
+  assert.equal(await staff.locator(".account-profile-panel").count(), 0);
   await other.close();
 });
 

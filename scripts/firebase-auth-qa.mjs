@@ -391,6 +391,8 @@ async function main() {
       assert.equal(config.config?.projectId, projectId);
       assert.match(config.config?.authDomain || "", /firebaseapp\.com$/);
       assert.equal(config.emulatorUrl, authOrigin);
+      // The website never hands out the demo account's credentials.
+      assert.equal(Object.hasOwn(config, "demoLogin"), false);
       return { projectId: config.config.projectId, emulator: authOrigin };
     },
   );
@@ -401,13 +403,14 @@ async function main() {
       const body = await assertAccountShape(null, false);
       assert.equal(body.user, null);
       assert.equal(body.sessionKey, null);
+      // The Admin is its own repo and host (decision I-1): /admin and /api/admin/* are plain 404s here.
       const admin = await api("/api/admin/submissions");
-      assert.equal(admin.status(), 401);
+      assert.equal(admin.status(), 404);
       const submissions = await api("/api/submissions");
       assert.equal(submissions.status(), 401);
-      await page.goto(`${localOrigin}/admin`);
+      assert.equal((await page.goto(`${localOrigin}/admin`)).status(), 404);
       await page
-        .getByRole("heading", { name: "Editor sign in", exact: true })
+        .getByRole("heading", { name: "This destination is unavailable.", exact: true })
         .waitFor();
       // Mock mode: guests get the same closed panel as members; query params are ignored.
       await page.goto(`${localOrigin}/contribute?category=aircraft&game=aircraft-identifier&view=mine`);
@@ -526,25 +529,25 @@ async function main() {
   );
 
   await check(
-    "Staff identity is enforced by the server and nonstaff cannot open editorial routes",
+    "Staff identity comes from the server, and the website opens no editorial routes for anyone",
     async () => {
       await signOutThroughUI();
       await signInThroughForm(qaUsers.editor.email);
       await assertAccountShape(qaUsers.editor, true);
-      const response = await api("/api/admin/submissions");
-      assert.equal(response.status(), 200, await response.text());
-      await page.goto(`${localOrigin}/admin`);
-      await page
-        .getByRole("navigation", { name: "Admin sections" })
-        .waitFor({ timeout: 30000 });
+      // Staff edit on the Admin host; this website has no admin API or pages, even for them.
+      assert.equal((await api("/api/admin/submissions")).status(), 404);
+      assert.equal((await page.goto(`${localOrigin}/admin`)).status(), 404);
+      // A loopback host has no known Admin, so /account draws no editors' section.
+      await page.goto(`${localOrigin}/account`);
+      await page.getByRole("heading", { name: "Photo area", exact: true }).waitFor({ timeout: 20000 });
+      assert.equal(
+        await page.getByRole("heading", { name: "Editorial workspace", exact: true }).count(),
+        0,
+      );
       await signOutThroughUI();
       await signInThroughForm(qaUsers.photographerA.email);
       await assertAccountShape(qaUsers.photographerA, false);
-      assert.equal((await api("/api/admin/submissions")).status(), 403);
-      await page.goto(`${localOrigin}/admin`);
-      await page
-        .getByRole("heading", { name: "Access unavailable", exact: true })
-        .waitFor({ timeout: 20000 });
+      assert.equal((await api("/api/admin/submissions")).status(), 404);
     },
   );
 
@@ -591,80 +594,27 @@ async function main() {
   );
 
   await check(
-    "Expired staff session stops admin writes and clears private workspace data",
+    "A member write started under another account's session is fenced before it runs",
     async () => {
       await signOutThroughUI();
       await signInThroughForm(qaUsers.editor.email);
-      const staffSnapshot = (await accountSnapshot()).body;
-      assert.equal(staffSnapshot.isStaff, true);
-      // Member proposals cannot be created any more; seed the demo proposals for this write check.
-      assert.equal((await api("/api/admin/demo", "POST", {})).status(), 200);
-      const listResponse = await api("/api/admin/submissions");
-      assert.equal(listResponse.status(), 200);
-      const list = await listResponse.json();
-      const pending = list.submissions?.find(
-        (item) => item.status === "pending",
-      );
-      assert.ok(
-        pending,
-        "Need a pending local QA record to assert rejected writes do not mutate it",
-      );
-      const deniedWrite = await context.request.patch(
-        `${localOrigin}/api/admin/submissions/${pending.id}`,
-        {
-          headers: {
-            Origin: localOrigin,
-            "Content-Type": "application/json",
-            "X-Account-Session": "expired-stale-session-key",
-          },
-          data: {
-            status: "rejected",
-            checks: {},
-            note: "Must not be applied",
-            version: pending.version,
-          },
-        },
-      );
-      assert.equal(deniedWrite.status(), 409, await deniedWrite.text());
-      const afterWrite = await api("/api/admin/submissions");
-      assert.equal(afterWrite.status(), 200);
-      const stillPending = (await afterWrite.json()).submissions.find(
-        (item) => item.id === pending.id,
-      );
-      assert.equal(
-        stillPending.status,
-        "pending",
-        "The rejected stale-session write must not mutate server state",
-      );
-
-      await page.route("**/api/account", (route) =>
-        route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          headers: { "Cache-Control": "private, no-store" },
-          body: JSON.stringify({
-            user: { displayName: "Different QA Session", emailVerified: true },
-            isStaff: true,
-            sessionKey: "different-local-qa-session",
-          }),
-        }),
-      );
-      await page.goto(`${localOrigin}/admin`);
-      await page
-        .getByRole("heading", { name: "Account session changed", exact: true })
-        .waitFor({ timeout: 30000 });
-      await page
-        .getByText(
-          /Private editorial data was cleared and pending writes were stopped/i,
-        )
-        .waitFor();
-      await page
-        .getByRole("button", { name: "Reload workspace", exact: true })
-        .waitFor();
-      await page.unroute("**/api/account");
+      const { sessionKey } = (await accountSnapshot()).body;
+      assert.equal(typeof sessionKey, "string");
+      // The account fence runs before the handler, so it answers even on the closed submission route;
+      // with the current key the request reaches the handler and gets the route's own answer.
+      const fenced = await api("/api/submissions", "POST", {}, {
+        "X-Account-Session": "expired-stale-session-key",
+      });
+      assert.equal(fenced.status(), 409, await fenced.text());
+      assert.equal((await fenced.json()).code, "ACCOUNT_CHANGED");
+      const current = await api("/api/submissions", "POST", {}, {
+        "X-Account-Session": sessionKey,
+      });
+      assert.equal(current.status(), 404);
+      assert.equal((await current.json()).code, "SUBMISSIONS_CLOSED");
       return {
         outcome:
-          "stale session write denied; account-session mismatch UI simulated without waiting for expiry duration",
+          "stale session write fenced with 409 ACCOUNT_CHANGED; the editors' session-changed screen is tested in the Admin repo",
       };
     },
   );

@@ -71,11 +71,10 @@ test("the proxy skips only the built assets and public files, so every other pat
 
 test("the website never hands out demo sign-in credentials (the demo account only removes capabilities)", () => {
   assert.doesNotMatch(read("app/api/auth/config/route.ts"), /demo/i);
-  const offenders = ["app", "lib", "components", "scripts"]
-    .flatMap(sources)
-    .concat(["web.env.example"])
-    .filter((file) => /DEMO_LOGIN|demoLogin/.test(read(file)));
-  assert.deepEqual(offenders, []);
+  // App code never names it; scripts and the env example never set it (the QA suites check it is absent).
+  const app = ["app", "lib", "components"].flatMap(sources).filter((file) => /DEMO_LOGIN|demoLogin/.test(read(file)));
+  const setup = sources("scripts").concat(["web.env.example"]).filter((file) => /DEMO_LOGIN/.test(read(file)));
+  assert.deepEqual([...app, ...setup], []);
 });
 
 test("the server entry refuses to start without a valid PORT or with a SITE_SURFACE other than public", () => {

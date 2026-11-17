@@ -72,10 +72,15 @@ export async function seedAuthDemoUsers() {
     }
   }
 }
-export async function signInDemoEditor(
+/**
+ * Signs the local QA editor (seedy@sites.test, staff through MOCK_ADMIN_EMAILS) in on this website's
+ * /sign-in and waits for `returnTo`. The editors' desks are in the Admin repo (decision I-1); here the
+ * account only proves that staff status comes from the server and opens nothing.
+ */
+export async function signInQaEditor(
   page,
   origin = "http://127.0.0.1:5173",
-  returnTo = "/admin",
+  returnTo = "/account",
 ) {
   const url = new URL(origin);
   if (!["127.0.0.1", "localhost", "[::1]"].includes(url.hostname))

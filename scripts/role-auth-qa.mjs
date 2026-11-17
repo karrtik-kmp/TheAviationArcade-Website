@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
+import { demoAuthUsers, demoPassword, seedAuthDemoUsers } from "./seed-auth-emulator.mjs";
 
 const origin = new URL(process.env.QA_ORIGIN || "http://127.0.0.1:5188");
 const prefix = process.env.QA_BASE_PATH ?? "/play";
@@ -12,6 +13,9 @@ const emulator = "http://127.0.0.1:9099";
 const email = `role-path-${Date.now()}@sites.test`;
 const password = "LocalRolePreview-2026!";
 const evidence = process.env.QA_EVIDENCE || "docs/evidence/role-auth";
+const demoEmail = "demo-pilot@sites.test";
+assert.ok(demoAuthUsers.some((user) => user.email === demoEmail));
+await seedAuthDemoUsers();
 const results = [],
   pageErrors = [],
   blockedRequests = [],
@@ -121,26 +125,20 @@ try {
       const config = await response.json();
       assert.equal(config.config.projectId, "demo-airplane-games");
       assert.equal(config.emulatorUrl, emulator);
-      for (const [path, label] of [
-        ["/admin/sign-in", "Staff access"],
-        ["/sign-in?as=photographer", "Photographer"],
-        ["/sign-in?as=player", "Player"],
-      ]) {
+      // The website never hands out the demo account's credentials.
+      assert.equal(Object.hasOwn(config, "demoLogin"), false);
+      for (const path of ["/sign-in?as=photographer", "/sign-in?as=player"]) {
         await page.goto(url(path), { waitUntil: "domcontentloaded" });
         await page.getByRole("textbox", { name: "Email address" }).fill("");
-        const editor = label === "Staff access";
-        if (editor)
-          await page.getByRole("heading", { name: "Editor sign in" }).waitFor();
-        else
-          await page.getByRole("heading", { name: "Sign in", exact: true }).waitFor();
+        await page.getByRole("heading", { name: "Sign in", exact: true }).waitFor();
         assert.equal(
           await page.getByRole("button", { name: "Fill demo login" }).count(),
-          editor ? 1 : 0,
+          0,
         );
-        // Editors cannot self-register. Public sign-in retains context without a role picker.
+        // Public sign-in offers sign-up and retains context without a role picker.
         assert.equal(
           await page.getByRole("button", { name: "Create an account" }).count(),
-          editor ? 0 : 1,
+          1,
         );
         assert.equal(await page.getByRole("radio").count(), 0);
         const links = await page
@@ -166,14 +164,20 @@ try {
   await check(
     "Anonymous guards and the shared sign-in page keep the prefix, role and safe query",
     async () => {
-      await page.goto(url("/admin"), { waitUntil: "domcontentloaded" });
-      await page.waitForURL(url("/admin/sign-in"));
+      // The Admin is its own repo and host (decision I-1): its old paths are plain 404s here.
+      for (const path of ["/admin", "/admin/sign-in"]) {
+        const response = await page.goto(url(path), { waitUntil: "domcontentloaded" });
+        assert.equal(response.status(), 404, path);
+        assert.equal(new URL(page.url()).pathname, `${prefix}${path}`);
+      }
       await page.goto(url("/play"), { waitUntil: "domcontentloaded" });
       await page.waitForURL(url("/sign-in?as=player"));
+      // An old editors' link stays on the public sign-in page and drops the dead destination.
       await page.goto(url("/sign-in?return_to=%2Fadmin"), {
         waitUntil: "domcontentloaded",
       });
-      await page.waitForURL(url("/admin/sign-in"));
+      assert.equal(new URL(page.url()).pathname, `${prefix}/sign-in`);
+      await page.getByText("Sign in to your Airplane Games account.", { exact: true }).waitFor();
       const destination = "/contribute?game=aircraft-identifier&view=mine";
       await page.goto(
         url(`/sign-in?return_to=${encodeURIComponent(destination)}`),
@@ -380,34 +384,35 @@ try {
     },
   );
   await check(
-    "Admin sign-in does not grant staff access to a player/contributor account",
+    "An old editors' sign-in link lands a member on the homepage, not on a 404 or a staff area",
     async () => {
-      await signIn("/admin/sign-in");
-      await page.waitForURL(url("/admin"), { waitUntil: "domcontentloaded" });
-      await page
-        .getByRole("heading", { name: "Access unavailable", exact: true })
-        .waitFor();
-      const denied = await context.request.get(url("/api/admin/submissions"));
-      assert.equal(denied.status(), 403);
+      await signIn("/sign-in?return_to=%2Fadmin");
+      await page.waitForURL(url("/"), { waitUntil: "domcontentloaded" });
+      const signedIn = await account();
+      assert.ok(signedIn.user);
+      assert.equal(signedIn.isStaff, false);
+      assert.equal(
+        (await context.request.get(url("/api/admin/submissions"))).status(),
+        404,
+      );
       await logout();
     },
   );
   await check(
-    "Demo login opens the prefixed read-only admin and remains denied live APIs",
+    "The demo account signs in on the public page, lands in the read-only player area and is denied member APIs",
     async () => {
-      await page.goto(url("/admin/sign-in"), { waitUntil: "domcontentloaded" });
-      await page
-        .getByRole("button", { name: "Fill demo login", exact: true })
-        .click();
+      // Seeded by `npm run demo:preview`, whose profile marks this account with DEMO_ACCOUNT_UID.
+      await page.goto(url("/sign-in"), { waitUntil: "domcontentloaded" });
+      await page.getByRole("textbox", { name: "Email address" }).fill(demoEmail);
+      await page.locator('input[name="password"]').fill(demoPassword);
       await page.getByRole("button", { name: "Sign in", exact: true }).click();
-      await page.waitForURL(url("/admin"), { waitUntil: "domcontentloaded" });
-      await page
-        .getByText(/This demo account can view content but cannot edit/)
-        .waitFor();
-      assert.equal(
-        (await context.request.get(url("/api/admin/submissions"))).status(),
-        403,
-      );
+      await page.waitForURL(url("/play"), { waitUntil: "domcontentloaded" });
+      assert.equal((await account()).isStaff, false);
+      await page.goto(url("/contribute"), { waitUntil: "domcontentloaded" });
+      await page.waitForURL(url("/play"), { waitUntil: "domcontentloaded" });
+      const denied = await context.request.get(url("/api/submissions"));
+      assert.equal(denied.status(), 403);
+      assert.equal((await denied.json()).code, "DEMO_ACCOUNT");
       await logout();
     },
   );

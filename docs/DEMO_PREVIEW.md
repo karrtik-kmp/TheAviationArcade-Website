@@ -44,11 +44,12 @@ access, and its email verification was not overridden.
 
 Run `npm run auth:emulator`, then `npm run demo:preview` in a separate terminal. The preview
 runs at http://127.0.0.1:5186 with ignored `.dev.vars.demo-preview` and the local account
-`demo-pilot@sites.test` / `LocalPreview-2026!`. Then run `node scripts/demo-admin-qa.mjs`
-with QA_ORIGIN set to that origin and PLAYWRIGHT_MODULE pointing to an installed module.
+`demo-pilot@sites.test` / `LocalPreview-2026!`. `scripts/role-auth-qa.mjs` signs that account in on
+`/sign-in` and checks it lands on the read-only `/play`, is sent there from `/contribute`, and gets
+`403 DEMO_ACCOUNT` from member APIs (`demo-admin-qa` moved to the Admin repo).
 
 `SITE_BASE_PATH` can be set before starting the preview. For example, `/play` puts
-admin sign-in at `/play/admin/sign-in`. Use `scripts/role-auth-qa.mjs` with the matching
+sign-in at `/play/sign-in`. Use `scripts/role-auth-qa.mjs` with the matching
 `QA_ORIGIN` and `QA_BASE_PATH` to verify prefixed role flows; see README.md. The player
 screen is a sample only: app profile linking is coming soon, with no real linked state.
 
