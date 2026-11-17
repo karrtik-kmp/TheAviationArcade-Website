@@ -732,3 +732,8 @@ exclusion in `lib/admin-site.ts`; staff hero copy on `/account` names the worksp
 link is hidden.
 Verification: typecheck; `npm test` 238/238; `npm run build` completes. Browser suites not run (they still hold admin
 steps). Nothing deployed.
+The three minors, fixed the same day: `safeAccountReturn` drops `/admin` and `/admin/…` (also percent-encoded), so
+an old `return_to=/admin` link lands on the homepage, whose footer and account menu carry the staff link to the
+Admin; `/administrator` is unaffected. `tests/admin-site.test.mjs` covers a `.local` host. The `/account` staff copy
+names the editorial workspace only when its link shows. Both new guards fail their tests when removed.
+Verification: typecheck; `npm test` 238/238; `npm run build` completes. Browser suites not run. Nothing deployed.

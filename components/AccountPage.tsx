@@ -80,7 +80,7 @@ export function AccountPage({
         <span className="eyebrow">Airplane Games · The Aviation Arcade</span>
         <h1>My account</h1>
         <p>
-          {account?.isStaff
+          {account?.isStaff && adminWorkspace
             ? "Manage your access to the photography community and editorial workspace."
             : "Manage your access to the photography community and your player profile."}
         </p>

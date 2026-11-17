@@ -23,7 +23,7 @@ test("account return paths keep same-site paths, queries, and fragments", () => 
     ),
     "/contribute?game=aircraft-identifier&view=mine#submissions",
   );
-  assert.equal(safeAccountReturn("/admin?tab=review"), "/admin?tab=review");
+  assert.equal(safeAccountReturn("/administrator?tab=review"), "/administrator?tab=review");
   assert.equal(safeAccountReturn("/"), "/");
 });
 
@@ -53,9 +53,10 @@ test("sign-in links retain action context; editors sign in on the Admin, not her
     "/sign-in?as=photographer&return_to=%2Fcontribute%3Fgame%3Daircraft-identifier%26view%3Dmine",
   );
   assert.equal(accountSignInPath("/contribute"), "/sign-in?as=photographer");
-  // /admin is not a page of this website (decision I-1); it is treated like any other player path.
-  assert.equal(accountSignInPath("/admin"), "/sign-in?as=player&return_to=%2Fadmin");
-  assert.equal(safeAccountReturn("/admin/sign-in"), "/", "the old editors' sign-in page stays reserved");
+  // /admin is not a page of this website (decision I-1): an old link returns to the homepage, never a 404.
+  for (const value of ["/admin", "/admin/", "/admin?tab=review", "/admin/sign-in", "/admin/media#desk", "/%61dmin/media"])
+    assert.equal(safeAccountReturn(value), "/", value);
+  assert.equal(accountSignInPath("/admin"), "/sign-in?as=player&return_to=%2F");
   assert.equal(accountSignInPath("/play"), "/sign-in?as=player");
   assert.equal(
     accountSignInPath("/account"),

@@ -66,6 +66,12 @@ const reserved = new Set([
   "/signout-with-chatgpt",
   "/callback",
 ]);
+/**
+ * The Admin's paths. The website has none since decision I-1 (the Admin is its own repo and host), so an old
+ * `/sign-in?return_to=/admin…` link must not land a signed-in editor on a 404.
+ */
+const retiredAdmin = (path: string) => path === "/admin" || path.startsWith("/admin/");
+
 /** A same-site app path (no base path) that is safe to land on after an auth step, else "/". */
 export function safeAccountReturn(value: string | null | undefined): string {
   if (
@@ -81,7 +87,8 @@ export function safeAccountReturn(value: string | null | undefined): string {
       url.origin !== origin ||
       path.startsWith("//") ||
       /[\\\u0000-\u001f\u007f]/.test(path) ||
-      reserved.has(path.replace(/\/+$/, ""))
+      reserved.has(path.replace(/\/+$/, "")) ||
+      retiredAdmin(path.replace(/\/+$/, ""))
     )
       return "/";
     return `${url.pathname}${url.search}${url.hash}`;
