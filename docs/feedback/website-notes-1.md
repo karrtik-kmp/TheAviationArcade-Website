@@ -16,7 +16,7 @@ anything changes · **Later** = agreed in principle, needs assets or a design ro
 | 7–8 | /games intro | Eyebrow "The Aviation Arcade", H1 "Choose Your Flight.", sub-heading, two paragraphs; search placeholder "Search games" | Done |
 | 9–12 | /games cards | Each card shows the client's sub-header and description (status label kept) | Done (see Q4) |
 | 12 | /games foot | New band "Your Next Challenge Is Cleared for Takeoff." with text and a "Prepare for Takeoff" button to /get-the-app | Done |
-| 17–30 | Seven game pages | Sub-heading under the title, the "About this game" block replaced by the client's heading, paragraphs and "Your Mission" line | Done (buttons: Q1, Q2) |
+| 17–30 | Seven game pages | Sub-heading under the title, the "About this game" block replaced by the client's heading, paragraphs and "Your Mission" line; buttons "Get Ready to Play" (to app release details) and "Be an Airport Spotter, Share your Photos" on every game | Done |
 | 33–35 | Plane of the Day | Sub-heading "One Plane. One Story. Every Day." and two paragraphs; "Today's Featured Aircraft" with aircraft and credit when a real feature is scheduled (the preview photo keeps "A reason to look up."); buttons "Explore the Arcade" and "Submit Your Photo"; archive heading "Missed a Flight? We've Got You Covered." with text; closing band "Your Photo Could Be Next!" with "Share Your Aviation Photography" | Done (see Q5) |
 | 31–32 | Ranks page (/how-to-play) | Eyebrow "The Flight Deck", H1 "Earn Your Wings. Join the Crew.", "Every Aviation Legend Starts as a Trainee.", the five-rank ladder with the client's line per rank, "Play More…", "Aviation Is Better Together." "Review your progress" kept | Done (see Q5) |
 | 36–37 | Photographers (/contribute) | Eyebrow "Calling all aviation photographers", H1 "Your Best Shot Deserves Some Air Time." in every state; the signed-out view gets the client's welcome text and a "Sign In to Submit Photos" button | Done (licence line: Q6) |
@@ -26,7 +26,28 @@ anything changes · **Later** = agreed in principle, needs assets or a design ro
 | 45–46 | Home photographer band | Eyebrow "Calling all aviation photographers", H2 "Share Your View From the Flight Line.", new text | Done (image: Q7) |
 | 49 | 404 | "Looks Like We've Gone Off Course!", new text, button "Return to the Hangar" to the homepage | Done |
 
-## Questions before the next round
+## Client answers (2026-11-23)
+
+| Q | Answer | Result |
+|---|---|---|
+| 1 | "Get Ready to Play" is fine | Applied to every game page, linking to app release details |
+| 2 | Keep "Be an Airport Spotter Share your Photos" on every game | Applied (a comma added for readability) |
+| 3 | Josh will fix the homepage card copy | Waiting; Runway Identifier stays meanwhile |
+| 4 | Josh will look at the missing copy | Waiting |
+| 5 | Accepted | Placement stays |
+| 6 | Legal wording coming, plus questions about the privacy policy and terms | Waiting |
+| 7 | Radar: use the game's own; insignia: send specs | Radar applied; specs below |
+| 8 | Placeholder now, video later | Placeholder applied on the homepage |
+
+### Rank insignia specs (sent to Josh)
+
+- Five files, one per rank: `trainee`, `first-officer`, `captain`, `check-airman`, `chief-pilot`.
+- SVG preferred. If raster: PNG, 512 × 512 px, transparent background.
+- Square artboard, insignia centred, about 10% margin, the same visual weight across all five.
+- Shown about 48–64 px tall beside each rank, so the design must still read at 48 px (avoid hairlines and small text).
+- Must work on both the dark navy (#071724) and the cream (#fff9ee) backgrounds, or send a light and a dark version.
+
+## Questions before the next round (as sent)
 
 1. **Play-style buttons on the game pages.** The client asks for primary buttons such as "Play Tail Spotter
    Now", "Start Identifying Aircraft", "Find Your First Code" and "Take the Runway Challenge". The website rule is that
@@ -62,7 +83,7 @@ anything changes · **Later** = agreed in principle, needs assets or a design ro
 | 48 | Font too small across the site | **Done** (round 2): every size of 17px or less went up one step (body 14 → 16, card text 12 → 14, captions 10 → 12, eyebrows 11 → 13); headings unchanged |
 | 50 | Default to dark mode | **Done** (round 2): dark is the default; the toggle still switches to light and remembers the choice |
 | 50 | Use the game's blue | Need the exact blue (from the Unity project) and a contrast check |
-| 50 | Radar background behind header and footer | Needs the radar artwork from the game |
-| 32 | Rank insignia next to each rank | Needs the five insignia images |
+| 50 | Radar background behind header and footer | **Done** (round 3): the game's three Launch-screen rings (radii 150 : 214 : 286) and brass glow, centred on the logo |
+| 32 | Rank insignia next to each rank | Specs sent; waiting for the five images |
 | 18–30 | Screenshot carousel on each game page | Needs screenshots from the game, per level |
-| 50 | Homepage "Can you identify this plane?" guessing teaser, or a video slot with a 3-2-1 reveal | A playable teaser conflicts with "the website is not a game client"; a video slot does not |
+| 50 | Homepage "Can you identify this plane?" video | **Placeholder done** (round 3); waiting for the video |

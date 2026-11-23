@@ -44,8 +44,15 @@
   --focus: #97651b;
   --success: #276850;
   --error: #a42b25;
+  --radar-ring-1: color-mix(in srgb, var(--brass) 30%, transparent);
+  --radar-ring-2: color-mix(in srgb, var(--brass) 22%, transparent);
+  --radar-ring-3: color-mix(in srgb, var(--brass) 15%, transparent);
+  --radar-glow: color-mix(in srgb, var(--brass) 12%, transparent);
   --radius: 16px;
   --page: 1360px;
+  /* Page side padding and logo size; the radar rings centre on the logo with these. */
+  --gutter: 48px;
+  --mark: 48px;
 }
 [data-theme="dark"] {
   color-scheme: dark;
@@ -150,8 +157,8 @@ button:active,
 .wrap {
   max-width: var(--page);
   margin: auto;
-  padding-left: 48px;
-  padding-right: 48px;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
 }
 .section {
   padding-top: 80px;
@@ -228,8 +235,10 @@ button:active,
   position: sticky;
   top: 0;
   z-index: 20;
+  isolation: isolate;
   background: var(--surface);
   border-bottom: 1px solid var(--line);
+  --radar-y: 40px;
 }
 .header-inner {
   height: 80px;
@@ -310,8 +319,49 @@ button:active,
   padding: 10px;
 }
 .site-footer {
+  position: relative;
+  isolation: isolate;
   border-top: 1px solid var(--line);
   padding: 40px 0 24px;
+  --radar-y: 64px;
+}
+/*
+ * The game's radar background (client, website notes 1): the three rings of the app's Launch
+ * screen (Art/Branding/Launch/ring-idle-*.svg, radii 150 : 214 : 286) and its brass glow, centred
+ * on the logo. Drawn as thin radial-gradient circles so they follow the theme's brass and stay on
+ * the logo at every width without clipping the header's menus.
+ */
+.site-header::before,
+.site-footer::before {
+  --radar-x: calc(
+    max(0px, (100% - var(--page)) / 2) + var(--gutter) + var(--mark) / 2
+  );
+  --radar-at: circle at var(--radar-x) var(--radar-y);
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      var(--radar-at),
+      transparent 109px,
+      var(--radar-ring-1) 110px,
+      transparent 111px
+    ),
+    radial-gradient(
+      var(--radar-at),
+      transparent 156px,
+      var(--radar-ring-2) 157px,
+      transparent 158px
+    ),
+    radial-gradient(
+      var(--radar-at),
+      transparent 209px,
+      var(--radar-ring-3) 210px,
+      transparent 211px
+    ),
+    radial-gradient(var(--radar-at), var(--radar-glow), transparent 240px);
 }
 .footer-top {
   display: flex;
@@ -1429,9 +1479,8 @@ button:active,
   }
 }
 @media (max-width: 1150px) {
-  .wrap {
-    padding-left: 32px;
-    padding-right: 32px;
+  :root {
+    --gutter: 32px;
   }
   .header-inner {
     gap: 16px;
@@ -1535,9 +1584,15 @@ button:active,
   html {
     scroll-padding-top: 80px;
   }
-  .wrap {
-    padding-left: 20px;
-    padding-right: 20px;
+  :root {
+    --gutter: 20px;
+    --mark: 40px;
+  }
+  .site-header {
+    --radar-y: 36px;
+  }
+  .site-footer {
+    --radar-y: 60px;
   }
   .section {
     padding-top: 52px;
@@ -1557,8 +1612,8 @@ button:active,
   }
   .brand img {
     flex: none;
-    width: 40px;
-    height: 40px;
+    width: var(--mark);
+    height: var(--mark);
   }
   .brand-name {
     font-size: 18px;
@@ -1948,4 +2003,22 @@ button:active,
 .photographer-welcome h2 {
   font-size: 32px;
   margin: 32px 0 4px;
+}
+.video-teaser h2 {
+  margin-bottom: 28px;
+}
+.video-placeholder {
+  aspect-ratio: 16 / 9;
+  max-width: 960px;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  color: var(--muted);
+}
+.video-placeholder svg {
+  color: var(--brass);
 }

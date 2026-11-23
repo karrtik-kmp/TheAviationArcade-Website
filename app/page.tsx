@@ -135,6 +135,16 @@ export default function Home() {
             })}
           </div>
         </section>
+        {/* Placeholder for the client's "Can you identify this plane?" video (ruling
+            2026-11-23): a picture, a 3-2-1 countdown, the answer. Swap the frame for a
+            <video> once the client supplies it. */}
+        <section className="wrap section video-teaser" aria-labelledby="video-teaser-title">
+          <h2 id="video-teaser-title">Can you identify this plane?</h2>
+          <div className="video-placeholder">
+            <AirplaneTilt size={56} weight="duotone" aria-hidden="true" />
+            <p>Video coming soon</p>
+          </div>
+        </section>
         <section className="photo-feature">
           <div className="wrap section">
             <Featured compact />

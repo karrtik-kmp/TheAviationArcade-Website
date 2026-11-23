@@ -777,6 +777,17 @@ Verification: typecheck, `npm test` 238/238, `npm run build`. In the browser pan
 1440, 1024, 768 and 375px on the home, games, game, ranks, photographer and sign-in pages; the header fits at
 1024px; both themes checked by eye. The browser QA suites were not run (they need the auth emulator).
 
+## Client answers applied: buttons, radar, video placeholder (2026-11-23)
+
+Josh's answers to the website-notes-1 questions are logged in
+[feedback/website-notes-1.md](feedback/website-notes-1.md). Game pages now use "Get Ready to Play" (to app
+release details) and "Be an Airport Spotter, Share your Photos". The header and footer carry the game's radar:
+the Launch screen's three rings and brass glow, centred on the logo through the new `--gutter`/`--mark` tokens.
+The homepage has a "Can you identify this plane?" video placeholder. Rank insignia specs were sent to Josh.
+
+Verification: typecheck, `npm test` 238/238, `npm run build`; in the browser pane, ring centre measured on the
+logo (header and footer), both themes, and no overflow at 375px. Browser QA suites not run.
+
 ## Responsive header, buttons and footer (2026-11-23)
 
 Audit with repro steps: [UI_AUDIT_2026-11-23.md](UI_AUDIT_2026-11-23.md). Fixed (`ff73221`, `3fe1299`): signed in, the

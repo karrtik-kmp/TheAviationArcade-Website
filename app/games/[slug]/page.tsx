@@ -66,14 +66,16 @@ export default async function GamePage({
               </>
             )}
             <div className="actions">
+              {/* Labels: client ruling 2026-11-23. The games are played in the app, so the
+                  primary button leads to the app release details, not to play. */}
               <Link className="btn" href="/get-the-app">
-                App release details
+                Get Ready to Play
               </Link>
               <Link
                 className="btn secondary"
                 href={`/contribute?game=${game.slug}`}
               >
-                Contribute content
+                Be an Airport Spotter, Share your Photos
               </Link>
             </div>
           </div>
