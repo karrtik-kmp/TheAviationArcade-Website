@@ -410,7 +410,7 @@ async function main() {
       assert.equal(submissions.status(), 401);
       assert.equal((await page.goto(`${localOrigin}/admin`)).status(), 404);
       await page
-        .getByRole("heading", { name: "This destination is unavailable.", exact: true })
+        .getByRole("heading", { name: "Looks Like We've Gone Off Course!", exact: true })
         .waitFor();
       // Mock mode: guests get the same closed panel as members; query params are ignored.
       await page.goto(`${localOrigin}/contribute?category=aircraft&game=aircraft-identifier&view=mine`);

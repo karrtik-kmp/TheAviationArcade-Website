@@ -4,12 +4,13 @@ export default function NotFound() {
   return (
     <PublicShell>
       <main id="main" className="wrap section">
-        <h1>This destination is unavailable.</h1>
+        <h1>Looks Like We&apos;ve Gone Off Course!</h1>
         <p className="muted" style={{ margin: "24px 0" }}>
-          Return to the arcade to explore the games.
+          Even the best pilots occasionally need to find their way back.
+          Let&apos;s get you headed in the right direction.
         </p>
-        <Link href="/games" className="btn">
-          Explore games
+        <Link href="/" className="btn">
+          Return to the Hangar
         </Link>
       </main>
     </PublicShell>

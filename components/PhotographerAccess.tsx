@@ -115,8 +115,8 @@ export function PhotographerAccess({
   return (
     <main id="main" className="wrap contribute-root">
       <section className="page-intro">
-        <p className="eyebrow">COMMUNITY PHOTOGRAPHY</p>
-        <h1>Bring your view of aviation.</h1>
+        <p className="eyebrow">Calling all aviation photographers</p>
+        <h1>Your Best Shot Deserves Some Air Time.</h1>
       </section>
       <section className="signin-panel photographer-access" aria-labelledby="photographer-access-title">
         <Camera size={28} weight="duotone" aria-hidden="true" />
@@ -166,6 +166,39 @@ export function PhotographerAccess({
   );
 }
 
+/** The client's welcome for visitors who are not signed in (website notes 1, 2026-11). */
+function PhotographerWelcome() {
+  return (
+    <div className="photographer-welcome">
+      <p className="page-subheading">You know the feeling.</p>
+      <p>
+        The light is perfect. The aircraft is perfectly positioned. You press the shutter and capture a moment that
+        makes you smile.
+      </p>
+      <p>We love those moments too!</p>
+      <p>
+        Airplane Games is building a growing collection of aviation photography, featuring aircraft, airports, airline
+        tails, and the incredible world of flight.
+      </p>
+      <p>
+        Whether you&apos;re a dedicated plane spotter or just happened to capture something amazing, we&apos;d love to
+        see your work.
+      </p>
+      <h2>Share Your View From the Flight Line.</h2>
+      <p>Your photography may be considered for our Plane of the Day feature, aviation galleries, or future game content.</p>
+      <p>
+        We believe photographers deserve recognition for their work, and approved featured images will include
+        appropriate credit.
+      </p>
+      <h2>Ready to Share?</h2>
+      <p>
+        Sign in to submit your photography for review. We&apos;ll review submissions for image quality, accuracy, and
+        appropriate usage rights before publication.
+      </p>
+    </div>
+  );
+}
+
 /**
  * /contribute when photographer submissions are not open through the website: the website's own
  * proposal routes are closed to members (D-2 amended), and backend media needs the photo service.
@@ -175,8 +208,9 @@ export function SubmissionsClosed({ signedIn, signInRequired = false }: { signed
   return (
     <main id="main" className="wrap contribute-root">
       <section className="page-intro">
-        <p className="eyebrow">COMMUNITY PHOTOGRAPHY</p>
-        <h1>Bring your view of aviation.</h1>
+        <p className="eyebrow">Calling all aviation photographers</p>
+        <h1>Your Best Shot Deserves Some Air Time.</h1>
+        {signInRequired && !signedIn && <PhotographerWelcome />}
       </section>
       <section className="signin-panel photographer-access" aria-labelledby="submissions-closed-title">
         <Camera size={28} weight="duotone" aria-hidden="true" />
@@ -189,7 +223,7 @@ export function SubmissionsClosed({ signedIn, signInRequired = false }: { signed
         {signInRequired && !signedIn && (
           <div className="actions">
             <SiteLink className="btn" href={accountSignInPath("/contribute")}>
-              Sign in
+              Sign In to Submit Photos
             </SiteLink>
           </div>
         )}

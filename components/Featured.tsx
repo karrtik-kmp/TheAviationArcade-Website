@@ -61,17 +61,27 @@ export function Featured({ compact = false }: { compact?: boolean }) {
           <div className="photo-preview-label">
             {photo.date ? "Plane of the Day" : "From the photo collection"}
           </div>
-          <h2>A reason to look up.</h2>
+          {/* "Today's" only for a real scheduled feature, never for the preview photograph. */}
+          <h2>{photo.date ? "Today's Featured Aircraft" : "A reason to look up."}</h2>
+          {photo.date && photo.aircraft && (
+            <div className="photo-aircraft">{photo.aircraft}</div>
+          )}
           <div className="photo-title">{photo.title}</div>
+          {photo.date && <div className="photo-aircraft">{photo.credit}</div>}
           <p>{photo.description}</p>
           {compact ? (
             <Link className="text-link" href="/plane-of-the-day">
               Explore the collection <ArrowUpRight size={18} />
             </Link>
           ) : (
-            <Link className="btn" href="/contribute">
-              Share a photo <ArrowUpRight size={18} />
-            </Link>
+            <div className="actions">
+              <Link className="btn" href="/games">
+                Explore the Arcade <ArrowUpRight size={18} />
+              </Link>
+              <Link className="btn secondary" href="/contribute">
+                Submit Your Photo
+              </Link>
+            </div>
           )}
           {error && (
             <p role="status" style={{ fontSize: 11 }}>
@@ -83,7 +93,11 @@ export function Featured({ compact = false }: { compact?: boolean }) {
       </div>
       {!compact && (
         <section style={{ marginTop: 64 }}>
-          <h2>From the archive</h2>
+          <h2>Missed a Flight? We&apos;ve Got You Covered.</h2>
+          <p className="archive-intro">
+            Explore previously featured aircraft and rediscover amazing aviation
+            moments from our growing photo collection.
+          </p>
           {archive.length ? (
             <div className="archive-grid">
               {archive.map((p) => (
@@ -107,6 +121,19 @@ export function Featured({ compact = false }: { compact?: boolean }) {
               Future scheduled entries stay private until their feature date.
             </div>
           )}
+        </section>
+      )}
+      {!compact && (
+        <section className="closing-cta" style={{ marginTop: 64 }}>
+          <h2>Your Photo Could Be Next!</h2>
+          <p>
+            Have an incredible aircraft photograph you&apos;d love to share?
+            Submit it for consideration and help us celebrate the world of
+            aviation.
+          </p>
+          <Link className="btn" href="/contribute">
+            Share Your Aviation Photography <ArrowUpRight size={18} />
+          </Link>
         </section>
       )}
     </>

@@ -755,3 +755,13 @@ Verification (local, Auth Emulator, demo-preview profile, mock roles): `npm test
 10/10 under `/play` (5188); session-return-qa 6/6 (5186). frontend-ui-qa: 64/64 layout checks, then fails on 21
 console errors, all `/api/featured` answering the expected 503 until A3. Evidence files the suites rewrote were
 not committed. Nothing deployed; hosted and live Google sign-in not tested.
+
+## Client copy round 1 from "website notes 1" (2026-11-23)
+
+The client's annotated-screenshot sheet (`../docs/website notes 1.pdf`) is tracked item by item in
+[feedback/website-notes-1.md](feedback/website-notes-1.md). Round 1 applied the copy for the homepage, games
+index and cards, seven game pages, Plane of the Day, ranks, photographers, About, App release details, the
+footer tagline and the 404 page. QA scripts follow the new headings. Not applied, waiting on answers: play-style
+and mislabelled game-page buttons, the licence sentence on the photographer page, and the swapped page 32/34
+text. Not started: font size, logo, game blue and dark default, radar background, rank insignia, screenshot
+carousels and the homepage teaser.

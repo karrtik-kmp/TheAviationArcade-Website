@@ -348,8 +348,11 @@ button:active,
 .hero-copy p {
   font-size: 15px;
   line-height: 1.8;
-  max-width: 410px;
-  margin-bottom: 30px;
+  max-width: 470px;
+  margin-bottom: 14px;
+}
+.hero-copy .actions {
+  margin-top: 30px;
 }
 .hero-photo {
   min-width: 0;
@@ -492,6 +495,10 @@ button:active,
   color: var(--muted);
   margin-top: 8px;
 }
+.game-card p.game-card-tagline {
+  font-weight: 600;
+  color: var(--ink);
+}
 .game-card-copy > svg {
   margin-top: 6px;
   color: var(--brass);
@@ -533,6 +540,16 @@ button:active,
 .photo-title {
   font-family: Barlow, sans-serif;
   font-size: 28px;
+}
+.photo-aircraft {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 6px 0;
+}
+.archive-intro {
+  color: var(--muted);
+  margin: 14px 0 24px;
+  max-width: 640px;
 }
 .community {
   position: relative;
@@ -594,6 +611,37 @@ button:active,
   margin-top: 18px;
   font-size: 14px;
   max-width: 650px;
+}
+/* A short heading-style line under a page title (client copy, website notes 1). */
+.page-intro > p.page-subheading,
+.hero-copy p.page-subheading {
+  font-family: Barlow, sans-serif;
+  font-weight: 600;
+  font-size: clamp(22px, 2.2vw, 30px);
+  line-height: 1.2;
+  color: var(--ink);
+  max-width: 760px;
+  margin-bottom: 18px;
+}
+.page-intro .eyebrow,
+.section-top .eyebrow,
+.community .eyebrow {
+  display: block;
+  margin-bottom: 14px;
+}
+.detail-copy p + p {
+  margin-top: 14px;
+}
+/* A closing call-to-action band at the foot of a page. */
+.closing-cta {
+  border-top: 1px solid var(--line);
+  padding-top: 56px;
+  padding-bottom: 80px;
+}
+.closing-cta p {
+  color: var(--muted);
+  margin: 16px 0 28px;
+  max-width: 640px;
 }
 .breadcrumbs {
   display: flex;
@@ -708,6 +756,26 @@ button:active,
 .prose p {
   color: var(--muted);
   margin: 14px 0;
+}
+.page-intro > p + p {
+  margin-top: 12px;
+}
+.rank-ladder {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  gap: 4px;
+}
+.rank-ladder li {
+  border-left: 3px solid var(--brass);
+  padding: 10px 0 10px 18px;
+}
+.rank-ladder h3 {
+  font-size: 22px;
+}
+.rank-ladder p {
+  margin: 6px 0 0;
 }
 .prose details {
   border-bottom: 1px solid var(--line);
@@ -1836,4 +1904,16 @@ button:active,
 .admin-gate .admin-local-note {
   font-size: 11px;
   margin-bottom: 0;
+}
+.photographer-welcome {
+  max-width: 760px;
+  margin-top: 24px;
+}
+.photographer-welcome p {
+  color: var(--muted);
+  margin-top: 12px;
+}
+.photographer-welcome h2 {
+  font-size: 32px;
+  margin: 32px 0 4px;
 }

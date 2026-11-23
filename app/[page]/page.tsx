@@ -1,14 +1,57 @@
 import { SiteLink as Link } from "@/components/SiteLink";
 import { notFound } from "next/navigation";
 import { PublicShell } from "@/components/PublicShell";
-const pages: Record<
-  string,
-  { title: string; intro: string; sections: { title: string; body: string }[] }
+import { ranks } from "@/lib/catalog";
+type Section = {
+  title: string;
+  body: string | string[];
+  /** Renders the five-rank ladder with the client's line for each rank. */
+  rankLadder?: boolean;
+};
+type InfoPage = {
+  eyebrow?: string;
+  title: string;
+  /** A heading-style line under the title. */
+  subheading?: string;
+  intro: string | string[];
+  sections: Section[];
+  actions?: { primary: string; secondary: string };
+};
+/** The client's line for each rank (website notes 1, 2026-11). Names come from the catalog. */
+const rankLines: Record<
+  (typeof ranks)[number]["id"],
+  { tagline: string; text: string }
 > = {
+  trainee: {
+    tagline: "Welcome Aboard!",
+    text: "You're new to the flight deck, and the adventure is just beginning. Get comfortable, learn the basics, and enjoy your first challenges.",
+  },
+  "first-officer": {
+    tagline: "You're Getting the Hang of This!",
+    text: "Your aviation knowledge is growing. You're spotting the differences, recognizing the clues, and getting better with every round.",
+  },
+  captain: {
+    tagline: "You're in Command!",
+    text: "You've proven you've got the skills to take charge. But the challenges are getting tougher. Stay sharp!",
+  },
+  "check-airman": {
+    tagline: "Welcome to Expert Territory.",
+    text: "You're playing at a whole new altitude. Your knowledge and attention to detail will be put to the ultimate test.",
+  },
+  "chief-pilot": {
+    tagline: "Top of the Flight Deck!",
+    text: "You've climbed to the highest rank. That's something to be proud of! Keep playing, improving, and enjoying the world of aviation.",
+  },
+};
+const pages: Record<string, InfoPage> = {
   "get-the-app": {
-    title: "Your next Trip is on the horizon.",
-    intro:
-      "Airplane Games is in development for mobile. Verified download links will appear here when a public release is ready.",
+    eyebrow: "Preparing for departure",
+    title: "Your Aviation Adventure Is Almost Ready for Takeoff!",
+    intro: [
+      "The aircraft are lined up. The challenges are coming together. And we're getting the Aviation Arcade ready for boarding.",
+      "Airplane Games is currently in development for mobile devices.",
+      "Soon you'll be able to put your aviation knowledge to the test with eight unique games, work your way through five pilot ranks, and discover new reasons to love aviation.",
+    ],
     sections: [
       {
         title: "Android first",
@@ -21,36 +64,72 @@ const pages: Record<
     ],
   },
   about: {
-    title: "For people who look up.",
-    intro:
-      "Airplane Games brings recognition, knowledge, speed and memory together in an aviation arcade.",
+    eyebrow: "The story behind the arcade",
+    title: "Built for the Love of Aviation.",
+    intro: [
+      "There's something magical about airplanes.",
+      "Maybe it's the thrill of watching a massive jet lift off the runway. The excitement of seeing an unfamiliar aircraft overhead. Or the satisfaction of recognizing an airport before anyone else.",
+      "Whatever draws you to aviation, we get it.",
+      "Airplane Games: The Aviation Arcade was created to bring that excitement to your fingertips.",
+    ],
     sections: [
       {
-        title: "An arcade with a common thread",
-        body: "Eight games explore civil and military aircraft, airline tails, airports, runway layouts, callsigns and airport codes. Status Points and a shared rank ladder connect them as you progress in the app.",
+        title: "A World of Aviation. One Fun Arcade.",
+        body: [
+          "Our mission is simple: make aviation fun, engaging, and accessible to everyone.",
+          "Through quick, entertaining games, players can discover new aircraft, explore airports around the world, sharpen their knowledge, and challenge themselves to reach new heights.",
+          "You don't need to be an expert to start playing. You just need a little curiosity.",
+        ],
       },
       {
-        title: "A community behind the collection",
-        body: "Photographers can propose aircraft, airport, ATC and other aviation images. Editors check facts, image quality, credit and rights before any proposed use.",
+        title: "Learn a Little. Play a Lot.",
+        body: [
+          "We believe the best games are the ones that make you smile, keep you thinking, and teach you something along the way.",
+          "Every challenge is another chance to discover something about the amazing world of aviation.",
+        ],
+      },
+      {
+        title: "More Than Just Games.",
+        body: [
+          "Airplane Games is also a celebration of the aviation community, from photographers and plane spotters to aviation enthusiasts and future pilots.",
+          "Through shared photography, featured aircraft, and a growing collection of aviation experiences, we're building something for everyone who loves to look up.",
+        ],
+      },
+      {
+        title: "See You in the Skies!",
+        body: "Whether you're here to test your knowledge, discover something new, or simply enjoy a few minutes of aviation fun, we're glad you're aboard.",
       },
     ],
+    actions: { primary: "Explore the Games", secondary: "Submit Your Photo" },
   },
   "how-to-play": {
-    title: "A little knowledge. A new perspective.",
-    intro:
-      "The games are played in the mobile app. This website is where you read about them, review your progress and join the community.",
+    eyebrow: "The Flight Deck",
+    title: "Earn Your Wings. Join the Crew.",
+    subheading: "Every Aviation Legend Starts as a Trainee.",
+    intro: [
+      "You don't need a pilot's license to take off here. Just a little curiosity, a love of aviation, and a willingness to test your skills.",
+      "With every game you play, you'll gain experience, sharpen your knowledge, and work your way up the aviation ladder.",
+    ],
     sections: [
       {
-        title: "Ranks and Status Points",
-        body: "Status Points measure lifetime progress through Trainee, First Officer, Captain, Check Airman and Chief Pilot. Every game, including the military edition of Aircraft Identifier, uses the same five ranks. The app remains the source of truth for awards and rank rules.",
+        title: "Five Ranks. How High Can You Climb?",
+        body: [],
+        rankLadder: true,
+      },
+      {
+        title: "Play More. Discover More. Keep Climbing.",
+        body: "Earn points, build your experience, collect achievements, and see how far your aviation knowledge can take you.",
       },
       {
         title: "Review your progress",
         body: "Signed-in players will be able to review their profile and stats here once app profile linking is available. Nothing on this website is played or purchased.",
       },
       {
-        title: "Join the community",
-        body: "A community forum is planned for players and photographers to talk aviation. Details will appear here when it opens.",
+        title: "Aviation Is Better Together.",
+        body: [
+          "Plane spotters. Aviation enthusiasts. Frequent flyers. Future pilots. We're building a place for everyone who shares the excitement of flight.",
+          "Come for the games. Stay for the community.",
+        ],
       },
     ],
   },
@@ -93,6 +172,8 @@ const pages: Record<
     ],
   },
 };
+const paragraphs = (body: string | string[]) =>
+  typeof body === "string" ? [body] : body;
 export default async function InformationPage({
   params,
 }: {
@@ -105,22 +186,42 @@ export default async function InformationPage({
     <PublicShell>
       <main id="main">
         <header className="wrap page-intro">
+          {data.eyebrow && <span className="eyebrow">{data.eyebrow}</span>}
           <h1>{data.title}</h1>
-          <p>{data.intro}</p>
+          {data.subheading && (
+            <p className="page-subheading">{data.subheading}</p>
+          )}
+          {paragraphs(data.intro).map((p) => (
+            <p key={p}>{p}</p>
+          ))}
         </header>
         <article className="wrap prose">
           {data.sections.map((s) => (
             <section key={s.title}>
               <h2>{s.title}</h2>
-              <p>{s.body}</p>
+              {paragraphs(s.body).map((p) => (
+                <p key={p}>{p}</p>
+              ))}
+              {s.rankLadder && (
+                <ol className="rank-ladder">
+                  {ranks.map((r) => (
+                    <li key={r.id}>
+                      <h3>
+                        {r.name} — {rankLines[r.id].tagline}
+                      </h3>
+                      <p>{rankLines[r.id].text}</p>
+                    </li>
+                  ))}
+                </ol>
+              )}
             </section>
           ))}
           <div className="actions" style={{ marginTop: 36 }}>
             <Link className="btn" href="/games">
-              Explore games
+              {data.actions?.primary ?? "Explore games"}
             </Link>
             <Link className="btn secondary" href="/contribute">
-              Share a photo
+              {data.actions?.secondary ?? "Share a photo"}
             </Link>
           </div>
         </article>

@@ -31,7 +31,7 @@ export default async function GamePage({
             <span>{game.name}</span>
           </div>
           <h1>{game.name}</h1>
-          <p>{game.description}</p>
+          <p className="page-subheading">{game.detail?.heading ?? game.description}</p>
         </header>
         <section className="wrap detail-layout">
           <div>
@@ -42,13 +42,29 @@ export default async function GamePage({
             </div>
           </div>
           <div className="detail-copy">
-            <h2>About this game</h2>
-            <p>
-              {game.name} is one of the Airplane Games arcade titles. It is
-              played in the mobile app, not on this website, which is where you
-              can learn about the games, share photography and follow the
-              community.
-            </p>
+            {game.detail ? (
+              <>
+                <h2>{game.detail.actionsHeading}</h2>
+                {game.detail.body.map((p) => (
+                  <p key={p}>{p}</p>
+                ))}
+                {game.detail.mission && (
+                  <p>
+                    <strong>Your Mission:</strong> {game.detail.mission}
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                <h2>About this game</h2>
+                <p>
+                  {game.name} is one of the Airplane Games arcade titles. It is
+                  played in the mobile app, not on this website, which is where
+                  you can learn about the games, share photography and follow
+                  the community.
+                </p>
+              </>
+            )}
             <div className="actions">
               <Link className="btn" href="/get-the-app">
                 App release details

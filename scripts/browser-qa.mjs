@@ -34,7 +34,7 @@ try {
   await check("Homepage desktop and theme switch", async () => {
     await page.goto(origin, { waitUntil: "domcontentloaded", timeout: 90000 });
     await page
-      .getByRole("heading", { name: "Think you know airplanes?" })
+      .getByRole("heading", { name: "Ready for Takeoff?" })
       .waitFor();
     await page.getByRole("link", { name: "Sign in", exact: true }).waitFor();
     assert.equal(
@@ -101,7 +101,7 @@ try {
       .getByRole("link", { name: "Games", exact: true })
       .click();
     await page
-      .getByRole("heading", { name: "Eight games. One aviation obsession." })
+      .getByRole("heading", { name: "Choose Your Flight." })
       .waitFor();
     assert.equal(
       await page.evaluate(
@@ -122,7 +122,7 @@ try {
       assert.equal((await api("/api/admin/submissions")).status, 404);
       assert.equal((await page.goto(origin + "/admin")).status(), 404);
       await page
-        .getByRole("heading", { name: "This destination is unavailable." })
+        .getByRole("heading", { name: "Looks Like We've Gone Off Course!" })
         .waitFor();
       assert.equal((await api("/api/submissions")).status, 401);
       await signInQaEditor(page, origin);

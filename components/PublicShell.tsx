@@ -127,7 +127,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
             </nav>
           </div>
           <div className="footer-bottom">
-            <span>Airplane Games. Made for people who look up.</span>
+            <span>Airplane Games. Your Boarding Pass to Aviation Fun.</span>
             <div className="actions">
               <Link href="/review-conditions">Review conditions</Link>
               <Link href="/privacy">Privacy</Link>

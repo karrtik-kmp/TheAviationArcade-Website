@@ -468,8 +468,8 @@ export default function SubmissionForm({
   return (
     <main id="main" className="wrap contribute-root">
       <section className="page-intro">
-        <p className="eyebrow">COMMUNITY PHOTOGRAPHY</p>
-        <h1>Bring your view of aviation.</h1>
+        <p className="eyebrow">Calling all aviation photographers</p>
+        <h1>Your Best Shot Deserves Some Air Time.</h1>
         <p>
           Help build the photo collection behind Airplane Games, from airliners
           and airports to military aircraft. Propose a photograph for editorial

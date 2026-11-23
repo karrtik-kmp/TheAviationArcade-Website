@@ -15,6 +15,16 @@ export type Game = {
   status: string;
   /** The photo category a contributor form starts with when it is opened for this game. */
   submissionCategory: Category;
+  /**
+   * The game's own page, in the client's words (website notes 1, 2026-11). Absent until the
+   * client supplies it; the page then falls back to `description`.
+   */
+  detail?: {
+    heading: string;
+    body: string[];
+    mission?: string;
+    actionsHeading: string;
+  };
 };
 
 /**
@@ -50,9 +60,9 @@ export const games: Game[] = [
     backendId: "identifier",
     slug: "aircraft-identifier",
     name: "Aircraft Identifier",
-    subtitle: "What plane is that?",
+    subtitle: "Can You Name That Plane?",
     description:
-      "Read the silhouette, study the engines and choose the aircraft. Familiar airliners lead to harder angles and finer details.",
+      "Think you know a Boeing from an Airbus? Look closely at the wings, engines, and shape to identify everything from familiar passenger jets to more challenging aircraft.",
     category: "Recognition",
     image: "/media/aircraft.webp",
     imageAlt:
@@ -67,98 +77,160 @@ export const games: Game[] = [
     backendId: "aircraft-identifier-military",
     slug: "military-aircraft-identifier",
     name: "Military Aircraft Identifier",
-    subtitle: "What jet is that?",
+    subtitle: "Mission: Identify That Aircraft!",
     description:
-      "The Aircraft Identifier challenge, flown with military types. Tell fighters, transports and trainers apart by silhouette, engines and finer details.",
+      "Fighter jets, military transports, and legendary aircraft. Take on a new identification challenge and see if you've got the eye of an aviation expert.",
     category: "Recognition",
     image: "",
     imageAlt: "",
     status: "In development",
     submissionCategory: "aircraft",
+    detail: {
+      heading: "You've Got an Aircraft to Identify!",
+      body: [
+        "From legendary fighter jets to massive military transports, the skies are filled with incredible machines.",
+        "Do you have what it takes to tell them apart? Study the shape, examine the details, and put your military aviation knowledge to the test.",
+      ],
+      mission: "Identify the aircraft and build your skills across increasingly difficult challenges.",
+      actionsHeading: "Identify the Military Aircraft!",
+    },
   },
   {
     id: "tail-identifier",
     backendId: "tail-identifier",
     slug: "tail-identifier",
     name: "Tail Identifier",
-    subtitle: "Know it by its colours.",
+    subtitle: "Whose Tail Is That?",
     description:
-      "Identify the airline from its tail livery. Discover the details that distinguish familiar carriers, regional airlines and historic fleets.",
+      "How well do you know the world's airlines? From iconic logos to colorful liveries, identify the airline using only its tail. Some are easy. Others might leave you scratching your head!",
     category: "Recognition",
     image: "/media/tail.webp",
     imageAlt:
       "KLM aircraft with its blue crown tail livery visible; contextual photography, not a cropped game question.",
     status: "In development",
     submissionCategory: "tail",
+    detail: {
+      heading: "A Little Tail Can Tell You a Lot.",
+      body: [
+        "Some airline tails are instantly recognizable. Others? Not so much.",
+        "From the world's biggest carriers to regional airlines and historic liveries, discover how much you can learn from a single tail design.",
+      ],
+      mission: "Identify the airline using the aircraft's tail artwork. Look for colors, patterns, and logos.",
+      actionsHeading: "Test Your Airline Knowledge",
+    },
   },
   {
     id: "airport-spotter",
     backendId: "airport-spotter",
     slug: "airport-spotter",
     name: "Airport Spotter",
-    subtitle: "Every airport has a tell.",
+    subtitle: "Where in the world are you?",
     description:
-      "Recognize airports from real photographs. Start with distinctive landmarks, then look for smaller clues in terminals and airfield details.",
+      "From famous international hubs to hidden aviation gems, see how many airports you can recognize.",
     category: "Recognition",
     image: "",
     imageAlt: "",
     status: "In development",
     submissionCategory: "airport",
+    detail: {
+      heading: "Welcome to your next mystery destination.",
+      body: [
+        "A terminal. A tower. A runway. A familiar mountain in the distance. Every picture offers clues to where you've landed.",
+      ],
+      mission: "Study the airport photograph, look for recognizable features, and identify the destination.",
+      actionsHeading: "Start Exploring Airports",
+    },
   },
   {
     id: "atc-match",
     backendId: "atc-match",
     slug: "atc-match",
     name: "ATC Match",
-    subtitle: "Three letters. One airport.",
+    subtitle: "Three Letters. One Destination.",
     description:
-      "Match airport names to their three-letter IATA codes before time runs out. Turn familiar destinations into confident recall.",
+      "LAX. JFK. LHR. Think you know your airport codes? Match airport names with their three-letter codes before the clock runs out.",
     category: "Matching",
     image: "",
     imageAlt: "",
     status: "In development",
     submissionCategory: "atc",
+    detail: {
+      heading: "Know Your Airport ABCs?",
+      body: [
+        "Three letters can take you almost anywhere.",
+        "From LAX to LHR, the world's airports have their own unique codes. Some are obvious. Others are full of surprises.",
+      ],
+      mission: "Match airport names with their three-letter IATA codes before the clock runs out.",
+      actionsHeading: "Put Your Airport Knowledge to Work",
+    },
   },
   {
     id: "call-sign-match",
     backendId: "call-sign-match",
     slug: "call-sign-match",
     name: "Call Sign Match",
-    subtitle: "Tune in to the airline.",
+    subtitle: "Who's Calling the Tower?",
     description:
-      "Match radio callsigns to their airlines against the clock. Learn the names heard on the frequency, from major carriers to historic operators.",
+      "Speedbird. Cactus. Shamrock. Every airline has a voice on the radio. Match aviation call signs to the airlines behind them and see how well you know the airwaves.",
     category: "Matching",
     image: "",
     imageAlt: "",
     status: "In development",
     submissionCategory: "atc",
+    detail: {
+      heading: "Do You Speak Airline?",
+      body: [
+        "When an airline calls air traffic control, it doesn't always use the name painted on its airplanes.",
+        "Ever wondered who's behind names like Speedbird or Shamrock?",
+      ],
+      mission: "Match the airline's radio call sign with the correct airline. Keep your eyes sharp and your aviation knowledge sharper.",
+      actionsHeading: "Tune In to the Challenge",
+    },
   },
   {
     id: "code-search",
     backendId: "code-search",
     slug: "code-search",
     name: "Code Search",
-    subtitle: "Find your next destination.",
+    subtitle: "Find the Code. Beat the Clock.",
     description:
-      "Find airport codes hidden in a letter grid. Later challenges turn city names into clues, testing recall as well as your eye.",
+      "Your favorite word search just got its wings! Hunt for hidden three-letter airport codes in a grid of letters. As you climb the ranks, the clues get trickier and your airport knowledge really gets put to the test.",
     category: "Word games",
     image: "",
     imageAlt: "",
     status: "In development",
     submissionCategory: "atc",
+    detail: {
+      heading: "Your Next Destination Is Hidden in Plain Sight.",
+      body: [
+        "Airport codes are hiding in a sea of letters, and the clock is ticking!",
+        "Search the grid, find the right codes, and discover how good you really are at recognizing aviation's three-letter language.",
+      ],
+      mission: "Find hidden IATA airport codes in a word-search puzzle. As the difficulty increases, city names become clues that you must translate into airport codes.",
+      actionsHeading: "Find Your First Code",
+    },
   },
   {
     id: "runway-identifier",
     backendId: "runway-identifier",
     slug: "runway-identifier",
     name: "Runway Identifier",
-    subtitle: "Read the shape of the airfield.",
+    subtitle: "Can You Recognize an Airport From the Runway Layout?",
     description:
-      "Identify airports from their runway layouts. Distinctive footprints give way to intersecting patterns and unfamiliar airfields.",
+      "Every airport has a unique layout. Study the runways, look for distinctive patterns, and identify the airport without seeing its name.",
     category: "Recognition",
     image: "",
     imageAlt: "",
     status: "In development",
     submissionCategory: "runway",
+    detail: {
+      heading: "All Runways Lead Somewhere. But Where?",
+      body: [
+        "Every airport has its own unique fingerprint.",
+        "Some have parallel runways stretching for miles. Others have intersecting layouts or unusual shapes.",
+      ],
+      mission: "Study an airport's runway diagram and identify the airport using only its layout. No airport name. Just you and the runways.",
+      actionsHeading: "Take the Runway Challenge",
+    },
   },
 ];

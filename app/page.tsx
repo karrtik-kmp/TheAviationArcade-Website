@@ -10,22 +10,58 @@ import { GameCard } from "@/components/Games";
 import { Featured } from "@/components/Featured";
 import { games, photographer, photographerUrl } from "@/lib/catalog";
 import { sitePath } from "@/lib/paths";
+/** The homepage's three games and their teaser copy (client, website notes 1). */
+const homeGames = [
+  {
+    slug: "aircraft-identifier",
+    teaser: {
+      title: "Can you name that plane?",
+      text: "Boeing or Airbus? Jumbo jet or regional aircraft? Take a closer look and see if you can identify the aircraft.",
+    },
+  },
+  {
+    slug: "airport-spotter",
+    teaser: {
+      title: "Where in the world are you?",
+      text: "From famous international hubs to hidden aviation gems, see how many airports you can recognize.",
+    },
+  },
+  {
+    slug: "runway-identifier",
+    teaser: {
+      title: "Every airport leaves a footprint.",
+      text: "Study the runway layout, look for the clues, and figure out which airport you're looking at.",
+    },
+  },
+];
 export default function Home() {
   return (
     <PublicShell>
       <main id="main">
         <section className="wrap hero">
           <div className="hero-copy reveal">
-            <span className="eyebrow">For the love of aviation</span>
-            <h1>Think you know airplanes?</h1>
+            <span className="eyebrow">Welcome aboard</span>
+            <h1>Ready for Takeoff?</h1>
+            <p className="page-subheading">
+              Think you know airplanes? Let&apos;s find out!
+            </p>
             <p>
-              Eight aviation games, coming to mobile. Read about them, join the
-              community and share your photography, from the window seat to the
-              captain&apos;s chair.
+              From jumbo jets to airport codes, airline tails to runway layouts,
+              Airplane Games brings the excitement of aviation to your
+              fingertips.
+            </p>
+            <p>
+              Test your knowledge, challenge yourself, collect points, and climb
+              the ranks from Trainee to Chief Pilot.
+            </p>
+            <p>
+              Whether you&apos;re a lifelong aviation enthusiast or just love
+              watching planes take off, there&apos;s a game with your name on
+              it.
             </p>
             <div className="actions">
               <Link href="/games" className="btn">
-                Explore games <ArrowUpRight size={18} />
+                Explore the Games <ArrowUpRight size={18} />
               </Link>
               <Link href="/contribute" className="btn secondary">
                 Share a photo
@@ -43,7 +79,7 @@ export default function Home() {
               fetchPriority="high"
             />
             <figcaption className="photo-credit">
-              <span>A different view of the everyday.</span>
+              <span>Prepare for Takeoff</span>
               <a href={photographerUrl} target="_blank" rel="noreferrer">
                 Photography by {photographer}
               </a>
@@ -76,20 +112,27 @@ export default function Home() {
         <section className="wrap section">
           <div className="section-top">
             <div>
-              <h2>Meet the games.</h2>
+              <span className="eyebrow">Fasten your seat belts</span>
+              <h2>Eight Games. A World of Aviation Fun.</h2>
               <p>
-                From the shape of a 747 to the code for Heathrow, a quick look
-                at what&apos;s coming to the app.
+                Think you can spot a Boeing 747 from a mile away? Know your
+                airport codes? Recognize an airline by the tip of its tail?
+              </p>
+              <p>It&apos;s time to put that knowledge to work!</p>
+              <p>
+                Explore eight unique aviation challenges packed with aircraft,
+                airports, airlines, and everything in between.
               </p>
             </div>
             <Link href="/games" className="text-link">
-              All eight games <ArrowUpRight size={18} />
+              Explore All Eight Games <ArrowUpRight size={18} />
             </Link>
           </div>
           <div className="game-grid home-games">
-            {[games[0], games[3], games[1]].map((g) => (
-              <GameCard key={g.id} game={g} />
-            ))}
+            {homeGames.map(({ slug, teaser }) => {
+              const g = games.find((x) => x.slug === slug)!;
+              return <GameCard key={g.id} game={g} teaser={teaser} />;
+            })}
           </div>
         </section>
         <section className="photo-feature">
@@ -107,10 +150,11 @@ export default function Home() {
               loading="lazy"
             />
             <div>
-              <h2>Your perspective belongs here.</h2>
+              <span className="eyebrow">Calling all aviation photographers</span>
+              <h2>Share Your View From the Flight Line.</h2>
               <p>
-                Aircraft, airports, tails or life around the tower. Help build
-                the collection behind our games.
+                Your photography may be considered for our Plane of the Day
+                feature, aviation galleries, or future game content.
               </p>
               <Link className="btn" href="/contribute">
                 Share a photo <ArrowUpRight size={18} />

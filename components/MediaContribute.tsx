@@ -1052,8 +1052,8 @@ export function MediaContribute({ sessionKey }: { sessionKey: string }) {
   return (
     <main id="main" className="wrap contribute-root media-root">
       <section className="page-intro">
-        <p className="eyebrow">COMMUNITY PHOTOGRAPHY</p>
-        <h1>Bring your view of aviation.</h1>
+        <p className="eyebrow">Calling all aviation photographers</p>
+        <h1>Your Best Shot Deserves Some Air Time.</h1>
         <p>
           Send photos of aircraft and airports to the Airplane Games team. Every photo is checked and reviewed before any
           use, and it is published only under the licence and credit you give for it. Nothing is played or sold here: the

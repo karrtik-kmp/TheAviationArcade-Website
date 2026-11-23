@@ -55,7 +55,14 @@ export function GameVisual({ game }: { game: Game }) {
     </div>
   );
 }
-export function GameCard({ game }: { game: Game }) {
+/** A card for one game. `teaser` swaps in page-specific copy (the homepage has its own). */
+export function GameCard({
+  game,
+  teaser,
+}: {
+  game: Game;
+  teaser?: { title: string; text: string };
+}) {
   return (
     <article className="game-card">
       <Link href={`/games/${game.slug}`}>
@@ -63,7 +70,8 @@ export function GameCard({ game }: { game: Game }) {
         <div className="game-card-copy">
           <div>
             <h3>{game.name}</h3>
-            <p>{game.subtitle}</p>
+            <p className="game-card-tagline">{teaser?.title ?? game.subtitle}</p>
+            <p>{teaser?.text ?? game.description}</p>
             <span className="status-label">{game.status}</span>
           </div>
           <ArrowUpRight size={22} />
@@ -101,7 +109,7 @@ export function Catalog() {
             aria-label="Search games"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Find your next challenge"
+            placeholder="Search games"
           />
         </label>
       </div>
