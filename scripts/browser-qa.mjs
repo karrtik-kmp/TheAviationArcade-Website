@@ -44,15 +44,16 @@ try {
       false,
     );
     await page.screenshot({
-      path: "docs/evidence/home-desktop-light.png",
+      path: "docs/evidence/home-desktop-dark.png",
       fullPage: true,
     });
-    await page.getByRole("button", { name: "Use dark theme" }).click();
+    // Dark is the default theme (client, website notes 1); the toggle switches to light.
+    await page.getByRole("button", { name: "Use light theme" }).click();
     await page.waitForFunction(
-      () => document.documentElement.dataset.theme === "dark",
+      () => document.documentElement.dataset.theme === "light",
     );
     await page.screenshot({
-      path: "docs/evidence/home-desktop-dark.png",
+      path: "docs/evidence/home-desktop-light.png",
       fullPage: true,
     });
   });

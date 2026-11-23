@@ -765,3 +765,14 @@ footer tagline and the 404 page. QA scripts follow the new headings. Not applied
 and mislabelled game-page buttons, the licence sentence on the photographer page, and the swapped page 32/34
 text. Not started: font size, logo, game blue and dark default, radar background, rank insignia, screenshot
 carousels and the homepage teaser.
+
+## Readability round: dark default and larger text (2026-11-23)
+
+From "website notes 1" pages 47, 48 and 50. Dark is now the default theme (light stays one toggle away and is
+remembered). Every text size of 17px or less went up one step (body 14 → 16px, card text 12 → 14, captions
+10 → 12); headings and the logo lockup are unchanged. Header links are 15px. browser-qa and frontend-ui-qa now
+start from dark and switch to light.
+
+Verification: typecheck, `npm test` 238/238, `npm run build`. In the browser pane, no horizontal overflow at
+1440, 1024, 768 and 375px on the home, games, game, ranks, photographer and sign-in pages; the header fits at
+1024px; both themes checked by eye. The browser QA suites were not run (they need the auth emulator).

@@ -23,7 +23,7 @@
   display: inline-flex;
   align-items: center;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   text-decoration: underline;
   text-decoration-color: var(--brass);
   text-underline-offset: 4px;
@@ -74,7 +74,7 @@
 }
 .community-auth-card .auth-intro {
   max-width: 42ch;
-  font-size: 12px;
+  font-size: 14px;
   line-height: 1.7;
 }
 .community-auth-card .auth-google,
@@ -121,7 +121,7 @@
 }
 .community-signin-legal a {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   text-decoration: underline;
   text-decoration-color: var(--line);
   text-underline-offset: 3px;
@@ -143,7 +143,7 @@
   .community-signin-header .brand-name { font-size: 17px; }
   .community-signin-header .brand-descriptor { font-size: 7px; }
   .community-signin-header-actions { gap: 8px; }
-  .community-signin-header-actions > a { font-size: 10px; white-space: nowrap; }
+  .community-signin-header-actions > a { font-size: 12px; white-space: nowrap; }
   .community-signin-main { display: flex; flex-direction: column; }
   .community-signin-photo { display: none; }
   .community-signin-form {
@@ -152,7 +152,7 @@
   }
   .community-auth-card .field input:where(:not([type="checkbox"], [type="radio"])) {
     min-height: 48px;
-    font-size: 16px;
+    font-size: 17px;
   }
 }
 @media (max-width: 374px) {

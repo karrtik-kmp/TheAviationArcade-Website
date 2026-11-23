@@ -16,10 +16,11 @@ async function visit(route) { const r = await page.goto(origin + route, { waitUn
     await page.waitForFunction(() => { const input = document.querySelector('input[name=email]'); return input && !input.disabled; }, { timeout: 30000 }); await page.locator('a.account-signin, .account-trigger, .account-error, .auth-mode-links').first().waitFor({ timeout: 30000 }).catch(() => { }); }
 function contrast(a, b) { const lum = s => s.match(/[\d.]+/g).slice(0, 3).map(Number).map(x => x / 255).map(x => x <= .04045 ? x / 12.92 : ((x + .055) / 1.055) ** 2.4).reduce((sum, x, i) => sum + x * [.2126, .7152, .0722][i], 0); const x = lum(a), y = lum(b); return (Math.max(x, y) + .05) / (Math.min(x, y) + .05); }
 try {
-    for (const theme of ['light', 'dark']) {
+    for (const theme of ['dark', 'light']) {
         await visit('/');
-        if (theme === 'dark')
-            await page.getByRole('button', { name: 'Use dark theme' }).click();
+        // Dark is the default theme; the light pass switches once and the choice is remembered.
+        if (theme === 'light')
+            await page.getByRole('button', { name: 'Use light theme' }).click();
         for (const width of [320, 768, 1024, 1440]) {
             await page.setViewportSize({ width, height: 1000 });
             for (const route of ['/', '/games', '/sign-in', '/contribute', '/plane-of-the-day', '/get-the-app', '/privacy']) {

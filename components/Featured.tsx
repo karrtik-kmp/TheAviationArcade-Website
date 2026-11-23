@@ -84,7 +84,7 @@ export function Featured({ compact = false }: { compact?: boolean }) {
             </div>
           )}
           {error && (
-            <p role="status" style={{ fontSize: 11 }}>
+            <p role="status" style={{ fontSize: 13 }}>
               The live collection is unavailable. Showing the client preview
               photograph.
             </p>

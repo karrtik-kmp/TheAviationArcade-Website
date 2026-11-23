@@ -9,7 +9,7 @@
   gap: 9px;
   padding: 0 12px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   white-space: nowrap;
 }
 .account-status-dot {
@@ -22,7 +22,7 @@
 .account-error {
   gap: 8px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
   white-space: nowrap;
 }
 .account-error button {
@@ -49,7 +49,7 @@
   border-radius: 8px;
   background: transparent;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 13px;
   white-space: nowrap;
 }
 .account-signin:hover,
@@ -67,7 +67,7 @@
 }
 .account-trigger-caret {
   color: var(--brass);
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1;
 }
 .account-menu {
@@ -90,13 +90,13 @@
   border-bottom: 1px solid var(--line);
 }
 .account-menu-heading .eyebrow {
-  font-size: 9px;
+  font-size: 12px;
 }
 .account-menu-heading strong {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 500;
 }
 .account-menu > a {
@@ -106,7 +106,7 @@
   gap: 10px;
   padding: 0 12px;
   border-radius: 7px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .account-menu > a:hover {
   background: var(--panel);
@@ -136,7 +136,7 @@
 .account-hero > p {
   max-width: 620px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
 }
 .account-panel {
   display: grid;
@@ -158,7 +158,7 @@
 .account-demo p {
   max-width: 590px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .account-panel-icon {
   display: grid;
@@ -179,7 +179,7 @@
   border-left: 3px solid var(--brass);
   background: var(--panel);
   color: var(--ink);
-  font-size: 12px;
+  font-size: 14px;
 }
 .account-profile-panel {
   margin-bottom: 24px;
@@ -197,7 +197,7 @@
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 13px;
 }
 .account-signout:hover {
   border-color: var(--brass);
@@ -220,7 +220,7 @@
   border-radius: var(--radius);
 }
 .account-destination .eyebrow {
-  font-size: 9px;
+  font-size: 12px;
 }
 .account-destination .text-link {
   min-height: 44px;
@@ -241,10 +241,10 @@
 }
 .account-verify-actions .btn {
   min-height: 44px;
-  font-size: 11px;
+  font-size: 13px;
 }
 .account-verify-result {
-  font-size: 11px !important;
+  font-size: 13px !important;
 }
 .auth-page {
   display: grid;
@@ -266,7 +266,7 @@
 }
 .auth-intro {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .auth-setup-notice,
 .auth-message {
@@ -274,7 +274,7 @@
   padding: 12px 14px;
   border-left: 3px solid var(--brass);
   background: var(--raised);
-  font-size: 11px;
+  font-size: 13px;
 }
 .auth-message.auth-error {
   border-color: var(--error);
@@ -286,7 +286,7 @@
 }
 .auth-google-mark {
   color: #4285f4;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
 }
 .auth-divider {
@@ -295,7 +295,7 @@
   width: 100%;
   gap: 12px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .auth-divider::before,
 .auth-divider::after {
@@ -316,7 +316,7 @@
   font-weight: 500;
 }
 .auth-form .field small {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
 }
 .auth-form .auth-submit {
@@ -336,7 +336,7 @@
   padding: 0;
   background: transparent;
   color: var(--ink);
-  font-size: 11px;
+  font-size: 13px;
   text-decoration: underline;
   text-decoration-color: var(--brass);
   text-underline-offset: 4px;
@@ -346,7 +346,7 @@
   min-height: 44px;
   align-items: center;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   text-decoration: underline;
   text-decoration-color: var(--brass);
   text-underline-offset: 4px;
@@ -427,7 +427,7 @@
 }
 .player-stats dt {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .player-stats dd {
   margin: 6px 0 0;
@@ -448,7 +448,7 @@
 }
 .player-recent span {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
 }
 @media (max-width: 767px) {
   .player-stats {
@@ -469,7 +469,7 @@
 .auth-roles legend {
   margin-bottom: 8px;
   padding: 0;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
 }
 .auth-role {
@@ -489,11 +489,11 @@
   pointer-events: none;
 }
 .auth-role strong {
-  font-size: 13px;
+  font-size: 15px;
 }
 .auth-role small {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .auth-role.active {
   border-color: var(--brass);

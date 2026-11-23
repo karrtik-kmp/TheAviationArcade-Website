@@ -66,7 +66,7 @@
 .contribute-root > section[aria-labelledby="mine-title"] > .notice p {
   max-width: 48ch;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 15px;
 }
 .contribute-root > section[aria-labelledby="mine-title"] > .notice .text-link {
   min-height: 42px;
@@ -124,12 +124,12 @@
 }
 .contribute-root .section-heading p {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
 }
 .contribute-root .hint {
   display: block;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.55;
   margin-top: 6px;
 }
@@ -168,12 +168,12 @@
   margin-bottom: 5px;
 }
 .contribute-root .drop-zone strong {
-  font-size: 14px;
+  font-size: 16px;
 }
 .contribute-root .drop-zone span,
 .contribute-root .drop-zone small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 13px;
 }
 .contribute-root .drop-zone:hover {
   border-color: var(--brass);
@@ -196,11 +196,11 @@
   line-height: 1.4;
 }
 .contribute-root .check-list--games .check-label strong {
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
 }
 .contribute-root .check-list--games .check-label small {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
 }
 .contribute-root .status {
@@ -208,7 +208,7 @@
   align-items: center;
   border-radius: 999px;
   padding: 4px 10px;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.5;
   text-transform: capitalize;
   white-space: nowrap;
@@ -251,7 +251,7 @@
 }
 .contribute-root .submit-actions > span {
   color: var(--muted);
-  font-size: 10px;
+  font-size: 12px;
 }
 .contribute-root .contribute-aside h2 {
   font-size: 34px;
@@ -266,7 +266,7 @@
   border-radius: 12px;
 }
 .contribute-root .contribute-aside figcaption {
-  font-size: 10px;
+  font-size: 12px;
   color: var(--muted);
   margin-top: 8px;
 }
@@ -327,7 +327,7 @@
     flex: 1 1 140px;
     min-width: 0;
     padding: 10px 12px;
-    font-size: 12px;
+    font-size: 14px;
   }
   .contribute-root > section[aria-labelledby="mine-title"] {
     margin-bottom: 52px;
@@ -432,7 +432,7 @@
   min-height: 1.5em;
   margin: 0 0 16px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
 }
 .contribute-root .media-panel,
 .contribute-root .media-detail {
@@ -470,7 +470,7 @@
 .contribute-root .media-note {
   margin: 0 0 12px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
   overflow-wrap: anywhere;
 }
 .contribute-root .media-prompt {
@@ -479,7 +479,7 @@
   border: 1px solid var(--brass);
   border-radius: 8px;
   background: var(--surface);
-  font-size: 14px;
+  font-size: 16px;
 }
 .contribute-root .media-upload {
   display: grid;
@@ -500,7 +500,7 @@
   font-weight: 500;
 }
 .contribute-root .media-upload .check-label {
-  font-size: 14px;
+  font-size: 16px;
   align-items: flex-start;
 }
 .contribute-root .media-upload .check-label input {
@@ -520,7 +520,7 @@
 .contribute-root .media-root .field .hint,
 .contribute-root .media-root .field-error,
 .contribute-root .media-upload .field-error {
-  font-size: 14px;
+  font-size: 16px;
 }
 .contribute-root .media-root .field-error {
   display: block;
@@ -555,7 +555,7 @@
 .contribute-root .media-file-preview figcaption {
   margin-top: 6px;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
 }
 .contribute-root .media-actions {
   display: flex;
@@ -571,7 +571,7 @@
   display: grid;
   gap: 4px;
   min-width: 180px;
-  font-size: 14px;
+  font-size: 16px;
 }
 .contribute-root .media-progress progress {
   width: 100%;
@@ -583,7 +583,7 @@
   border: 1px solid var(--error);
   border-radius: 8px;
   background: var(--surface);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
 }
 .contribute-root .media-list {
@@ -622,7 +622,7 @@
   cursor: pointer;
 }
 .contribute-root .media-state {
-  font-size: 14px;
+  font-size: 16px;
 }
 .contribute-root .media-badge {
   display: inline-block;
@@ -631,7 +631,7 @@
   border: 1px solid var(--brass);
   border-radius: 999px;
   color: var(--brass);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 1.4;
   vertical-align: middle;
@@ -654,7 +654,7 @@
   border-radius: 8px;
   background: var(--surface);
   color: var(--muted);
-  font-size: 14px;
+  font-size: 16px;
 }
 .contribute-root .media-placeholder p {
   margin: 0 0 10px;
@@ -669,7 +669,7 @@
   margin: 0 0 14px;
   padding: 0;
   list-style: none;
-  font-size: 14px;
+  font-size: 16px;
   overflow-wrap: anywhere;
 }
 .contribute-root .media-add {
@@ -709,7 +709,7 @@
   margin: 0;
 }
 .contribute-root .media-rights .check-label {
-  font-size: 14px;
+  font-size: 16px;
   align-items: flex-start;
 }
 .contribute-root .media-rights .check-label input {

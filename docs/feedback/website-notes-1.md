@@ -57,9 +57,11 @@ anything changes · **Later** = agreed in principle, needs assets or a design ro
 
 | PDF page | Request | Note |
 |---|---|---|
-| 47 | Logo: rework the lockup alignment, try the game's colour, make it larger; larger header links | Design round |
-| 48 | Font too small across the site | Design round: body is 14px, card text 12px, captions 10–11px |
-| 50 | Default to the game's blue and to dark mode | Need the game's blue (from the Unity project) and a contrast check |
+| 47 | Larger header links | **Done** (round 2): 12px → 15px, medium weight; 14px below 1150px |
+| 47 | Logo: rework the lockup alignment, try the game's colour, make it larger | Design round; the lockup's sizes were deliberately left unchanged in round 2 |
+| 48 | Font too small across the site | **Done** (round 2): every size of 17px or less went up one step (body 14 → 16, card text 12 → 14, captions 10 → 12, eyebrows 11 → 13); headings unchanged |
+| 50 | Default to dark mode | **Done** (round 2): dark is the default; the toggle still switches to light and remembers the choice |
+| 50 | Use the game's blue | Need the exact blue (from the Unity project) and a contrast check |
 | 50 | Radar background behind header and footer | Needs the radar artwork from the game |
 | 32 | Rank insignia next to each rank | Needs the five insignia images |
 | 18–30 | Screenshot carousel on each game page | Needs screenshots from the game, per level |
