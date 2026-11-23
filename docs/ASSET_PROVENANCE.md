@@ -45,6 +45,19 @@ Seven catalog identities and their order come from `Scripts/Gameplay/Modules/Mod
 
 The generated source is `C:/Users/PC/.codex/generated_images/01a1636f-ad4e-75d1-a4cf-f29ade279732/exec-d4c20464-12c6-4f8e-bce9-15a8d793f63d.png` (2172x724). The website derivative is 1800x600 JPEG, quality 88, resized with Pillow using the same 3:1 aspect ratio. No factual game record may use this asset as photographic verification.
 
+The homepage banner no longer shows this illustration (2026-11-23); the files stay because
+`scripts/prepare-assets.mjs` still produces them.
+
+## Client placeholders (2026-11-23)
+
+Both were supplied by the client through the project folder (`../docs/`) as stand-ins until final
+assets arrive. Photographer credit and usage terms are not yet recorded; do not reuse them elsewhere.
+
+| Website file | Source | Preparation |
+|---|---|---|
+| `flight-line.webp`, `flight-line-640.webp` | `docs/WhatsApp Image 2026-11-23 at 10.46.54 AM.jpeg` (1280x410; an airliner crossing the moon) | sharp 0.35: WebP q82 at full size, WebP q80 at 640 px wide. The homepage "Share Your View From the Flight Line" banner |
+| `identify-placeholder.mp4` | `docs/WhatsApp Video 2026-11-23 at 10.36.32 AM.mp4` (480x848 portrait, 10 s, H.264/AAC) | Copied unchanged. The homepage "Can you identify this plane?" video |
+
 ## Reproduce
 
 The standalone website repository is now `H:/Work/TheAviationArcade/website`. From that directory, run `node scripts/prepare-assets.mjs` with a Python executable that already has Pillow. The default original-asset source is `C:/Unity/Projects/AviationArcade_v2`; set `WEBSITE_ASSET_SOURCE_ROOT` to override that Unity checkout. The script reads original project assets and writes only this website's `public/media` and `public/fonts` directories.

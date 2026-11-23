@@ -651,11 +651,6 @@ button:active,
   font-size: 15px;
   margin: 20px 0 26px;
 }
-.community-caption {
-  font-size: 12px;
-  color: var(--muted);
-  margin-top: 9px;
-}
 .page-intro {
   padding-top: 64px;
   padding-bottom: 36px;
@@ -2006,19 +2001,17 @@ button:active,
 }
 .video-teaser h2 {
   margin-bottom: 28px;
+  text-align: center;
 }
-.video-placeholder {
-  aspect-ratio: 16 / 9;
-  max-width: 960px;
-  border: 1px dashed var(--line);
+/* A portrait phone clip: keep it to the viewport height, centred in the section. */
+.teaser-video {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: min(78vh, 720px);
+  aspect-ratio: 480 / 848;
+  margin: 0 auto;
   border-radius: var(--radius);
   background: var(--panel);
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: 14px;
-  color: var(--muted);
-}
-.video-placeholder svg {
-  color: var(--brass);
 }

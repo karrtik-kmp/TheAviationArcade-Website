@@ -804,3 +804,10 @@ trigger at 1151/1201), light and dark; every public page plus `/account`, `/play
 768 px has no horizontal scroll. Not verified: real iOS Safari / Android Chrome, the photographer upload form
 (shows "not open yet" without the backend), browser QA suites (not run). The plain `.dev.vars` points at the
 retired cloud project, so emulator accounts can't sign in with it; use the `demo-preview` profile.
+
+## Client placeholder video and banner photo (2026-11-23)
+
+The client's placeholder clip (480 × 848 portrait, 10 s) now plays in the homepage "Can you identify this
+plane?" slot, and the placeholder moon photograph replaces the AI illustration in the "Share Your View From
+the Flight Line" banner (its "Community illustration" caption is gone with it). Sources and preparation are in
+[ASSET_PROVENANCE.md](ASSET_PROVENANCE.md); the photographer credit is still to be confirmed.

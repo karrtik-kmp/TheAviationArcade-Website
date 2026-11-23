@@ -86,4 +86,5 @@ anything changes · **Later** = agreed in principle, needs assets or a design ro
 | 50 | Radar background behind header and footer | **Done** (round 3): the game's three Launch-screen rings (radii 150 : 214 : 286) and brass glow, centred on the logo |
 | 32 | Rank insignia next to each rank | Specs sent; waiting for the five images |
 | 18–30 | Screenshot carousel on each game page | Needs screenshots from the game, per level |
-| 50 | Homepage "Can you identify this plane?" video | **Placeholder done** (round 3); waiting for the video |
+| 50 | Homepage "Can you identify this plane?" video | **Placeholder clip in** (2026-11-23): the client's 10 s portrait clip plays in the slot; waiting for the final video |
+| 46 | Photographer banner image | **Placeholder photo in** (2026-11-23): the client's 1280 × 410 moon shot; credit and final image still to come |

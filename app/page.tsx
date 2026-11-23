@@ -135,15 +135,21 @@ export default function Home() {
             })}
           </div>
         </section>
-        {/* Placeholder for the client's "Can you identify this plane?" video (ruling
-            2026-11-23): a picture, a 3-2-1 countdown, the answer. Swap the frame for a
-            <video> once the client supplies it. */}
+        {/* The client's "Can you identify this plane?" video (a picture, a 3-2-1 countdown,
+            the answer). identify-placeholder.mp4 is the client's placeholder clip
+            (2026-11-23), a 480 x 848 portrait phone video; replace the file when the final
+            video arrives. */}
         <section className="wrap section video-teaser" aria-labelledby="video-teaser-title">
           <h2 id="video-teaser-title">Can you identify this plane?</h2>
-          <div className="video-placeholder">
-            <AirplaneTilt size={56} weight="duotone" aria-hidden="true" />
-            <p>Video coming soon</p>
-          </div>
+          <video
+            className="teaser-video"
+            src={sitePath("/media/identify-placeholder.mp4")}
+            width="480"
+            height="848"
+            controls
+            playsInline
+            preload="metadata"
+          />
         </section>
         <section className="photo-feature">
           <div className="wrap section">
@@ -152,11 +158,14 @@ export default function Home() {
         </section>
         <section className="wrap section">
           <div className="community">
+            {/* Client placeholder photograph (2026-11-23); the final banner image is to come. */}
             <img
-              src={sitePath("/media/community.webp")}
+              src={sitePath("/media/flight-line.webp")}
+              srcSet={`${sitePath("/media/flight-line-640.webp")} 640w, ${sitePath("/media/flight-line.webp")} 1280w`}
+              sizes="(max-width:767px) 100vw, 1264px"
               alt=""
-              width="1800"
-              height="600"
+              width="1280"
+              height="410"
               loading="lazy"
             />
             <div>
@@ -171,10 +180,6 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <p className="community-caption">
-            Community illustration. Submitted game photographs are reviewed
-            separately.
-          </p>
         </section>
       </main>
     </PublicShell>
