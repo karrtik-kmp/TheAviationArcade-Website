@@ -335,6 +335,12 @@ button:active,
   color: var(--muted);
   font-size: 12px;
 }
+/* Taller hit areas for thumbs without moving the links (padding offset by negative margin). */
+.footer-links a,
+.footer-bottom a {
+  padding-block: 8px;
+  margin-block: -8px;
+}
 .hero {
   display: grid;
   grid-template-columns: 1fr 1.07fr;
@@ -1567,6 +1573,12 @@ button:active,
   }
   .header-actions > .btn {
     display: none;
+  }
+  /* Long labels wrap inside the button instead of pushing the page sideways. */
+  .btn {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
   }
   .icon-button {
     height: 40px;
