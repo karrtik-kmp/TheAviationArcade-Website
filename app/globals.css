@@ -276,6 +276,7 @@ button:active,
 }
 .desktop-nav a {
   padding: 6px 0;
+  white-space: nowrap;
 }
 .desktop-nav a:hover,
 .desktop-nav a[aria-current="page"] {
@@ -1411,14 +1412,20 @@ button:active,
   font-size: 12px;
   color: var(--muted);
 }
+/* Below this width the three nav links no longer fit beside the header buttons (signed in, the
+   account button carries the member's name), so they move into the menu instead of wrapping. */
+@media (max-width: 1200px) {
+  .desktop-nav {
+    display: none;
+  }
+  .mobile-menu-button {
+    display: grid;
+  }
+}
 @media (max-width: 1150px) {
   .wrap {
     padding-left: 32px;
     padding-right: 32px;
-  }
-  .desktop-nav {
-    gap: 16px;
-    font-size: 14px;
   }
   .header-inner {
     gap: 16px;
@@ -1456,12 +1463,6 @@ button:active,
   }
 }
 @media (max-width: 900px) {
-  .desktop-nav {
-    display: none;
-  }
-  .mobile-menu-button {
-    display: grid;
-  }
   .hero {
     gap: 24px;
   }
@@ -1536,15 +1537,20 @@ button:active,
     padding-top: 52px;
     padding-bottom: 52px;
   }
+  /* One row on phones: the brand gives way (its name may wrap) before the buttons drop to a second row. */
   .header-inner {
     min-height: 72px;
     height: auto;
-    flex-wrap: wrap;
     gap: 12px;
     padding-top: 12px;
     padding-bottom: 12px;
   }
+  .brand {
+    flex-shrink: 1;
+    min-width: 0;
+  }
   .brand img {
+    flex: none;
     width: 40px;
     height: 40px;
   }
@@ -1555,6 +1561,7 @@ button:active,
     font-size: 7px;
   }
   .header-actions {
+    flex: none;
     gap: 8px;
     margin-left: auto;
   }
@@ -1790,6 +1797,18 @@ button:active,
   }
   .review-panel {
     padding: 20px;
+  }
+}
+/* Small phones (360 px Android, 320 px iPhone SE): keep the header on one row. */
+@media (max-width: 374px) {
+  .brand {
+    gap: 10px;
+  }
+  .brand-name {
+    font-size: 17px;
+  }
+  .brand-descriptor {
+    display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {

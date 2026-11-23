@@ -61,7 +61,8 @@
   cursor: pointer;
 }
 .account-trigger-name {
-  max-width: 150px;
+  /* The full name is in the menu; a longer one here crowds the desktop nav just above 1200 px. */
+  max-width: 110px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -382,11 +383,22 @@
   .account-destination {
     padding: 22px;
   }
+  /* A square icon button like its neighbours, so the phone header stays on one row. */
   .account-trigger {
-    padding: 0 9px;
+    width: 40px;
+    min-height: 40px;
+    padding: 0;
   }
-  .account-trigger-name {
+  .account-trigger-name,
+  .account-trigger-caret {
     display: none;
+  }
+  /* Anchor the menu to the sticky header's right edge, not the button, so it never runs off the left. */
+  .site-header .account-control {
+    position: static;
+  }
+  .site-header .account-menu {
+    right: 14px;
   }
   .account-status {
     padding: 0 5px;
