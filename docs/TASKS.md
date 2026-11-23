@@ -776,3 +776,20 @@ start from dark and switch to light.
 Verification: typecheck, `npm test` 238/238, `npm run build`. In the browser pane, no horizontal overflow at
 1440, 1024, 768 and 375px on the home, games, game, ranks, photographer and sign-in pages; the header fits at
 1024px; both themes checked by eye. The browser QA suites were not run (they need the auth emulator).
+
+## Responsive header, buttons and footer (2026-11-23)
+
+Audit with repro steps: [UI_AUDIT_2026-11-23.md](UI_AUDIT_2026-11-23.md). Fixed (`ff73221`, `3fe1299`): signed in, the
+phone header wrapped to two rows (121 px sticky); the account menu would run off a 320 px screen; the desktop nav
+squeezed "Plane of the Day" onto three lines between 901 and ~1200 px; a nowrap button scrolled
+`/plane-of-the-day` sideways at 320 px; footer links were 20–22 px tall. The nav now folds into the menu at
+1200 px (was 900), phones keep a one-row 73 px header, `.btn` labels wrap under 767 px.
+
+Verification: typecheck, `npm test` 238/238, `npm run build` (built with another session's uncommitted radar
+work in the tree). In the in-app browser (Chromium), website on 5180 with the emulator-only `demo-preview`
+profile: header height, document width, off-screen elements and tap targets measured at 320/360/375/768/1000/
+1151/1200/1201/1280 px, signed out and signed in (`photographer-a`, plus a 28-character name forced into the
+trigger at 1151/1201), light and dark; every public page plus `/account`, `/play`, `/contribute` at 375 and
+768 px has no horizontal scroll. Not verified: real iOS Safari / Android Chrome, the photographer upload form
+(shows "not open yet" without the backend), browser QA suites (not run). The plain `.dev.vars` points at the
+retired cloud project, so emulator accounts can't sign in with it; use the `demo-preview` profile.
