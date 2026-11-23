@@ -41,6 +41,8 @@ export function Featured({ compact = false }: { compact?: boolean }) {
       });
     return () => abort.abort();
   }, []);
+  // Only a real scheduled feature carries a date; the preview photograph never says "Today's".
+  const scheduled = Boolean(photo.date);
   return (
     <>
       <div className="feature-grid">
@@ -59,15 +61,16 @@ export function Featured({ compact = false }: { compact?: boolean }) {
         </figure>
         <div className="feature-copy">
           <div className="photo-preview-label">
-            {photo.date ? "Plane of the Day" : "From the photo collection"}
+            {scheduled ? "Plane of the Day" : "From the photo collection"}
           </div>
-          {/* "Today's" only for a real scheduled feature, never for the preview photograph. */}
-          <h2>{photo.date ? "Today's Featured Aircraft" : "A reason to look up."}</h2>
-          {photo.date && photo.aircraft && (
+          <h2>
+            {scheduled ? "Today's Featured Aircraft" : "A reason to look up."}
+          </h2>
+          {scheduled && photo.aircraft && (
             <div className="photo-aircraft">{photo.aircraft}</div>
           )}
           <div className="photo-title">{photo.title}</div>
-          {photo.date && <div className="photo-aircraft">{photo.credit}</div>}
+          {scheduled && <div className="photo-aircraft">{photo.credit}</div>}
           <p>{photo.description}</p>
           {compact ? (
             <Link className="text-link" href="/plane-of-the-day">
@@ -92,49 +95,49 @@ export function Featured({ compact = false }: { compact?: boolean }) {
         </div>
       </div>
       {!compact && (
-        <section style={{ marginTop: 64 }}>
-          <h2>Missed a Flight? We&apos;ve Got You Covered.</h2>
-          <p className="archive-intro">
-            Explore previously featured aircraft and rediscover amazing aviation
-            moments from our growing photo collection.
-          </p>
-          {archive.length ? (
-            <div className="archive-grid">
-              {archive.map((p) => (
-                <article key={p.id}>
-                  <img
-                    src={sitePath(p.imageUrl)}
-                    alt={p.aircraft || p.title}
-                    width="640"
-                    height="480"
-                    loading="lazy"
-                  />
-                  <h3>{p.title}</h3>
-                  <p>{p.credit}</p>
-                  <p>{p.date}</p>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <div className="info-note">
-              The archive will grow as reviewed photographs are published.
-              Future scheduled entries stay private until their feature date.
-            </div>
-          )}
-        </section>
-      )}
-      {!compact && (
-        <section className="closing-cta" style={{ marginTop: 64 }}>
-          <h2>Your Photo Could Be Next!</h2>
-          <p>
-            Have an incredible aircraft photograph you&apos;d love to share?
-            Submit it for consideration and help us celebrate the world of
-            aviation.
-          </p>
-          <Link className="btn" href="/contribute">
-            Share Your Aviation Photography <ArrowUpRight size={18} />
-          </Link>
-        </section>
+        <>
+          <section style={{ marginTop: 64 }}>
+            <h2>Missed a Flight? We&apos;ve Got You Covered.</h2>
+            <p className="archive-intro">
+              Explore previously featured aircraft and rediscover amazing
+              aviation moments from our growing photo collection.
+            </p>
+            {archive.length ? (
+              <div className="archive-grid">
+                {archive.map((p) => (
+                  <article key={p.id}>
+                    <img
+                      src={sitePath(p.imageUrl)}
+                      alt={p.aircraft || p.title}
+                      width="640"
+                      height="480"
+                      loading="lazy"
+                    />
+                    <h3>{p.title}</h3>
+                    <p>{p.credit}</p>
+                    <p>{p.date}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="info-note">
+                The archive will grow as reviewed photographs are published.
+                Future scheduled entries stay private until their feature date.
+              </div>
+            )}
+          </section>
+          <section className="closing-cta" style={{ marginTop: 64 }}>
+            <h2>Your Photo Could Be Next!</h2>
+            <p>
+              Have an incredible aircraft photograph you&apos;d love to share?
+              Submit it for consideration and help us celebrate the world of
+              aviation.
+            </p>
+            <Link className="btn" href="/contribute">
+              Share Your Aviation Photography <ArrowUpRight size={18} />
+            </Link>
+          </section>
+        </>
       )}
     </>
   );

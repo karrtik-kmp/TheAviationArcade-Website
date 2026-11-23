@@ -22,7 +22,7 @@ export type Game = {
   detail?: {
     heading: string;
     body: string[];
-    mission?: string;
+    mission: string;
     actionsHeading: string;
   };
 };

@@ -205,12 +205,13 @@ function PhotographerWelcome() {
  * A guest with `signInRequired` is asked to sign in instead (backend mode).
  */
 export function SubmissionsClosed({ signedIn, signInRequired = false }: { signedIn: boolean; signInRequired?: boolean }) {
+  const guest = signInRequired && !signedIn;
   return (
     <main id="main" className="wrap contribute-root">
       <section className="page-intro">
         <p className="eyebrow">Calling all aviation photographers</p>
         <h1>Your Best Shot Deserves Some Air Time.</h1>
-        {signInRequired && !signedIn && <PhotographerWelcome />}
+        {guest && <PhotographerWelcome />}
       </section>
       <section className="signin-panel photographer-access" aria-labelledby="submissions-closed-title">
         <Camera size={28} weight="duotone" aria-hidden="true" />
@@ -220,7 +221,7 @@ export function SubmissionsClosed({ signedIn, signInRequired = false }: { signed
             ? "Sign in to send photos or ask for photographer access."
             : "Photo submissions open here once the Airplane Games photo service is connected."}
         </p>
-        {signInRequired && !signedIn && (
+        {guest && (
           <div className="actions">
             <SiteLink className="btn" href={accountSignInPath("/contribute")}>
               Sign In to Submit Photos

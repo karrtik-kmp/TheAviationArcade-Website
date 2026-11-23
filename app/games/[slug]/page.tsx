@@ -48,11 +48,9 @@ export default async function GamePage({
                 {game.detail.body.map((p) => (
                   <p key={p}>{p}</p>
                 ))}
-                {game.detail.mission && (
-                  <p>
-                    <strong>Your Mission:</strong> {game.detail.mission}
-                  </p>
-                )}
+                <p>
+                  <strong>Your Mission:</strong> {game.detail.mission}
+                </p>
               </>
             ) : (
               <>
