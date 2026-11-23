@@ -811,3 +811,12 @@ The client's placeholder clip (480 × 848 portrait, 10 s) now plays in the homep
 plane?" slot, and the placeholder moon photograph replaces the AI illustration in the "Share Your View From
 the Flight Line" banner (its "Community illustration" caption is gone with it). Sources and preparation are in
 [ASSET_PROVENANCE.md](ASSET_PROVENANCE.md); the photographer credit is still to be confirmed.
+
+## Signed-out tab return no longer flashes "Checking account" (2026-11-23)
+
+The quiet tab-return re-check (2026-10-26) only covered a signed-in user. A signed-out visitor still went
+to the loading state on every return (after 60 s, or any back/forward restore), so the header showed the
+"Checking account" spinner. `AccountSession` now treats a confirmed signed-out visitor as "the same account"
+too, so that check runs in the background. A different Firebase user, sign-in/out events and 401/403/409
+still block as before. Verification: TypeScript and 238 unit tests pass; in the dev preview, a simulated
+return while signed out made one `/api/account` call with no spinner (the old code showed it).

@@ -67,12 +67,15 @@ export function AccountSessionProvider({
   const refresh = useCallback(async () => {
     const request = ++serial.current;
     pending.current = request;
-    // Re-checking the user already on screen happens in the background: the
-    // page keeps what it shows, and the server still authorizes every request.
-    const sameUser = (uid: string | null) =>
-      uid !== null &&
-      confirmedFirebaseUid.current === uid &&
-      !!accountRef.current?.user;
+    // Re-checking the account already on screen (a signed-in user, or a
+    // confirmed signed-out visitor) happens in the background: the page keeps
+    // what it shows, and the server still authorizes every request.
+    const sameUser = (uid: string | null) => {
+      const shown = accountRef.current;
+      if (!shown) return false;
+      if (uid === null) return !shown.user;
+      return confirmedFirebaseUid.current === uid && !!shown.user;
+    };
     let quiet =
       stateRef.current === "ready" &&
       sameUser(firebaseAuth.current?.currentUser?.uid ?? null);
