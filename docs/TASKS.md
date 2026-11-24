@@ -820,3 +820,32 @@ to the loading state on every return (after 60 s, or any back/forward restore), 
 too, so that check runs in the background. A different Firebase user, sign-in/out events and 401/403/409
 still block as before. Verification: TypeScript and 238 unit tests pass; in the dev preview, a simulated
 return while signed out made one `/api/account` call with no spinner (the old code showed it).
+## Legal pages and cookie consent (2026-11-24)
+
+The client sent Termageddon embeds for the privacy policy, terms of service, disclaimer and cookie policy,
+the Usercentrics cookie-consent tool, and the Photo Submission Policy and Image License Agreement (Google Doc,
+effective December 1, 2026). Each policy has its own page: `/privacy`, `/terms`, `/cookies`, `/disclaimer`
+and `/photo-submission-policy` (list in `lib/legal.ts`). The prototype privacy notice and "Review
+conditions" page are gone (`/review-conditions` now 404s). The footer lists all five plus "Cookie settings",
+which reopens the consent panel, and the sign-in page links the photo policy, privacy and terms.
+
+- Termageddon's embed script only runs on the window `load` event, which has already fired when React
+  mounts a page, so `PolicyEmbed` makes the same request the script makes (the render URL with the page as
+  `origin`) and puts the HTML in the div. The policy link is the fallback.
+- The photo policy is the client's text, verbatim, in `lib/photo-submission-policy.ts`. Replace it when they
+  send a new version.
+- Usercentrics: `uc-block` is the first script and React's last `<head>` node; the banner loader starts from
+  a small inline script in `<body>`. With the loader in `<head>` its injected module script broke
+  hydration.
+
+Verification: typecheck, `npm test` 238/238, `npm run build`. In the in-app browser on the dev server: all
+four Termageddon policies load; the photo policy shows 22 sections; the consent banner appears, Deny closes
+it and "Cookie settings" reopens it; no hydration errors on a fresh tab; the sign-in page, including the
+Google button, still renders with the blocker on; the footer fits at 375 px. Not verified: the banner on the
+real domains (Usercentrics settings may be tied to the domain), Google sign-in completing with consent denied,
+and the browser QA suites (not run; `frontend-ui-qa.mjs` now checks the photo policy page in place of the
+old notice).
+
+Not done yet: the client's revised photo submission form (full name, Instagram handle with display consent,
+title, description, and three confirmations: 18+, copyright, agreement). "Airplane identifier info is on page
+9/10" needs clarification from the client.

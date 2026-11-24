@@ -2,6 +2,8 @@ import { SiteLink as Link } from "@/components/SiteLink";
 import { notFound } from "next/navigation";
 import { PublicShell } from "@/components/PublicShell";
 import { ranks } from "@/lib/catalog";
+import { legalPageFor } from "@/lib/legal";
+import { LegalPage } from "@/components/LegalPage";
 type Section = {
   title: string;
   body: string | string[];
@@ -133,45 +135,16 @@ const pages: Record<string, InfoPage> = {
       },
     ],
   },
-  "review-conditions": {
-    title: "Share for review. Keep your copyright.",
-    intro:
-      "This private prototype accepts proposals for editorial review. Publication terms are still being finalized.",
-    sections: [
-      {
-        title: "Permission to review",
-        body: "Submit only photographs you created or are authorized to share for private review. A proposal does not transfer copyright or grant a public publishing license. Do not upload material you cannot lawfully share.",
-      },
-      {
-        title: "Proposed uses need separate clearance",
-        body: "Choosing a game, gallery or Plane of the Day describes where an image might fit. Editors must separately verify the facts and appropriate permission before publication. Approval and publication are separate actions.",
-      },
-      {
-        title: "What editors verify",
-        body: "The review covers subject identity, image quality, photographer credit, documented usage rights and category fit. Editors may request changes or reject a proposal with a reason. AI-generated imagery cannot be approved as factual game photography.",
-      },
-    ],
-  },
-  privacy: {
-    title: "Your proposal stays in the review workflow.",
-    intro:
-      "A plain-language data notice for this private prototype. A final production privacy policy is still required before public launch.",
-    sections: [
-      {
-        title: "What is stored",
-        body: "A proposal stores the photograph, identification details, requested credit, contact email, proposed uses, review notes and status. Files and records are stored on the server; the contact email is not displayed in the public collection.",
-      },
-      {
-        title: "Who can see it",
-        body: "Your signed-in account can view its own proposals. Authorized editors can access the review queue. The public collection receives only approved, published fields and credited photographs, never private email or license evidence.",
-      },
-      {
-        title: "Prototype access",
-        body: "You can browse this website without signing in. Email/password and Google sign-in through Firebase are used for account features and photo submissions. Staff permissions are checked on the server. App account linking is not yet available. Public retention and deletion policies are not finalized.",
-      },
-    ],
-  },
 };
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ page: string }>;
+}) {
+  const { page } = await params;
+  const legal = legalPageFor(page);
+  return legal ? { title: legal.label } : {};
+}
 const paragraphs = (body: string | string[]) =>
   typeof body === "string" ? [body] : body;
 export default async function InformationPage({
@@ -180,7 +153,9 @@ export default async function InformationPage({
   params: Promise<{ page: string }>;
 }) {
   const { page } = await params;
-  const data = pages[page];
+  const legal = legalPageFor(page);
+  if (legal) return <LegalPage page={legal} />;
+  const data = Object.hasOwn(pages, page) ? pages[page] : undefined;
   if (!data) notFound();
   return (
     <PublicShell>

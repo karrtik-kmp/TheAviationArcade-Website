@@ -9,6 +9,8 @@ import { AccountControl } from "@/components/AccountControl";
 import { useAccountSession } from "@/components/AccountSession";
 import "@/components/account.css";
 import { sitePath } from "@/lib/paths";
+import { legalPages } from "@/lib/legal";
+import { CookieSettingsButton } from "@/components/PolicyEmbed";
 export function Brand() {
   return (
     <Link href="/" className="brand" aria-label="Airplane Games home">
@@ -128,11 +130,15 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
           </div>
           <div className="footer-bottom">
             <span>Airplane Games. Your Boarding Pass to Aviation Fun.</span>
-            <div className="actions">
-              <Link href="/review-conditions">Review conditions</Link>
-              <Link href="/privacy">Privacy</Link>
+            <nav className="actions legal-links" aria-label="Legal">
+              {legalPages.map((p) => (
+                <Link key={p.path} href={p.path}>
+                  {p.label}
+                </Link>
+              ))}
+              <CookieSettingsButton />
               <span>Private prototype</span>
-            </div>
+            </nav>
           </div>
         </div>
       </footer>

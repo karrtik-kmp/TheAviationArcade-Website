@@ -57,8 +57,9 @@ export async function CommunitySignInRoute({
         <div className="community-signin-form">
           <AuthForm audience={role} returnTo={returnTo} />
           <nav className="community-signin-legal" aria-label="Legal">
-            <SiteLink href="/review-conditions">Review conditions</SiteLink>
-            <SiteLink href="/privacy">Privacy</SiteLink>
+            <SiteLink href="/photo-submission-policy">Photo Submission Policy</SiteLink>
+            <SiteLink href="/privacy">Privacy Policy</SiteLink>
+            <SiteLink href="/terms">Terms of Service</SiteLink>
           </nav>
         </div>
       </main>

@@ -2015,3 +2015,44 @@ button:active,
   border-radius: var(--radius);
   background: var(--panel);
 }
+
+/* Legal pages and footer legal links (client policies, 2026-11-24). */
+.legal-links {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  row-gap: 4px;
+}
+.link-button {
+  appearance: none;
+  background: none;
+  border: 0;
+  padding: 8px 0;
+  margin-block: -8px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.link-button:hover {
+  color: var(--ink);
+}
+.legal-prose ul {
+  color: var(--muted);
+  padding-left: 22px;
+  margin: 14px 0;
+}
+.legal-prose li + li {
+  margin-top: 6px;
+}
+.legal-prose .policy_embed_div {
+  color: var(--muted);
+}
+.legal-prose .policy_embed_div a {
+  color: var(--ink);
+  text-decoration: underline;
+}
+@media (max-width: 767px) {
+  .legal-links {
+    justify-content: flex-start;
+    column-gap: 16px;
+  }
+}
