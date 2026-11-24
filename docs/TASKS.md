@@ -847,5 +847,8 @@ and the browser QA suites (not run; `frontend-ui-qa.mjs` now checks the photo po
 old notice).
 
 Not done yet: the client's revised photo submission form (full name, Instagram handle with display consent,
-title, description, and three confirmations: 18+, copyright, agreement). "Airplane identifier info is on page
+title, description, and three confirmations: 18+, copyright, agreement). The backend can't store most of it and
+records only rights statement v1, so it waits on
+[../../docs/briefs/backend-photo-submission-v2.md](../../docs/briefs/backend-photo-submission-v2.md) (2026-11-24);
+the v1 upload form stays as is until the contract ships. "Airplane identifier info is on page
 9/10" needs clarification from the client.
