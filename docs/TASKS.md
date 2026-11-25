@@ -874,6 +874,8 @@ backend speaking 0.30.0 (auth emulator, `store-qa` profile): empty-form errors a
 `X-Submission` and the description PATCH, the v1 → v2 move on a published photo, the declined view and its
 removal action, a changes-requested photo cleared by a title edit, no overflow at 375 px, no console errors.
 Not verified: against the real backend (not on `dev.api` yet), browser QA suites. Deploy: backend
-(migrations 0028, 0029), website and Admin go to dev together, with the user's sign-off. Open, user's or the
-client's call: when to stop accepting v1 uploads, and whether v2 may be accepted before 2026-12-01 (the
-website sends v2 as soon as it is deployed).
+(migrations 0028, 0029), website and Admin go to dev together, with the user's sign-off.
+
+User ruling 2026-11-25: v2 (the 2026-12-01 agreement) may be accepted before its effective date; the website
+sends v2 as soon as it is deployed. Still open (user's or client's call): when the backend stops accepting v1
+uploads.
