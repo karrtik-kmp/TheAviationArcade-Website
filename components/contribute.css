@@ -586,6 +586,53 @@
   font-size: 16px;
   font-weight: 600;
 }
+/* Photo submission v2: the team's review notice, the rights summary and the agreement links. */
+.contribute-root .media-review {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid var(--brass);
+  border-left-width: 4px;
+  border-radius: 8px;
+  background: var(--surface);
+}
+.contribute-root .media-review-declined {
+  border-color: var(--error);
+}
+.contribute-root .media-review h3 {
+  margin: 0 0 6px;
+}
+.contribute-root .media-review-reason {
+  margin: 0 0 8px;
+  font-size: 16px;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.contribute-root .media-rights-summary {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.contribute-root .media-rights-summary h3 {
+  margin: 0 0 6px;
+}
+.contribute-root .media-rights-summary ul {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 16px;
+}
+.contribute-root .media-rights-summary li + li {
+  margin-top: 4px;
+}
+.contribute-root .media-agreement-links a {
+  color: var(--ink);
+  text-decoration: underline;
+}
+.contribute-root .media-rights .check-label,
+.contribute-root .media-licence .check-label {
+  font-size: 16px;
+  align-items: flex-start;
+}
 .contribute-root .media-list {
   display: grid;
   gap: 10px;

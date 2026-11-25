@@ -1,5 +1,5 @@
 /**
- * Backend media routes (MEDIA_PLAN.md, openapi 0.17.0). Photographers and staff upload photos,
+ * Backend media routes (MEDIA_PLAN.md, openapi 0.30.0). Photographers and staff upload photos,
  * fill in licences and read their items through the game backend with their own Firebase ID
  * token; admins publish and withdraw on the Admin (its own repo). Only with `ROLES_SOURCE=backend`: on a mock deployment every
  * route is 404 MEDIA_UNAVAILABLE and no backend call is made. The backend authorises every call
@@ -10,7 +10,10 @@
 import { HttpError, respond } from "../errors.ts";
 import { BackendError, BackendNotConnected } from "./backend.ts";
 import {
+  MEDIA_V2_STATEMENT,
+  decodeSubmissionHeader,
   mediaDetailSchema,
+  mediaReviewDecisions,
   mediaEditRequestSchema,
   mediaErrorCodes as codes,
   mediaIdPattern,
@@ -74,6 +77,9 @@ function backendFailure(error: unknown, who: Who, ownerOnly?: string): never {
         throw new HttpError(409, "The latest version is already published.", codes.NOTHING_TO_PUBLISH);
       if (code === "rights_already_stated")
         throw new HttpError(409, "The rights for this photo have already been stated.", codes.RIGHTS_ALREADY_STATED);
+      // The reason is never in the message: the photo's `review` carries it.
+      if (code === "media_declined")
+        throw new HttpError(409, "This photo was declined, so it can't be changed. Only your name and Instagram details can be removed.", codes.MEDIA_DECLINED);
       throw new HttpError(409, "Someone changed this photo first. Reload it and try again.", codes.VERSION_CONFLICT);
     }
     if (status === 413) throw new HttpError(413, "Keep each photo under 5 MB.", codes.TOO_LARGE);
@@ -164,11 +170,26 @@ function idempotencyKey(request: Request) {
   return key;
 }
 
-/** `X-Rights-Statement`: the browser's consent to rights wording v1. Missing or anything else is 400. */
+/** `X-Rights-Statement`: the browser's consent to rights wording v1 or the v2 agreement. Missing or anything else is 400. */
 function rightsStatement(request: Request): MediaUploadStatement {
   const value = request.headers.get("X-Rights-Statement");
-  if (value === "v1_own" || value === "v1_authorised") return value;
+  if (value === "v1_own" || value === "v1_authorised" || value === MEDIA_V2_STATEMENT) return value;
   throw invalid("State who holds the rights to this photo.");
+}
+
+/**
+ * `X-Submission`: required with v2 and refused with v1, as the backend does. Checked here so a malformed one
+ * never reaches the backend, then passed on exactly as sent (the backend's replay check compares it). Never
+ * logged or echoed: it holds the photographer's name.
+ */
+function submissionHeader(request: Request, statement: MediaUploadStatement): string | undefined {
+  const value = request.headers.get("X-Submission");
+  if (statement !== MEDIA_V2_STATEMENT) {
+    if (value !== null) throw invalid("These photo details go with the photo submission agreement only.");
+    return undefined;
+  }
+  if (value === null || !decodeSubmissionHeader(value)) throw invalid("Check your name, the photo title and the credit, and try again.");
+  return value;
 }
 
 function imageType(request: Request): MediaContentType {
@@ -181,11 +202,12 @@ function imageType(request: Request): MediaContentType {
 async function uploadInput(request: Request) {
   const key = idempotencyKey(request);
   const statement = rightsStatement(request);
+  const submission = submissionHeader(request, statement);
   const contentType = imageType(request);
   checkDeclaredLength(request, MAX_BYTES);
   const bytes = await readCounted(request, MAX_BYTES);
   if (!bytes.byteLength) throw invalid("Choose a photo to upload.");
-  return { key, statement, contentType, bytes };
+  return { key, statement, submission, contentType, bytes };
 }
 
 /** Query parameters: only the allowed names, each at most once. */
@@ -203,10 +225,11 @@ const controlCharacter = /[\u0000-\u001f\u007f]/;
 
 async function list(ctx: Ctx) {
   gate(ctx, "photographer");
-  const params = query(ctx, ["state", "pending", "cursor"]);
+  const params = query(ctx, ["state", "pending", "review", "cursor"]);
   const out = new URLSearchParams();
   const state = params.get("state");
   const pending = params.get("pending");
+  const review = params.get("review");
   const cursor = params.get("cursor");
   if (state !== null) {
     if (!(mediaStates as readonly string[]).includes(state)) throw invalid("Unknown photo state.");
@@ -216,6 +239,10 @@ async function list(ctx: Ctx) {
     if (pending !== "true") throw invalid("Unknown filter.");
     if (state !== null && state !== "published") throw invalid("Changes waiting only applies to published photos.");
     out.set("pending", "true");
+  }
+  if (review !== null) {
+    if (review !== "none" && !(mediaReviewDecisions as readonly string[]).includes(review)) throw invalid("Unknown review filter.");
+    out.set("review", review);
   }
   if (cursor !== null) {
     if (cursor.length < 1 || cursor.length > 100 || controlCharacter.test(cursor)) throw invalid("That page marker is not valid.");
@@ -238,7 +265,7 @@ async function upload(ctx: Ctx, versionOf?: string) {
     if (!/^[1-9][0-9]{0,9}$/.test(revision) || Number(revision) > 2147483647) throw invalid("The photo's revision is required.");
     path = `/v1/admin/media/${versionOf}/versions?revision=${revision}`;
   } else query(ctx, []);
-  const { key, statement, contentType, bytes } = await uploadInput(ctx.request);
+  const { key, statement, submission, contentType, bytes } = await uploadInput(ctx.request);
   let answer: { status: number; body: unknown };
   try {
     answer = await ctx
@@ -246,6 +273,7 @@ async function upload(ctx: Ctx, versionOf?: string) {
       .sendWithStatus("POST", path, bytes, contentType, {
         idempotencyKey: key,
         rightsStatement: statement,
+        ...(submission === undefined ? {} : { submission }),
         timeoutMs: UPLOAD_TIMEOUT_MS,
       });
   } catch (error) {
@@ -274,7 +302,7 @@ async function edit(ctx: Ctx) {
   const id = mediaId(ctx);
   query(ctx, []);
   const parsed = mediaEditRequestSchema.safeParse(await jsonBody(ctx));
-  if (!parsed.success) throw invalid("Check the licence and description and try again.");
+  if (!parsed.success) throw invalid("Check the photo details and try again.");
   // creditRequired is a staff decision; the backend enforces it too (0.17.0).
   if (!ctx.principal.staff && parsed.data.licence && "creditRequired" in parsed.data.licence)
     throw new HttpError(403, "Only the team can change whether a credit is required.", codes.CREDIT_POLICY_STAFF_ONLY);
@@ -285,13 +313,16 @@ async function edit(ctx: Ctx) {
   );
 }
 
-/** State the rights for a draft that has none (an import, or from before statements). The backend enforces the owner. */
+/**
+ * State the rights for a draft: v1 for one that has none (an import, or from before statements), or accept the
+ * v2 agreement for one that holds no v2 yet (a v1 photo moves to v2 as a new draft). The backend enforces the owner.
+ */
 async function stateRights(ctx: Ctx) {
   gate(ctx, "photographer");
   const id = mediaId(ctx);
   query(ctx, []);
   const parsed = mediaRightsRequestSchema.safeParse(await jsonBody(ctx));
-  if (!parsed.success) throw invalid("Choose who holds the rights to this photo.");
+  if (!parsed.success) throw invalid("Check the confirmations and your photo details, and try again.");
   return respond(
     await viaBackend(
       mediaItemSchema,

@@ -1,7 +1,7 @@
 /**
  * Browser-safe helpers for backend media (MEDIA_PLAN.md, slice M0): limits, the pre-upload check,
  * upload keys, licence validation and diff, publish blockers, outcome mapping and the rights
- * statement. Imports only types from the server module, so no zod reaches the browser. Relative
+ * statement and agreement. Imports only types from the server module, so no zod reaches the browser. Relative
  * imports only, so this loads under plain `node --test`.
  */
 import type { MediaLicence, MediaLicenceUpdate } from "./request/media.ts";
@@ -26,18 +26,130 @@ export const RIGHTS_STATEMENT = {
     "I confirm this is true, and I agree that Airplane Games may publish this photo, after review, under the licence and credit I give for it.",
 } as const;
 
+/**
+ * The client's Photo Submission Policy and Image License Agreement (2026-11-24, effective 2026-12-01) and
+ * the form's confirmations, word for word from the client's form document. Ticking all three and sending is
+ * the v2 statement (Backend API 0.29.0), which the backend records with the time and the photographer.
+ */
+export const AGREEMENT_STATEMENT = "v2_agreement_2026-12-01";
+export const AGREEMENT = {
+  statement: AGREEMENT_STATEMENT,
+  version: "2026-12-01",
+  name: "Photo Submission Policy and Image License Agreement",
+  confirmations: [
+    { id: "age", label: "I confirm that I am at least 18 years old." },
+    {
+      id: "rights",
+      label:
+        "I confirm that I own the copyright or have the legal authority and necessary permissions to submit this photograph.",
+    },
+    {
+      id: "agreement",
+      label:
+        "I have read and agree to the Photo Submission Policy and Image License Agreement, including worldwide commercial and promotional use without payment or royalties.",
+    },
+  ],
+  instagramConsent: "I authorize Airplane Games to publicly display and link to my Instagram handle.",
+  summaryTitle: "Your photography rights",
+  summary: [
+    "You retain your copyright.",
+    "You can continue to sell and license your photo.",
+    "Your work receives photographer credit.",
+    "Submissions are voluntary and unpaid. Airplane Games receives a worldwide license for the uses described in the full agreement.",
+  ],
+  submitLabel: "Submit My Photo",
+} as const;
+export type ConfirmationId = (typeof AGREEMENT.confirmations)[number]["id"];
+
 /** A version's stored rights statement (staff see `statedBy`). `d1_private_review` marks an imported photo. */
 export type RightsState = {
-  statement: "v1_own" | "v1_authorised" | "d1_private_review";
+  statement: "v1_own" | "v1_authorised" | typeof AGREEMENT_STATEMENT | "d1_private_review";
   statedAt: string;
   statedBy?: string;
 } | null;
+/** True when the draft holds the v2 agreement statement. */
+export function hasAgreement(rights: RightsState | undefined) {
+  return rights?.statement === AGREEMENT_STATEMENT;
+}
+/**
+ * Whether the owner can accept the agreement for this photo (the backend's v2 `PUT .../rights` rule): the
+ * draft does not hold v2 yet (none, the import's, or v1, published or not), and the photo is not declined.
+ */
+export function canAcceptAgreement(item: { draft: object; review?: { decision: string } | null }) {
+  return !hasAgreement(rightsOf(item.draft)) && item.review?.decision !== "declined";
+}
+
+/** openapi `MediaSubmission.instagramHandle` once trimmed and one leading `@` stripped; empty means none. */
+export const instagramHandlePattern = /^[A-Za-z0-9._]{1,30}$/;
+export function normaliseInstagramHandle(raw: string | null | undefined): string | null {
+  const text = (raw ?? "").trim().replace(/^@/, "");
+  return text === "" ? null : text;
+}
+
+/** What the photographer types for a v2 submission (`X-Submission`, or `submission` of a v2 rights move). */
+export type SubmissionValues = {
+  fullName: string;
+  title: string;
+  credit: string;
+  instagramHandle: string;
+  instagramDisplayConsent: boolean;
+};
+export type SubmissionField = "fullName" | "title" | "credit" | "instagramHandle" | "instagramDisplayConsent";
+const submissionLabels = { fullName: "Full name", title: "Photo title", credit: "Photographer credit" } as const;
+const lineControl = /[\u0000-\u001f\u007f-\u009f]/;
+
+/** Messages for one required single-line field: 1-200 characters once trimmed, one line. */
+function requiredLine(label: string, raw: string): string | undefined {
+  if (lineControl.test(raw)) return `${label} must be on one line, with no line breaks or control characters.`;
+  const text = raw.trim();
+  if (!text) return `Add your ${label.toLowerCase()}.`;
+  if ([...text].length > 200) return `${label} must be 200 characters or fewer.`;
+  return undefined;
+}
+export function instagramErrors(handle: string, consent: boolean): Partial<Record<"instagramHandle" | "instagramDisplayConsent", string>> {
+  const errors: Partial<Record<"instagramHandle" | "instagramDisplayConsent", string>> = {};
+  const normalised = normaliseInstagramHandle(handle);
+  if (normalised !== null && !instagramHandlePattern.test(normalised))
+    errors.instagramHandle = "An Instagram handle has up to 30 letters, numbers, full stops and underscores.";
+  else if (consent && normalised === null) errors.instagramDisplayConsent = "Add your Instagram handle, or untick this box.";
+  return errors;
+}
+/** Per-field messages mirroring the backend's `MediaSubmission` rules. */
+export function submissionErrors(values: SubmissionValues): Partial<Record<SubmissionField, string>> {
+  const errors: Partial<Record<SubmissionField, string>> = {};
+  for (const field of ["fullName", "credit", "title"] as const) {
+    const message = requiredLine(submissionLabels[field], values[field]);
+    if (message) errors[field] = message;
+  }
+  return { ...errors, ...instagramErrors(values.instagramHandle, values.instagramDisplayConsent) };
+}
+/** The submission as the backend takes it: trimmed, the handle normalised (omitted when none). */
+export function submissionOf(values: SubmissionValues) {
+  const handle = normaliseInstagramHandle(values.instagramHandle);
+  return {
+    fullName: values.fullName.trim(),
+    title: values.title.trim(),
+    credit: values.credit.trim(),
+    ...(handle === null ? {} : { instagramHandle: handle }),
+    instagramDisplayConsent: handle !== null && values.instagramDisplayConsent,
+  };
+}
+/** `X-Submission`: base64url (no padding) of the UTF-8 JSON submission. */
+export function encodeSubmission(values: SubmissionValues) {
+  const bytes = new TextEncoder().encode(JSON.stringify(submissionOf(values)));
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
 /** The fields 0.19.0 added to a version; read structurally so this works with the shared types. */
 export function rightsOf(version: object): RightsState {
   return (version as { rights?: RightsState }).rights ?? null;
 }
 export function descriptionOf(version: object): string | null {
   return (version as { description?: string | null }).description ?? null;
+}
+export function titleOf(version: object): string | null {
+  return (version as { title?: string | null }).title ?? null;
 }
 /**
  * Whether the owner can still state rights for this draft (the backend's `PUT .../rights` rule): it has no v1
@@ -49,11 +161,15 @@ export function needsRightsStatement(item: {
   publishedVersion: number | null;
   draft: { publishedAt: string | null };
 }) {
-  return !hasV1Statement(rightsOf(item.draft)) && item.draft.publishedAt == null && item.draftVersion !== item.publishedVersion;
+  return !hasStatedRights(rightsOf(item.draft)) && item.draft.publishedAt == null && item.draftVersion !== item.publishedVersion;
 }
-/** True when the statement is a v1 one the owner gave through the API (publishing needs it). */
+/** True when the statement is a v1 one the owner gave through the API. */
 export function hasV1Statement(rights: RightsState | undefined) {
   return rights?.statement === "v1_own" || rights?.statement === "v1_authorised";
+}
+/** True when the owner stated rights through the API, v1 or v2 (publishing needs one). */
+export function hasStatedRights(rights: RightsState | undefined) {
+  return hasV1Statement(rights) || hasAgreement(rights);
 }
 
 /** Image type from the first bytes (JPEG `FF D8 FF`, PNG `89 50 4E 47 0D 0A 1A 0A`). The file's own `type` is never trusted. */
@@ -133,7 +249,7 @@ export type UploadKeys = ReturnType<typeof createUploadKeys>;
 export const licenceFields = ["credit", "licenceName", "licenceUrl", "sourceUrl", "attributionText"] as const;
 export type LicenceField = (typeof licenceFields)[number];
 /** Form values: text fields as typed (empty means none); `creditRequired` is staff only. */
-export type LicenceValues = Record<LicenceField, string> & { creditRequired?: boolean; description?: string };
+export type LicenceValues = Record<LicenceField, string> & { creditRequired?: boolean; description?: string; title?: string };
 export type LicenceErrors = Partial<Record<LicenceField, string>>;
 
 const limits: Record<LicenceField, { max: number; label: string; url?: boolean }> = {
@@ -161,6 +277,12 @@ export function descriptionErrors(raw: string): string | undefined {
   }
   if ([...normaliseDescription(text)].length > DESCRIPTION_MAX) return `Description must be ${DESCRIPTION_MAX} characters or fewer.`;
   return undefined;
+}
+
+/** Title rule (Backend 0.29.0): one line, 1-200 once trimmed; empty clears it, except on a v2 draft (`required`). */
+export function titleErrors(raw: string, required = false): string | undefined {
+  if (!raw.trim() && !required) return undefined;
+  return requiredLine("Photo title", raw);
 }
 
 /** Per-field messages mirroring the contract. Empty is allowed (it clears the field). Fields are trimmed; single-line only. */
@@ -199,9 +321,9 @@ export function licenceErrors(values: Partial<Record<LicenceField, string>>): Li
  * `description` (when the values carry it) is one more field in the same diff. Call `licenceErrors` and
  * `descriptionErrors` first; this does not validate.
  */
-export type EditChanges = MediaLicenceUpdate & { description?: string | null };
+export type EditChanges = MediaLicenceUpdate & { description?: string | null; title?: string | null };
 export function licenceDiff(
-  base: MediaLicence & { description?: string | null },
+  base: MediaLicence & { description?: string | null; title?: string | null },
   values: Partial<LicenceValues>,
   staff = false,
 ): { changes: EditChanges } | { none: true } {
@@ -209,6 +331,10 @@ export function licenceDiff(
   if (values.description !== undefined) {
     const next = normaliseDescription(values.description) || null;
     if (next !== (base.description ?? null)) changes.description = next;
+  }
+  if (values.title !== undefined) {
+    const next = values.title.trim() || null;
+    if (next !== (base.title ?? null)) changes.title = next;
   }
   for (const field of licenceFields) {
     if (values[field] === undefined) continue;
@@ -221,18 +347,20 @@ export function licenceDiff(
 }
 
 /** Splits a diff into the PATCH body parts: `licence` (if any key) and `description` (if present). */
-export function splitEdit(changes: EditChanges): { licence?: MediaLicenceUpdate; description?: string | null } {
-  const { description, ...licence } = changes;
+export function splitEdit(changes: EditChanges): { licence?: MediaLicenceUpdate; description?: string | null; title?: string | null } {
+  const { description, title, ...licence } = changes;
   return {
     ...(Object.keys(licence).length ? { licence } : {}),
     ...(description !== undefined ? { description } : {}),
+    ...(title !== undefined ? { title } : {}),
   };
 }
 
 /** A saved licence (and description) as form values (`creditRequired` included). */
-export function licenceToValues(licence: MediaLicence & { description?: string | null }): LicenceValues {
+export function licenceToValues(licence: MediaLicence & { description?: string | null; title?: string | null }): LicenceValues {
   return {
     description: licence.description ?? "",
+    title: licence.title ?? "",
     credit: licence.credit ?? "",
     licenceName: licence.licenceName ?? "",
     licenceUrl: licence.licenceUrl ?? "",
@@ -248,8 +376,8 @@ export function licenceToValues(licence: MediaLicence & { description?: string |
  * next diff would resend untouched fields and revert another editor's change.
  */
 export function rebaseLicence(
-  oldBase: MediaLicence & { description?: string | null },
-  newBase: MediaLicence & { description?: string | null },
+  oldBase: MediaLicence & { description?: string | null; title?: string | null },
+  newBase: MediaLicence & { description?: string | null; title?: string | null },
   values: Partial<LicenceValues>,
 ): LicenceValues {
   const before = licenceToValues(oldBase);
@@ -262,6 +390,7 @@ export function rebaseLicence(
   }
   if (typeof values.description === "string" && normaliseDescription(values.description) !== normaliseDescription(before.description ?? ""))
     next.description = values.description;
+  if (typeof values.title === "string" && values.title.trim() !== (before.title ?? "").trim()) next.title = values.title;
   if (typeof values.creditRequired === "boolean" && values.creditRequired !== oldBase.creditRequired)
     next.creditRequired = values.creditRequired;
   return next;
@@ -270,14 +399,14 @@ export function rebaseLicence(
 export type PublishBlocker = { field: "licenceName" | "credit" | "rights"; message: string };
 /**
  * What stops a SAVED draft from being published (the backend's 422 `content_invalid` rule): a licence
- * name, a credit when required, and a v1 rights statement. Pass the draft's `rights` (null when none);
+ * name, a credit when required, and a v1 or v2 rights statement. Pass the draft's `rights` (null when none);
  * leave it out to check the licence only.
  */
 export function publishBlockers(saved: MediaLicence, rights?: RightsState): PublishBlocker[] {
   const blockers: PublishBlocker[] = [];
   if (!saved.licenceName?.trim()) blockers.push({ field: "licenceName", message: "Add a licence name." });
   if (saved.creditRequired && !saved.credit?.trim()) blockers.push({ field: "credit", message: "Add a credit, which this photo requires." });
-  if (rights !== undefined && !hasV1Statement(rights))
+  if (rights !== undefined && !hasStatedRights(rights))
     blockers.push({ field: "rights", message: "No rights statement. The photographer who owns this photo needs to state their rights." });
   return blockers;
 }
@@ -293,7 +422,8 @@ export function mediaOutcome(status: number, code?: string | null): MediaOutcome
   if (code === "SIGNED_OUT" || code === "ACCOUNT_CHANGED" || status === 401) return "fenced";
   if (code === "PHOTOGRAPHER_REQUIRED" || code === "FORBIDDEN") return "roleLost";
   if (code === "IDEMPOTENCY_KEY_REUSED") return "keyReused";
-  if (code === "VERSION_CONFLICT" || code === "NOTHING_TO_PUBLISH" || code === "RIGHTS_ALREADY_STATED") return "conflict";
+  if (code === "VERSION_CONFLICT" || code === "NOTHING_TO_PUBLISH" || code === "RIGHTS_ALREADY_STATED" || code === "MEDIA_DECLINED")
+    return "conflict";
   if (code === "TOO_LARGE" || code === "UNSUPPORTED_TYPE" || code === "MEDIA_INVALID") return "fileRejected";
   if (code === "BACKEND_CONTRACT") return "error";
   if (

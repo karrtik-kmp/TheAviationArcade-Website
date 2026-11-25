@@ -6,7 +6,7 @@
  * is a compatibility label, not a credential, and no `X-Client-Version` is sent. Relative imports only.
  */
 import type { Bearer } from "./principal.ts";
-import { mediaRightsStatementPattern } from "./media.ts";
+import { mediaRightsStatementPattern, mediaSubmissionHeaderPattern, type MediaUploadStatement } from "./media.ts";
 
 export type FetchFn = (input: string, init: RequestInit) => Promise<Response>;
 
@@ -32,10 +32,16 @@ export class BackendError extends Error {
 }
 
 /**
- * Per-call options. `idempotencyKey` is sent as `Idempotency-Key` and `rightsStatement` as
- * `X-Rights-Statement`, each only when given and valid (an invalid one throws before any request).
+ * Per-call options. `idempotencyKey` is sent as `Idempotency-Key`, `rightsStatement` as
+ * `X-Rights-Statement` and `submission` (already base64url) as `X-Submission`, each only when given and
+ * well formed (a malformed one throws before any request). The submission holds a private name: never log it.
  */
-export type SendOptions = { idempotencyKey?: string; rightsStatement?: "v1_own" | "v1_authorised"; timeoutMs?: number };
+export type SendOptions = {
+  idempotencyKey?: string;
+  rightsStatement?: MediaUploadStatement;
+  submission?: string;
+  timeoutMs?: number;
+};
 const idempotencyKeyPattern = /^[A-Za-z0-9_-]{1,128}$/;
 
 export type BackendClient = {
@@ -70,6 +76,8 @@ export function backendClient(
       throw new TypeError("The Idempotency-Key is not valid.");
     if (send.rightsStatement !== undefined && !mediaRightsStatementPattern.test(send.rightsStatement))
       throw new TypeError("The rights statement is not valid.");
+    if (send.submission !== undefined && !mediaSubmissionHeaderPattern.test(send.submission))
+      throw new TypeError("The submission is not valid.");
     const headers: Record<string, string> = {
       Accept: "application/json",
       Authorization: `Bearer ${bearer.reveal()}`,
@@ -78,6 +86,7 @@ export function backendClient(
     if (body !== undefined) headers["Content-Type"] = contentType;
     if (send.idempotencyKey !== undefined) headers["Idempotency-Key"] = send.idempotencyKey;
     if (send.rightsStatement !== undefined) headers["X-Rights-Statement"] = send.rightsStatement;
+    if (send.submission !== undefined) headers["X-Submission"] = send.submission;
     let response: Response;
     try {
       response = await call(`${base}${path}`, {

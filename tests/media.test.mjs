@@ -46,6 +46,7 @@ const version = {
   height: 600,
   licence,
   description: null,
+  title: null,
   rights: { statement: "v1_own", statedAt: "2026-11-04T10:00:00.000Z" },
   publishedAt: null,
   createdAt: "2026-11-04T10:00:00.000Z",
@@ -57,6 +58,8 @@ const item = {
   draftVersion: 1,
   publishedVersion: null,
   draft: version,
+  submission: null,
+  review: null,
   createdAt: "2026-11-04T10:00:00.000Z",
   updatedAt: "2026-11-04T10:00:00.000Z",
 };
@@ -73,19 +76,33 @@ test("media schemas list the contract's required keys", () => {
   assert.deepEqual(list(block("MediaList"), "required"), keys(media.mediaListSchema));
   assert.deepEqual(list(block("MediaImages"), "required"), keys(media.mediaImagesSchema));
   assert.deepEqual(list(block("MediaRevisionRequest"), "required"), keys(media.mediaRevisionRequestSchema));
-  // MediaEditRequest: only revision is required; anyOf needs licence or description.
+  // MediaEditRequest: only revision is required; anyOf needs one of licence, description, title, fullName, instagram.
   const editBlock = block("MediaEditRequest");
   assert.deepEqual(list(editBlock, "required"), ["revision"]);
-  assert.ok(editBlock.includes("- required: [licence]") && editBlock.includes("- required: [description]"));
-  const editKeys = ["description", "licence", "note", "revision"];
+  for (const key of ["licence", "description", "title", "fullName", "instagram"])
+    assert.ok(editBlock.includes(`- required: [${key}]`), key);
+  const editKeys = ["description", "fullName", "instagram", "licence", "note", "revision", "title"];
   assert.deepEqual(Object.keys(media.mediaEditRequestObject.shape).sort(), editKeys);
   assert.deepEqual(propertyNames(editBlock).sort(), editKeys);
-  assert.deepEqual(list(block("MediaRightsRequest"), "required"), keys(media.mediaRightsRequestSchema));
+  // MediaRightsRequest: v1 alone, or v2 with the submission.
+  const rightsBlock = block("MediaRightsRequest");
+  assert.deepEqual(list(rightsBlock, "required", 10), keys(media.mediaRightsRequestV1Schema));
+  assert.ok(rightsBlock.includes("required: [revision, statement, submission]"));
+  assert.deepEqual(keys(media.mediaRightsRequestV2Schema), ["revision", "statement", "submission"]);
+  assert.ok(rightsBlock.includes("enum: [v1_own, v1_authorised] }") && rightsBlock.includes("enum: [v2_agreement_2026-12-01] }"));
+  // MediaSubmission and the item's private submission record.
+  assert.deepEqual(list(block("MediaSubmission"), "required"), ["credit", "fullName", "title"]);
+  assert.deepEqual(propertyNames(block("MediaSubmission")).sort(), keys(media.mediaSubmissionObject));
+  assert.deepEqual(list(block("MediaReview"), "required"), ["decidedAt", "decision", "reason", "version"]);
+  assert.deepEqual(Object.keys(media.mediaReviewSchema.shape).sort(), ["decidedAt", "decidedBy", "decision", "reason", "version"]);
+  assert.ok(block("MediaReview").includes("decision: { type: string, enum: [changes_requested, declined] }"));
+  assert.deepEqual([...media.mediaReviewDecisions].sort(), ["changes_requested", "declined"]);
   assert.deepEqual(list(block("MediaRights"), "required"), ["statedAt", "statement"]);
   assert.deepEqual(Object.keys(media.mediaRightsSchema.shape).sort(), ["statedAt", "statedBy", "statement"]);
   assert.deepEqual(list(block("MediaRights"), "enum", 10), [...media.mediaRightsStatements].sort());
-  assert.ok(yaml.includes("enum: [v1_own, v1_authorised] }"), "the upload header and the rights request take the two v1 values");
-  assert.ok(yaml.includes("name: X-Rights-Statement") && yaml.includes("/v1/admin/media/{mediaId}/rights:"));
+  assert.ok(yaml.includes("schema: { type: string, enum: [v1_own, v1_authorised, v2_agreement_2026-12-01] }"), "the upload header takes v1 and v2");
+  assert.ok(yaml.includes("name: X-Rights-Statement") && yaml.includes("name: X-Submission") && yaml.includes("/v1/admin/media/{mediaId}/rights:"));
+  assert.ok(block("Error").includes("media_declined"), "Error.code has media_declined");
   // MediaItem: `owner` is a property but not required.
   const itemBlock = block("MediaItem");
   const required = list(itemBlock, "required");
@@ -735,4 +752,156 @@ test("a backend description is counted in code points: 2000 emoji parse, 2001 do
   }
   assert.equal(media.mediaItemSchema.safeParse(withDescription("a".repeat(2000))).success, true);
   assert.equal(media.mediaItemSchema.safeParse(withDescription(null)).success, true);
+});
+
+// ===== Photo submission v2 (Backend 0.29.0) and review feedback (0.30.0). =====
+
+const { encodeSubmission, submissionErrors, canAcceptAgreement, AGREEMENT } = await import("../lib/media-form.ts");
+const v2 = media.MEDIA_V2_STATEMENT;
+const typed = { fullName: "Ada Pilot", title: "Dawn at the gate", credit: "A. Pilot", instagramHandle: "@ada.flies", instagramDisplayConsent: true };
+const v2Headers = (submission) => ({
+  "Content-Type": "image/jpeg",
+  "Idempotency-Key": key,
+  "X-Rights-Statement": v2,
+  ...(submission === undefined ? {} : { "X-Submission": submission }),
+});
+const v2Upload = (submission = encodeSubmission(typed)) => upload({ headers: v2Headers(submission) });
+
+test("X-Submission is base64url of the UTF-8 JSON, trimmed with the handle normalised, and decodes back", () => {
+  const header = encodeSubmission({ ...typed, fullName: "  Zoë Ångström ✈ ", instagramHandle: " @ada.flies " });
+  assert.match(header, /^[A-Za-z0-9_-]+$/);
+  const json = JSON.parse(Buffer.from(header, "base64url").toString("utf8"));
+  assert.deepEqual(json, { fullName: "Zoë Ångström ✈", title: typed.title, credit: typed.credit, instagramHandle: "ada.flies", instagramDisplayConsent: true });
+  assert.equal(header, Buffer.from(JSON.stringify(json), "utf8").toString("base64url"), "the same as the backend's example");
+  assert.deepEqual(media.decodeSubmissionHeader(header), json);
+  const none = JSON.parse(Buffer.from(encodeSubmission({ ...typed, instagramHandle: "@", instagramDisplayConsent: true }), "base64url").toString());
+  assert.deepEqual([none.instagramHandle, none.instagramDisplayConsent], [undefined, false], "no handle: no consent");
+});
+
+test("decodeSubmissionHeader refuses padding, non-canonical text, a BOM, unknown keys and broken fields", () => {
+  const enc = (value) => Buffer.from(typeof value === "string" ? value : JSON.stringify(value), "utf8").toString("base64url");
+  const good = { fullName: "A", title: "T", credit: "C" };
+  assert.ok(media.decodeSubmissionHeader(enc(good)));
+  for (const value of [
+    enc(good) + "=",
+    enc("﻿" + JSON.stringify(good)),
+    enc({ ...good, extra: 1 }),
+    enc({ ...good, fullName: "   " }),
+    enc({ ...good, title: "x".repeat(201) }),
+    enc({ ...good, credit: "line\nbreak" }),
+    enc({ ...good, instagramHandle: "has space" }),
+    enc({ ...good, instagramHandle: "x".repeat(31) }),
+    enc({ ...good, instagramDisplayConsent: true }),
+    enc({ fullName: "A", title: "T" }),
+    enc("[1]"),
+    "not base64!",
+    "x".repeat(6145),
+  ])
+    assert.equal(media.decodeSubmissionHeader(value), null, value.slice(0, 40));
+  // A stray bit in the last character is not canonical.
+  const canonical = enc({ ...good, fullName: "ABCD" });
+  assert.notEqual(canonical.length % 4, 0, "the fixture ends in a partial group");
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  const twisted = canonical.slice(0, -1) + alphabet[alphabet.indexOf(canonical.at(-1)) + 1];
+  assert.equal(media.decodeSubmissionHeader(twisted), null, "non-canonical");
+});
+
+test("v2 uploads need X-Submission and forward it as sent; v1 uploads refuse it; nothing bad reaches the backend", async () => {
+  const { call, backend } = mediaHarness();
+  const header = encodeSubmission(typed);
+  for (const path of ["media", "media/med-1/versions?revision=3"]) {
+    const ok = await call("POST", path, v2Upload(header));
+    assert.equal(ok.status, 201, path);
+  }
+  assert.deepEqual(backend.calls.map((c) => [c.options.rightsStatement, c.options.submission]), [[v2, header], [v2, header]]);
+  backend.calls.length = 0;
+  const bad = [
+    upload({ headers: v2Headers(undefined) }),
+    v2Upload("not base64!"),
+    v2Upload(Buffer.from(JSON.stringify({ fullName: "Ada" })).toString("base64url")),
+    upload({ headers: { "Content-Type": "image/jpeg", "Idempotency-Key": key, "X-Rights-Statement": "v1_own", "X-Submission": header } }),
+  ];
+  for (const opts of bad) {
+    const res = await call("POST", "media", opts);
+    assert.deepEqual([res.status, res.body.code], [400, "INVALID_REQUEST"]);
+    assert.ok(!JSON.stringify(res.body).includes("Ada"), "the submission is never echoed");
+  }
+  assert.equal(backend.calls.length, 0);
+});
+
+test("PUT media/:id/rights takes v2 with the submission, and only then", async () => {
+  const { call, backend } = mediaHarness();
+  const submission = { fullName: "Ada Pilot", title: "Dawn", credit: "A. Pilot", instagramHandle: "ada", instagramDisplayConsent: false };
+  const ok = await call("PUT", "media/med-1/rights", { body: { revision: 4, statement: v2, submission } });
+  assert.equal(ok.status, 200);
+  assert.deepEqual(backend.calls[0].body, { revision: 4, statement: v2, submission });
+  for (const body of [
+    { revision: 4, statement: v2 },
+    { revision: 4, statement: "v1_own", submission },
+    { revision: 4, statement: v2, submission: { ...submission, extra: 1 } },
+    { revision: 4, statement: v2, submission: { ...submission, instagramHandle: null, instagramDisplayConsent: true } },
+  ]) {
+    const res = await call("PUT", "media/med-1/rights", { body });
+    assert.deepEqual([res.status, res.body.code], [400, "INVALID_REQUEST"], JSON.stringify(body));
+  }
+  assert.equal(backend.calls.length, 1);
+});
+
+test("PATCH takes title, fullName and instagram; a consent without a handle is refused", async () => {
+  const { call, backend } = mediaHarness();
+  const body = { revision: 2, title: "Dawn", fullName: null, instagram: { handle: null, displayConsent: false } };
+  assert.equal((await call("PATCH", "media/med-1", { body })).status, 200);
+  assert.deepEqual(backend.calls[0].body, body);
+  for (const bad of [
+    { revision: 2, instagram: { handle: null, displayConsent: true } },
+    { revision: 2, instagram: { handle: "ada" } },
+    { revision: 2, title: "two\nlines" },
+  ])
+    assert.equal((await call("PATCH", "media/med-1", { body: bad })).status, 400, JSON.stringify(bad));
+  assert.equal(backend.calls.length, 1);
+});
+
+test("media_declined is its own 409 and never carries the reason; review filters pass through", async () => {
+  const declined = mediaHarness({
+    reply: () => {
+      throw new BackendError(409, "media_declined");
+    },
+  });
+  for (const [method, path, opts] of [
+    ["PATCH", "media/med-1", { body: edit }],
+    ["PUT", "media/med-1/rights", { body: rights }],
+    ["POST", "media/med-1/versions?revision=1", v2Upload()],
+  ]) {
+    const res = await declined.call(method, path, opts);
+    assert.deepEqual([res.status, res.body.code], [409, "MEDIA_DECLINED"], `${method} ${path}`);
+  }
+  const { call, backend } = mediaHarness({ reply: () => ({ items: [], nextCursor: null }) });
+  for (const review of ["none", "changes_requested", "declined"]) assert.equal((await call("GET", `media?review=${review}`)).status, 200);
+  assert.equal((await call("GET", "media?review=approved")).status, 400);
+  assert.deepEqual(backend.calls.map((c) => new URL(c.path, "http://x").searchParams.get("review")), ["none", "changes_requested", "declined"]);
+});
+
+test("an item with a review and a private submission parses; the reason keeps its line breaks", () => {
+  const reviewed = {
+    ...item,
+    draft: { ...version, title: "Dawn", rights: { statement: v2, statedAt: "2026-12-01T10:00:00.000Z" } },
+    submission: { fullName: "Ada Pilot", instagramHandle: "ada.flies", instagramDisplayConsent: true },
+    review: { decision: "changes_requested", reason: "Please add the airline\nin the title.", version: 1, decidedAt: "2026-12-02T10:00:00.000Z" },
+  };
+  const parsed = media.mediaItemSchema.safeParse(reviewed);
+  assert.ok(parsed.success);
+  assert.equal(parsed.data.review.reason, "Please add the airline\nin the title.");
+  assert.equal(media.mediaItemSchema.safeParse({ ...reviewed, review: { ...reviewed.review, decision: "approved" } }).success, false);
+  assert.equal(media.mediaItemSchema.safeParse({ ...reviewed, submission: { fullName: null } }).success, false, "all three keys");
+  const withoutReview = { ...item };
+  delete withoutReview.review;
+  assert.equal(media.mediaItemSchema.safeParse(withoutReview).success, false, "review is required");
+  assert.equal(canAcceptAgreement(reviewed), false, "already v2");
+  assert.equal(canAcceptAgreement(item), true, "a v1 photo may move to v2");
+  assert.equal(canAcceptAgreement({ ...item, review: { decision: "declined" } }), false, "not when declined");
+  assert.equal(AGREEMENT.statement, v2);
+  assert.deepEqual(
+    Object.keys(submissionErrors({ fullName: "", title: "", credit: "", instagramHandle: "", instagramDisplayConsent: true })).sort(),
+    ["credit", "fullName", "instagramDisplayConsent", "title"],
+  );
 });

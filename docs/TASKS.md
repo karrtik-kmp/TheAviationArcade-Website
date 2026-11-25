@@ -846,9 +846,34 @@ real domains (Usercentrics settings may be tied to the domain), Google sign-in c
 and the browser QA suites (not run; `frontend-ui-qa.mjs` now checks the photo policy page in place of the
 old notice).
 
-Not done yet: the client's revised photo submission form (full name, Instagram handle with display consent,
-title, description, and three confirmations: 18+, copyright, agreement). The backend can't store most of it and
-records only rights statement v1, so it waits on
-[../../docs/briefs/backend-photo-submission-v2.md](../../docs/briefs/backend-photo-submission-v2.md) (2026-11-24);
-the v1 upload form stays as is until the contract ships. "Airplane identifier info is on page
-9/10" needs clarification from the client.
+"Airplane identifier info is on page 9/10" needs clarification from the client.
+
+## Photo submission v2 and review feedback (2026-11-25, Backend API 0.30.0)
+
+The backend answered [../../docs/briefs/backend-photo-submission-v2.md](../../docs/briefs/backend-photo-submission-v2.md)
+with 0.29.0 (submission v2, Backend `ef16242`) and 0.30.0 (review feedback, `62ff2bb`); see
+`docs/briefs/website-photo-submission-v2-contract.md` and `website-media-review-contract.md` in the root folder.
+`contracts/openapi.yaml` is the 0.30.0 byte copy.
+
+- Parsers widened: `MediaVersion.title`, `MediaItem.submission` and `review`, statement
+  `v2_agreement_2026-12-01`, error `media_declined` (website code `MEDIA_DECLINED`, never with the reason).
+- `/api/media` uploads take v1 or v2; v2 needs `X-Submission` (checked, then passed on as sent, never
+  logged or echoed), v1 refuses it. `PUT media/:id/rights` takes v2 with `submission`. `PATCH` takes
+  `title`, `fullName`, `instagram`. The list passes `review=none|changes_requested|declined` through.
+- `/contribute` upload form is the client's form (`components/MediaSubmission.tsx`, words in
+  `AGREEMENT` in `lib/media-form.ts`): full name, account email note, credit, Instagram handle and display
+  consent, title, description (saved with a PATCH right after the upload), the rights summary, the three
+  confirmations and links to the agreement and privacy policy. It always sends v2.
+- Photo page: the team's review shown word for word (plain text, line breaks kept); "Accept the new
+  agreement for this photo" on any photo without v2 (a new draft; a published photo stays live until the
+  team publishes it); private details (name, Instagram, consent) editable; v2 photos hide licence name and
+  link. A declined photo offers only removal of name and Instagram details.
+
+Verification: typecheck, `npm test` 245/245, `npm run build`. In the in-app browser against a local fake
+backend speaking 0.30.0 (auth emulator, `store-qa` profile): empty-form errors and focus, a v2 upload with
+`X-Submission` and the description PATCH, the v1 → v2 move on a published photo, the declined view and its
+removal action, a changes-requested photo cleared by a title edit, no overflow at 375 px, no console errors.
+Not verified: against the real backend (not on `dev.api` yet), browser QA suites. Deploy: backend
+(migrations 0028, 0029), website and Admin go to dev together, with the user's sign-off. Open, user's or the
+client's call: when to stop accepting v1 uploads, and whether v2 may be accepted before 2026-12-01 (the
+website sends v2 as soon as it is deployed).
