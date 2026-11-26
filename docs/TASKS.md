@@ -848,6 +848,32 @@ real domains (Usercentrics settings may be tied to the domain), Google sign-in c
 and the browser QA suites (not run; `frontend-ui-qa.mjs` now checks the photo policy page in place of the
 old notice).
 
+### Policy pages load with the page (2026-11-25)
+
+On dev.playairplanegames.com a cold `/privacy` showed the policy at about 3.7 s: the browser asked Termageddon
+only after about 550 KB of page JavaScript had loaded (to about 3.0 s; sent uncompressed over HTTP/1.1 by
+nginx), and Termageddon then took about 0.5 s and answers `no-cache`. Meanwhile the footer sat right under the title.
+
+- `lib/policy-embed.ts` fetches the policy on the server (same render URL and page `origin` as the embed
+  script, 2.5 s timeout), keeps it per policy and page URL for an hour, and serves a copy up to a day old if a
+  refresh fails. `LegalPage` puts the HTML in the page; only if the server gets nothing does `PolicyEmbed` load
+  it in the browser, as before.
+- `PolicyEmbed` (fallback): the loading state keeps one screen of height with skeleton lines so the footer stays
+  down; a failed load offers "Try again" and keeps focus on the policy after it loads; a `#section` link
+  lands once the policy is in.
+- Styles: Termageddon's reset is scoped to an id and beat `.prose`, so policy headings were Poppins in the
+  muted colour. Rules under `#legal-policy` now use Barlow headings, ink colour, site borders and hover for
+  the privacy accordions, wrap long URLs (no sideways scroll at 320 px) and hide the policy's own title
+  (it repeats the page `h1`; "Last updated" stays).
+
+Verification: typecheck, `npm test` 251/251 (new `tests/policy-embed.test.mjs`), `npm run build` (`/:page`
+is dynamic). On the dev server all four policies come in the HTML (cached `/privacy` answers in 0.03 s;
+about 14 KB brotli), the browser makes no Termageddon render request, headings and accordions are checked in
+dark and light themes and at 320 px, and the browser fallback's failed state and "Try again" were checked with a
+temporary forced failure (removed). Not verified on the deployed dev site until it is redeployed. Still open
+on the server side (not this repo): nginx gzip for proxied JS/CSS (`gzip_proxied any`, `gzip_types`) and
+HTTP/2, which slow every page.
+
 "Airplane identifier info is on page 9/10" needs clarification from the client.
 
 ## Photo submission v2 and review feedback (2026-11-25, Backend API 0.30.0)

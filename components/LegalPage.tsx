@@ -1,8 +1,10 @@
 import { Fragment } from "react";
+import { headers } from "next/headers";
 import { PublicShell } from "@/components/PublicShell";
 import { PolicyEmbed } from "@/components/PolicyEmbed";
 import type { LegalPage as LegalPageEntry } from "@/lib/legal";
 import { photoSubmissionPolicy } from "@/lib/photo-submission-policy";
+import { pageOrigin, policyHtml } from "@/lib/policy-embed";
 
 /** Turns the contact email and website address in the client's text into links. */
 function Linked({ text }: { text: string }) {
@@ -47,6 +49,17 @@ function PhotoSubmissionPolicy() {
   );
 }
 
+/**
+ * A Termageddon policy, fetched on the server so it arrives with the page. If that fails the browser
+ * loads it instead (`PolicyEmbed`), with the Termageddon link as the last resort.
+ */
+async function TermageddonPolicy({ page, policyKey }: { page: LegalPageEntry; policyKey: string }) {
+  const origin = pageOrigin(await headers(), page.path);
+  const html = origin ? await policyHtml(policyKey, origin) : null;
+  if (html === null) return <PolicyEmbed policyKey={policyKey} label={page.label} />;
+  return <div id={policyKey} className="policy_embed_div" dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
 export function LegalPage({ page }: { page: LegalPageEntry }) {
   const isPhotoPolicy = !page.termageddonKey;
   return (
@@ -57,9 +70,9 @@ export function LegalPage({ page }: { page: LegalPageEntry }) {
           <h1>{isPhotoPolicy ? photoSubmissionPolicy.title : page.label}</h1>
           {isPhotoPolicy && <p>Effective date: {photoSubmissionPolicy.effective}</p>}
         </header>
-        <article className="wrap prose legal-prose">
+        <article id="legal-policy" className="wrap prose legal-prose">
           {page.termageddonKey ? (
-            <PolicyEmbed policyKey={page.termageddonKey} label={page.label} />
+            <TermageddonPolicy page={page} policyKey={page.termageddonKey} />
           ) : (
             <PhotoSubmissionPolicy />
           )}

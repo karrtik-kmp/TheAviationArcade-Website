@@ -2050,6 +2050,134 @@ button:active,
   color: var(--ink);
   text-decoration: underline;
 }
+/* Hold the page's height while the policy loads so the footer does not ride up under the header. */
+.legal-prose .policy-loading {
+  min-height: 100vh;
+}
+.policy-skeleton {
+  display: grid;
+  gap: 14px;
+  margin-top: 28px;
+}
+.policy-skeleton .skeleton {
+  display: block;
+  height: 16px;
+}
+.policy-skeleton .skeleton:nth-child(4n + 1) {
+  width: 40%;
+  height: 24px;
+  margin-top: 14px;
+}
+.policy-skeleton .skeleton:nth-child(4n) {
+  width: 70%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .policy-skeleton .skeleton {
+    animation: none;
+  }
+}
+/*
+ * Termageddon's policy HTML ships a reset scoped to `#<policy key>` (an id), which outranks `.prose`.
+ * These rules go through the page's own id so the policies use the site's type and tokens, like the
+ * photo submission policy does.
+ */
+#legal-policy .policy_embed_div h2 {
+  font-family: Barlow, sans-serif;
+  font-weight: 600;
+  font-size: 34px;
+  line-height: 1.05;
+  color: var(--ink);
+  margin: 40px 0 16px;
+}
+/* The policy's own title repeats the page heading right above it; "Last updated" after it stays. */
+#legal-policy .policy_embed_div article > h2:first-child {
+  display: none;
+}
+#legal-policy .policy_embed_div h3 {
+  font-family: Barlow, sans-serif;
+  font-weight: 600;
+  font-size: 24px;
+  line-height: 1.15;
+  color: var(--ink);
+  margin: 28px 0 12px;
+}
+#legal-policy .policy_embed_div h4 {
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--ink);
+  margin: 18px 0 8px;
+}
+#legal-policy .policy_embed_div p,
+#legal-policy .policy_embed_div li {
+  line-height: 1.7;
+}
+/* Long URLs in the policies would otherwise push a phone screen sideways. */
+#legal-policy .policy_embed_div {
+  overflow-wrap: anywhere;
+}
+#legal-policy .policy_embed_div ul {
+  padding-left: 22px;
+  margin: 12px 0;
+}
+#legal-policy .policy_embed_div li + li {
+  margin-top: 6px;
+}
+#legal-policy .policy_embed_div .accordions {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+#legal-policy .policy_embed_div .accordion {
+  border-bottom: 1px solid var(--line);
+}
+#legal-policy .policy_embed_div .accordion:last-child {
+  border-bottom: 0;
+}
+#legal-policy .policy_embed_div .accordion-summary {
+  padding: 12px 16px;
+  color: var(--ink);
+}
+#legal-policy .policy_embed_div .accordion-summary:hover {
+  background: var(--raised);
+}
+#legal-policy .policy_embed_div .accordion-summary:focus-visible {
+  outline-offset: -3px;
+}
+#legal-policy .policy_embed_div .accordion-summary h3 {
+  font-family: Poppins, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  margin: 0;
+}
+#legal-policy .policy_embed_div .accordion-content {
+  padding: 4px 16px 16px 32px;
+}
+#legal-policy .policy_embed_div table {
+  font-size: 14px;
+}
+#legal-policy .policy_embed_div th,
+#legal-policy .policy_embed_div td {
+  border-bottom: 1px solid var(--line);
+}
+/* Focused only to keep keyboard position after "Try again"; a ring round the whole policy is noise. */
+#legal-policy .policy_embed_div:focus {
+  outline: none;
+}
+.legal-prose .policy_embed_div > .btn {
+  margin-top: 8px;
+}
+@media (max-width: 767px) {
+  #legal-policy .policy_embed_div h2 {
+    font-size: 28px;
+  }
+  #legal-policy .policy_embed_div h3 {
+    font-size: 21px;
+  }
+  #legal-policy .policy_embed_div .accordion-content {
+    padding-left: 16px;
+  }
+}
 @media (max-width: 767px) {
   .legal-links {
     justify-content: flex-start;
