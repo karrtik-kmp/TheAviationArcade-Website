@@ -972,7 +972,7 @@ questions that remain are in [feedback/client-questions-srs.md](feedback/client-
 
 | ID | Task | State |
 |---|---|---|
-| WB-MKT-01…08 | Marketplace home, categories, listings, detail, images, descriptions, affiliate links, featured | Backlog; waits for client products and affiliate programmes (CQ-2, CQ-8) and the Admin/backend catalog (AD-MKT, SH-11). Until then the page may only say "coming soon", with no placeholder products. Affiliate disclosure, sanitized rich text, outbound links only, no checkout |
+| WB-MKT-01…08 | Marketplace home, categories, listings, detail, images, descriptions, affiliate links, featured | `/marketplace` "coming soon" page done 2026-11-26. Rest backlog; waits for client products and affiliate programmes (CQ-2, CQ-8) and the Admin/backend catalog (AD-MKT, SH-11). Until then the page may only say "coming soon", with no placeholder products. Affiliate disclosure, sanitized rich text, outbound links only, no checkout |
 | WB-PTR-01…05 | Partner listing, profile, company info, website and affiliate links | Backlog; waits for client partners (CQ-3) and OI-19 (who maintains it) |
 
 ### 5.8 Game information (WB-GAM)
@@ -989,7 +989,7 @@ questions that remain are in [feedback/client-questions-srs.md](feedback/client-
 
 | ID | Task | State |
 |---|---|---|
-| WB-FAQ-01 | FAQ page | Backlog; text from the client only; OI-19 decides static file vs Admin + backend, and who sends contact mail |
+| WB-FAQ-01 | FAQ page | `/faq` "coming soon" page done 2026-11-26. Josh asked for a CMS (11-26): plan [briefs/faq-cms-plan.md](briefs/faq-cms-plan.md) passed review; Backend document `faq` + public read (API 0.33.0, after the pending dev deploy), Admin FAQ desk, then the website reader. Text from the client only |
 | WB-FAQ-02 | FAQ search | Backlog, with WB-FAQ-01 |
 | WB-FAQ-03 | Gameplay guides | Backlog; guide text from the client (CQ-5) |
 | WB-FAQ-04 | Account support | Partial: sign-in, reset and verification help in the auth screens; no support page or recovery workflow |

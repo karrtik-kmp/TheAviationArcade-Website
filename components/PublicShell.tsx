@@ -106,7 +106,12 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
             className="mobile-nav"
             aria-label="Mobile navigation"
           >
-            {[...nav, ["/get-the-app", "App release details"]].map(([href, label]) => (
+            {[
+              ...nav,
+              ["/marketplace", "Marketplace"],
+              ["/faq", "FAQ"],
+              ["/get-the-app", "App release details"],
+            ].map(([href, label]) => (
               <Link key={href} href={href}>
                 {label}
               </Link>
@@ -124,6 +129,8 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
               <Link href="/how-to-play">Ranks and community</Link>
               <Link href="/contribute">Share a photo</Link>
               <Link href="/about">About</Link>
+              <Link href="/marketplace">Marketplace</Link>
+              <Link href="/faq">FAQ</Link>
               {/* Only the server's staff check shows the way in; the Admin guards itself regardless. */}
               {account?.isStaff && <AdminWorkspaceLink>Editor workspace</AdminWorkspaceLink>}
             </nav>
