@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "@/components/brand-refresh.css";
 import { Providers } from "@/components/Providers";
 import { sitePath } from "@/lib/paths";
 

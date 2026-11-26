@@ -140,7 +140,12 @@ export default function Home() {
             (2026-11-23), a 480 x 848 portrait phone video; replace the file when the final
             video arrives. */}
         <section className="wrap section video-teaser" aria-labelledby="video-teaser-title">
-          <h2 id="video-teaser-title">Can you identify this plane?</h2>
+          <div className="video-teaser-copy">
+            <h2 id="video-teaser-title">Can you identify this plane?</h2>
+            <Link href="/games" className="btn">
+              Explore the Games <ArrowUpRight size={18} />
+            </Link>
+          </div>
           <video
             className="teaser-video"
             src={sitePath("/media/identify-placeholder.mp4")}

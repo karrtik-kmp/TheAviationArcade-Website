@@ -1042,3 +1042,22 @@ Verification: typecheck, `npm test` 273/273 (contract test on 0.33.0; new SUBMIS
 Browser (auth emulator, `store-qa` profile, a local fake of the role routes): a verified account with no role opened
 `/contribute`, one POST was made and the photo form opened; a blocked account saw only the blocked message. Not checked
 in the browser: the unverified-email state and the limit message on a real upload. Not run against the real backend.
+
+## Brand refresh: game blue, logo, game roundels, new screens (2026-11-26)
+
+Design round from "website notes 1" and the SRS website screens. Client copy is unchanged (user ruling
+2026-11-26: keep the client's text). All styling is in `components/brand-refresh.css`, loaded after
+`globals.css`. Dark (default) uses the game's Atlantic livery; light keeps cream with #132a4a ink. Logo lockup
+larger (60px mark, brass rim, brass descriptor), header links 16px. The eight game tiles and game pages use the
+game's own module roundels (`public/media/games/`, from Unity `Art/Branding/ModuleIcons`) on their ticket
+colours with the radar rings, replacing generic icons; photo tiles carry the roundel as a corner badge. Game
+pages put the roundel beside the title and the client's "Your Mission" line in a card. The rank ladder has a
+numbered brass slot per rank for the insignia. The homepage video sits beside its heading. The "coming soon"
+screens (Marketplace, FAQ before publish) are a split layout with a client Plane of the Day photograph.
+Not done: game screenshot carousels (no release screenshots yet), insignia art, Pass/Partners/Contact pages
+(client content, CQ-1/CQ-3, OI-19).
+
+Verification: typecheck, `npm test` 273/273, `npm run build`; eslint on changed files: only the existing
+`PublicShell` set-state-in-effect errors and `<img>` warnings. In the browser pane (dev, 5173): home, games,
+Airport Spotter and Tail Identifier pages, ranks and Marketplace at 1440 in dark, a game page in light, home
+header at 390; no horizontal overflow. Browser QA suites not run.

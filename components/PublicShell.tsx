@@ -14,7 +14,7 @@ import { CookieSettingsButton } from "@/components/PolicyEmbed";
 export function Brand() {
   return (
     <Link href="/" className="brand" aria-label="Airplane Games home">
-      <img src={sitePath("/media/logo-144.webp")} alt="" width="48" height="48" />
+      <img src={sitePath("/media/logo-192.webp")} alt="" width="60" height="60" />
       <div className="brand-name">
         Airplane Games
         <span className="brand-descriptor">The Aviation Arcade</span>

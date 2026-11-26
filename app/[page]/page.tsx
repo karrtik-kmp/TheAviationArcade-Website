@@ -179,12 +179,19 @@ export default async function InformationPage({
               ))}
               {s.rankLadder && (
                 <ol className="rank-ladder">
-                  {ranks.map((r) => (
+                  {ranks.map((r, i) => (
                     <li key={r.id}>
-                      <h3>
-                        {r.name} — {rankLines[r.id].tagline}
-                      </h3>
-                      <p>{rankLines[r.id].text}</p>
+                      {/* Insignia slot: the step number stands in until the client's five
+                          rank insignia arrive (specs in docs/feedback/website-notes-1.md). */}
+                      <span className="rank-mark" aria-hidden="true">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <div>
+                        <h3>
+                          {r.name} — {rankLines[r.id].tagline}
+                        </h3>
+                        <p>{rankLines[r.id].text}</p>
+                      </div>
                     </li>
                   ))}
                 </ol>

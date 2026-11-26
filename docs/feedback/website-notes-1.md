@@ -79,12 +79,12 @@ anything changes · **Later** = agreed in principle, needs assets or a design ro
 | PDF page | Request | Note |
 |---|---|---|
 | 47 | Larger header links | **Done** (round 2): 12px → 15px, medium weight; 14px below 1150px |
-| 47 | Logo: rework the lockup alignment, try the game's colour, make it larger | Design round; the lockup's sizes were deliberately left unchanged in round 2 |
+| 47 | Logo: rework the lockup alignment, try the game's colour, make it larger | **Done** (2026-11-26): mark 48 → 60px with a brass rim, wordmark 22 → 26px, descriptor in the game's brass on the wordmark's left edge; header links 16px |
 | 48 | Font too small across the site | **Done** (round 2): every size of 17px or less went up one step (body 14 → 16, card text 12 → 14, captions 10 → 12, eyebrows 11 → 13); headings unchanged |
 | 50 | Default to dark mode | **Done** (round 2): dark is the default; the toggle still switches to light and remembers the choice |
-| 50 | Use the game's blue | Need the exact blue (from the Unity project) and a contrast check |
+| 50 | Use the game's blue | **Done** (2026-11-26): dark theme = the game's Atlantic livery (shell #132a4a, metal #204e7a, brass #d5b66d); light theme ink #132a4a. Awaiting Josh's look |
 | 50 | Radar background behind header and footer | **Done** (round 3): the game's three Launch-screen rings (radii 150 : 214 : 286) and brass glow, centred on the logo |
-| 32 | Rank insignia next to each rank | Specs sent; waiting for the five images |
+| 32 | Rank insignia next to each rank | Specs sent; waiting for the five images. Each rank now has a 56px brass slot (step number 01–05 until the art arrives) |
 | 18–30 | Screenshot carousel on each game page | Needs screenshots from the game, per level |
 | 50 | Homepage "Can you identify this plane?" video | **Placeholder clip in** (2026-11-23): the client's 10 s portrait clip plays in the slot; waiting for the final video |
 | 46 | Photographer banner image | **Placeholder photo in** (2026-11-23): the client's 1280 × 410 moon shot; credit and final image still to come |

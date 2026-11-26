@@ -74,3 +74,12 @@ OFL notices remain alongside them. `scripts/optimize-assets.py` reproduces these
 `prepare-assets.mjs`. It needs Pillow, fontTools and Brotli. For this task only, the two font
 conversion packages were installed under ignored `work/font-compression`; no runtime dependency
 is needed to serve the checked-in font files. Original TTF and JPEG assets are preserved.
+
+## Game module roundels and logo derivative (2026-11-26)
+
+| Website file | Source | Use |
+|---|---|---|
+| `public/media/games/roundel-*.svg` (8) | Unity `Assets/_Project/Art/Branding/ModuleIcons/roundel-*-v2.svg`, copied unchanged | The game's own module icons on game tiles and game pages |
+| `public/media/logo-192.webp` | `public/media/logo-256.png`, resized with sharp (WebP q90) | Header and footer mark at 60px |
+
+The Marketplace and FAQ "coming soon" screens reuse `potd-8.webp` (Josh M, "Queen", listed above).

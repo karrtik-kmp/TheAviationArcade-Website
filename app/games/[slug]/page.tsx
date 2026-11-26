@@ -2,6 +2,7 @@ import { SiteLink as Link } from "@/components/SiteLink";
 import { notFound } from "next/navigation";
 import { PublicShell } from "@/components/PublicShell";
 import { GameVisual } from "@/components/Games";
+import { roundelFor } from "@/lib/game-art";
 import { games } from "@/lib/catalog";
 export async function generateMetadata({
   params,
@@ -24,13 +25,16 @@ export default async function GamePage({
   return (
     <PublicShell>
       <main id="main">
-        <header className="wrap page-intro">
+        <header className="wrap page-intro game-intro">
           <div className="breadcrumbs">
             <Link href="/games">Games</Link>
             <span>/</span>
             <span>{game.name}</span>
           </div>
-          <h1>{game.name}</h1>
+          <div className="game-title">
+            <img src={roundelFor(game)} alt="" width="96" height="96" />
+            <h1>{game.name}</h1>
+          </div>
           <p className="page-subheading">{game.detail?.heading ?? game.description}</p>
         </header>
         <section className="wrap detail-layout">
@@ -48,7 +52,7 @@ export default async function GamePage({
                 {game.detail.body.map((p) => (
                   <p key={p}>{p}</p>
                 ))}
-                <p>
+                <p className="mission-card">
                   <strong>Your Mission:</strong> {game.detail.mission}
                 </p>
               </>

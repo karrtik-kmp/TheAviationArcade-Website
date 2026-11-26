@@ -1,37 +1,21 @@
 "use client";
 import { useState } from "react";
 import { SiteLink as Link } from "@/components/SiteLink";
-import {
-  ArrowUpRight,
-  MagnifyingGlass,
-  AirplaneTilt,
-  Broadcast,
-  MapPin,
-  GridFour,
-  ArrowsLeftRight,
-  Path,
-} from "@phosphor-icons/react";
+import { ArrowUpRight, MagnifyingGlass } from "@phosphor-icons/react";
 import { games, type Game } from "@/lib/catalog";
 import { sitePath } from "@/lib/paths";
+import { roundelFor } from "@/lib/game-art";
+/** The tile colour follows the game's module ticket (navy, teal, burgundy). */
+function toneFor(game: Game) {
+  return game.slug === "tail-identifier" || game.slug === "code-search"
+    ? "burgundy"
+    : game.slug === "airport-spotter" || game.slug === "call-sign-match"
+      ? "teal"
+      : "navy";
+}
 export function GameVisual({ game }: { game: Game }) {
-  const tone =
-    game.slug === "tail-identifier" || game.slug === "code-search"
-      ? "burgundy"
-      : game.slug === "airport-spotter" || game.slug === "call-sign-match"
-        ? "teal"
-        : "navy";
-  const Icon =
-    game.slug === "airport-spotter"
-      ? MapPin
-      : game.slug === "call-sign-match"
-        ? Broadcast
-        : game.slug === "code-search"
-          ? GridFour
-          : game.slug === "runway-identifier"
-            ? Path
-            : AirplaneTilt;
   return (
-    <div className={`game-visual ${tone}`}>
+    <div className={`game-visual ${toneFor(game)}${game.image ? " has-photo" : ""}`}>
       {game.image ? (
         <img
           src={sitePath(game.image)}
@@ -40,18 +24,17 @@ export function GameVisual({ game }: { game: Game }) {
           height="640"
           loading="lazy"
         />
-      ) : game.slug === "atc-match" ? (
-        <div
-          className="visual-matching"
-          aria-label="Airport codes meet airport names"
-        >
-          <span className="visual-word">LHR</span>
-          <ArrowsLeftRight size={36} />
-          <span className="visual-word">LONDON</span>
-        </div>
       ) : (
-        <Icon weight="duotone" aria-hidden="true" />
+        <span className="game-radar" aria-hidden="true" />
       )}
+      <img
+        className="game-roundel"
+        src={roundelFor(game)}
+        alt=""
+        width="128"
+        height="128"
+        loading="lazy"
+      />
     </div>
   );
 }

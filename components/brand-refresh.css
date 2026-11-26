@@ -1,0 +1,309 @@
+/*
+ * Brand refresh (2026-11-26), from the client's "website notes 1" design requests and the SRS:
+ * the game's blue (the Atlantic livery, Unity FIGMA_TO_CODE_MAP.md) as the default dark theme,
+ * a larger logo lockup, the game's own module roundels on the game tiles, and roomier layouts for
+ * the game, ranks, video and "coming soon" screens. Loaded after globals.css; only overrides.
+ */
+
+/* Light theme keeps its cream ground; ink takes the game's navy-blue shell. */
+:root {
+  --ink: #132a4a;
+  --mark: 60px;
+  --header-h: 88px;
+}
+
+/* Dark (the default): the game's Atlantic livery. Shell #132a4a, metal #204e7a, brass #d5b66d. */
+[data-theme="dark"] {
+  --surface: #132a4a;
+  --panel: #19355a;
+  --raised: #204e7a;
+  --ink: #fff9ee;
+  --muted: #b7c5d4;
+  --line: #34567e;
+  --action: #c64731;
+  --action-hover: #b33b28;
+  --brass: #d5b66d;
+  --focus: #d5b66d;
+}
+
+/* ---------- Header and logo lockup ---------- */
+.site-header {
+  --radar-y: calc(var(--header-h) / 2);
+}
+.header-inner {
+  height: var(--header-h);
+}
+.brand {
+  gap: 14px;
+}
+.brand img {
+  width: var(--mark);
+  height: var(--mark);
+  background: #071724;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brass) 55%, transparent);
+}
+/* Wordmark and descriptor share one left edge and one width, centred on the mark. */
+.brand-name {
+  display: inline-grid;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.brand-descriptor {
+  margin-top: 7px;
+  font-family: Poppins, sans-serif;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  color: var(--brass);
+  white-space: nowrap;
+}
+.desktop-nav {
+  font-size: 16px;
+  gap: 32px;
+}
+.site-footer {
+  --radar-y: calc(40px + var(--mark) / 2);
+}
+
+@media (max-width: 1150px) {
+  .brand-name {
+    font-size: 23px;
+  }
+  .brand-descriptor {
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+  }
+}
+@media (max-width: 767px) {
+  :root {
+    --mark: 44px;
+    --header-h: 72px;
+  }
+  .site-header {
+    --radar-y: 36px;
+  }
+  .site-footer {
+    --radar-y: calc(40px + var(--mark) / 2);
+  }
+  .brand {
+    gap: 10px;
+  }
+  .brand-name {
+    font-size: 19px;
+  }
+  .brand-descriptor {
+    font-size: 7.5px;
+    letter-spacing: 0.16em;
+    margin-top: 5px;
+  }
+}
+
+/* ---------- Game tiles: the game's module roundel on its ticket colour ---------- */
+.game-visual {
+  isolation: isolate;
+}
+.game-visual.navy {
+  background: #204e7a;
+}
+.game-visual.teal {
+  background: #0b4650;
+}
+.game-visual.burgundy {
+  background: #6b2635;
+}
+/* The game's three radar rings behind the roundel. */
+.game-radar {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle, transparent 69px, rgb(213 182 109 / 0.34) 70px, transparent 71px),
+    radial-gradient(circle, transparent 99px, rgb(213 182 109 / 0.24) 100px, transparent 101px),
+    radial-gradient(circle, transparent 133px, rgb(213 182 109 / 0.15) 134px, transparent 135px),
+    radial-gradient(circle, rgb(213 182 109 / 0.16), transparent 160px);
+}
+.game-visual img.game-roundel {
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+  transition: transform 0.4s;
+}
+.game-card:hover .game-visual img.game-roundel {
+  transform: scale(1.03);
+}
+/* On a photograph the roundel becomes a badge in the corner. */
+.game-visual.has-photo img.game-roundel {
+  position: absolute;
+  left: 18px;
+  bottom: 18px;
+  width: 64px;
+  height: 64px;
+  filter: drop-shadow(0 4px 12px rgb(0 0 0 / 0.35));
+}
+.detail-layout .game-visual img.game-roundel {
+  width: 168px;
+  height: 168px;
+}
+.detail-layout .game-visual.has-photo img.game-roundel {
+  width: 80px;
+  height: 80px;
+}
+.detail-layout .game-radar {
+  transform: scale(1.5);
+}
+.game-card > a {
+  border-radius: var(--radius);
+  transition: transform 0.2s;
+}
+.game-card:hover > a {
+  transform: translateY(-2px);
+}
+
+/* ---------- Game page ---------- */
+.game-title {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 8px;
+}
+.game-title img {
+  width: 84px;
+  height: 84px;
+  flex: none;
+}
+.mission-card {
+  margin-top: 24px !important;
+  padding: 20px 22px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--brass);
+  border-radius: 12px;
+  background: var(--panel);
+  color: var(--ink);
+}
+.mission-card strong {
+  display: block;
+  font-family: Barlow, sans-serif;
+  font-weight: 600;
+  font-size: 22px;
+  letter-spacing: 0.02em;
+  color: var(--brass);
+  margin-bottom: 4px;
+}
+@media (max-width: 767px) {
+  .game-title {
+    gap: 14px;
+  }
+  .game-title img {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* ---------- Rank ladder: numbered steps, the slot for the client's insignia ---------- */
+.rank-ladder {
+  gap: 12px;
+  margin-top: 20px;
+}
+.rank-ladder li {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 20px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  padding: 18px 22px;
+}
+.rank-mark {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--brass);
+  box-shadow: inset 0 0 0 4px var(--panel), inset 0 0 0 5px color-mix(in srgb, var(--brass) 45%, transparent);
+  font-family: Barlow, sans-serif;
+  font-weight: 600;
+  font-size: 22px;
+  color: var(--brass);
+}
+.rank-ladder li:last-child {
+  border-color: color-mix(in srgb, var(--brass) 70%, transparent);
+}
+@media (max-width: 480px) {
+  .rank-ladder li {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 14px;
+    padding: 16px;
+  }
+  .rank-mark {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+}
+
+/* ---------- Homepage "Can you identify this plane?" video: copy beside the clip ---------- */
+.video-teaser {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 56px;
+  align-items: center;
+}
+.video-teaser h2 {
+  text-align: left;
+  margin: 0 0 28px;
+  font-size: clamp(44px, 5vw, 72px);
+}
+.video-teaser .eyebrow {
+  display: block;
+}
+.video-teaser .teaser-video {
+  max-height: min(78vh, 680px);
+  margin: 0;
+  border: 1px solid var(--line);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.28);
+}
+@media (max-width: 767px) {
+  .video-teaser {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .video-teaser .teaser-video {
+    margin: 0 auto;
+  }
+}
+
+/* ---------- "Coming soon" screens (Marketplace, FAQ until published) ---------- */
+.coming-soon {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: 56px;
+  align-items: center;
+  padding-top: 48px;
+  padding-bottom: 96px;
+}
+.coming-soon .page-intro {
+  padding: 0;
+}
+.coming-soon .actions {
+  margin-top: 32px;
+}
+.coming-soon-photo {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border-top-left-radius: 140px;
+}
+@media (max-width: 900px) {
+  .coming-soon {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .coming-soon-photo {
+    aspect-ratio: 3 / 2;
+    border-top-left-radius: 80px;
+  }
+}
