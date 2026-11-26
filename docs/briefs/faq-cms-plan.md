@@ -1,7 +1,7 @@
 # Plan: FAQ managed in the CMS (Backend + Admin + website), 2026-11-26
 
 **Status:** passed the plan-review gate with changes (backend-expert, frontend-expert, senior-lead; changes folded in).
-Owner of this plan: website session. Decision 1 is made (full admin); decision 2 waits for the user (end of file).
+Owner of this plan: website session. Both user decisions are made (end of file): full admin; edit on dev, then copy to live.
 
 ## Why
 
@@ -57,6 +57,14 @@ immutable published rows with digest checks, discard, one `content_publish` audi
 9. **Tests:** two PATCHes at once (one 409), publish then edit, read before first publish, 304, 429, trim and
    line-ending rules. Commands: typecheck, test, test:e2e, contracts:write.
 
+10. **Copy dev to live** (decision 2). Staff-only `GET /v1/admin/content/documents/faq/export` returns the
+    published FAQ as one JSON file (`format: "faq.v1"`, source host, version, sha256). Staff-only
+    `POST .../faq/import` on the live backend loads that file **into the draft** (never straight to live): same
+    validation as PATCH, refuses another format, takes the live draft's base version (409 if someone changed it),
+    audit row naming the source version. The body can exceed 16 KB, so give this route its own limit sized to the
+    caps (≈ 700 KB) or upload it as a file, as the sheet imports do. Publishing stays the normal publish route.
+    Tests: round trip dev → prod is byte-identical after publish; a tampered or wrong-format file is refused.
+
 **Timing:** lands after the joint dev deploy already waiting (migrations 0027–0031, API 0.29–0.32), as 0.33.
 
 ## Admin (Admin session)
@@ -75,6 +83,9 @@ immutable published rows with digest checks, discard, one `content_publish` audi
 - Reorder: focus stays on the moved item's same button (or the other one if it becomes disabled), "Moved to
   position 3 of 8" in a polite live region (pattern `StoreDesk.tsx` ~170–200), accessible names include the
   question. Remove/Publish dialogs trap focus, return it to the trigger, close on Escape.
+- Copy to live (decision 2): on dev, "Download FAQ for live" saves the published FAQ file; on the live Admin,
+  "Load FAQ from dev" uploads it into the draft and shows the list of changes against what is live; the editor
+  then publishes as usual. Each screen says which host it is on, so nobody publishes on the wrong one.
 - Checks: typecheck, test, build; browser: keyboard reorder, 409 path, 375 px.
 
 ## Website reader (after the contract)
@@ -103,15 +114,17 @@ immutable published rows with digest checks, discard, one `content_publish` audi
 
 1. Backend FAQ wave (after the pending dev deploy).
 2. Admin desk and website reader in parallel on contract 0.33.0.
-3. Josh enters the FAQ (where: decision 2).
+3. Josh enters and publishes the FAQ on the dev Admin and checks it on `dev.`.
+4. Staff download it from dev, load it into the live Admin's draft, review the changes and publish on live.
 
 ## Decisions for the user
 
 1. **Josh's access — decided 2026-11-26 (user): full `admin`.** Josh gets an active `admin` row (verified
    email), which also opens Store, Users and media publishing. No new role; ADR-0002 unchanged. The grant itself
    is done in the Admin Users desk by an existing admin, on each host Josh uses.
-2. **Where Josh edits.** Dev is his demo (ruling 11-16) and nothing copies dev content to prod. Edit on prod
-   (`admin.`) directly, or on dev with a promote step?
+2. **Where Josh edits — decided 2026-11-26 (user): on dev, then copy to live.** Josh edits and publishes on the
+   dev Admin, checks the result on `dev.`, and the FAQ is then copied to live with the export / import step
+   (Backend item 10, Admin "Copy to live"). Live content is never edited from dev directly.
 
 Afterwards: record the OI-19 (FAQ half) ruling in PROJECT_STATE §3 and SRS §9 (root session), and the tasks in
 website, Admin and Backend TASKS.
