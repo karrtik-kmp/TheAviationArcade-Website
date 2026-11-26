@@ -874,6 +874,19 @@ temporary forced failure (removed). Not verified on the deployed dev site until 
 on the server side (not this repo): nginx gzip for proxied JS/CSS (`gzip_proxied any`, `gzip_types`) and
 HTTP/2, which slow every page.
 
+### Footer stays at the bottom of short pages (2026-11-26)
+
+On dev the footer rode up under the content of short pages (a policy still loading or failed, 404, sign-out):
+nothing made the page at least one screen tall. `PublicShell` now wraps header, `main` and footer in
+`.page-frame` (a flex column, `min-height: 100dvh`; `main` grows, keeps full width when it is `.wrap`). The
+policy's loading state keeps its one screen of height, so the footer doesn't jump when the policy arrives.
+Same change in the Admin repo (`AdminShell`).
+
+Verification: typecheck, `npm test` 273/273. In the browser on the local dev server: 404 at 1440x900 and
+390x844 and `/cookies` in its failed state put the footer's bottom on the window's bottom edge, no sideways
+scroll; the loading state holds the footer below the first screen. Not verified on the deployed dev site
+until it is redeployed.
+
 "Airplane identifier info is on page 9/10" needs clarification from the client.
 
 ## Photo submission v2 and review feedback (2026-11-25, Backend API 0.30.0)

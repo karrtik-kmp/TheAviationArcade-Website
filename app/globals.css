@@ -230,6 +230,27 @@ button:active,
 .skip:focus {
   top: 12px;
 }
+/*
+ * The page is at least one screen tall, so on a short page (a policy still loading or failed, 404,
+ * sign-out) the footer sits at the bottom of the window instead of riding up under the content.
+ * `width: 100%` keeps a `main.wrap` at full width: auto side margins would shrink a flex item.
+ */
+.page-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+.page-frame > main {
+  flex: 1 0 auto;
+  width: 100%;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.page-frame > .site-header,
+.page-frame > .site-footer {
+  flex-shrink: 0;
+}
 /* Layer scale: page 0, navigation 20, modal overlays 40, skip link 100. */
 .site-header {
   position: sticky;

@@ -64,7 +64,7 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", close);
   }, [open]);
   return (
-    <>
+    <div className="page-frame">
       <a className="skip" href="#main">
         Skip to content
       </a>
@@ -149,6 +149,6 @@ export function PublicShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
