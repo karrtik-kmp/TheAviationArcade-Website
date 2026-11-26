@@ -1,0 +1,76 @@
+/* The FAQ page (app/faq). Shared tokens and the .prose details/summary base live in globals.css. */
+.faq-search {
+  margin-bottom: 32px;
+}
+.faq-search label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.faq-search-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.faq-search input {
+  flex: 1 1 240px;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+.faq-search input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.faq-count {
+  min-height: 1.5em;
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+.faq-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.faq-empty {
+  margin-bottom: 32px;
+}
+.faq-clear {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+.faq-category + .faq-category {
+  margin-top: 40px;
+}
+.faq-category h2 {
+  margin-bottom: 4px;
+}
+.prose .faq-entry summary {
+  min-height: 44px;
+  padding: 10px 0;
+  overflow-wrap: anywhere;
+}
+.prose .faq-entry summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+.faq-answer {
+  padding-top: 8px;
+  overflow-wrap: anywhere;
+}
+.faq-answer p + p {
+  margin-top: 12px;
+}
+.faq-entry {
+  scroll-margin-top: 96px;
+}

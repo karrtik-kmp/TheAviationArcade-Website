@@ -989,8 +989,8 @@ questions that remain are in [feedback/client-questions-srs.md](feedback/client-
 
 | ID | Task | State |
 |---|---|---|
-| WB-FAQ-01 | FAQ page | `/faq` "coming soon" page done 2026-11-26. Josh asked for a CMS (11-26): plan [briefs/faq-cms-plan.md](briefs/faq-cms-plan.md) passed review; Backend document `faq` + public read (API 0.33.0, after the pending dev deploy), Admin FAQ desk, then the website reader. Answer renderer done 2026-11-26 (`lib/faq-answer.ts`, `components/FaqAnswer.tsx`, `tests/faq-answer.test.mjs`; shared byte-identical with the Admin preview). Text from the client only |
-| WB-FAQ-02 | FAQ search | Backlog, with WB-FAQ-01 |
+| WB-FAQ-01 | FAQ page | Reader built 2026-11-26 against the Backend's draft 0.33.0 `FaqPublic` (Backend working tree, not yet committed; re-vendor `contracts/openapi.yaml` byte-identical when it is): `lib/faq.ts` (strict parse, 60 s cache, one request in flight, ETag/304, last good copy for a day on 429/5xx), `app/faq/page.tsx`, `components/FaqList.tsx`; "coming soon" when nothing is published or the backend never answered. Verified against a local fake backend: sections, empty category hidden, links, markup shown as text, deep link, no-JS HTML, 320 px. Josh asked for a CMS (11-26): plan [briefs/faq-cms-plan.md](briefs/faq-cms-plan.md) passed review; Backend document `faq` + public read (API 0.33.0, after the pending dev deploy), Admin FAQ desk, then the website reader. Answer renderer done 2026-11-26 (`lib/faq-answer.ts`, `components/FaqAnswer.tsx`, `tests/faq-answer.test.mjs`; shared byte-identical with the Admin preview). Text from the client only |
+| WB-FAQ-02 | FAQ search | Done 2026-11-26 in `FaqList` (client-side filter, count announced, hidden without JS) |
 | WB-FAQ-03 | Gameplay guides | Backlog; guide text from the client (CQ-5) |
 | WB-FAQ-04 | Account support | Partial: sign-in, reset and verification help in the auth screens; no support page or recovery workflow |
 | WB-FAQ-05 | Subscription information | Backlog; text from the client (CQ-1, CQ-5) |
