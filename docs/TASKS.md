@@ -879,3 +879,137 @@ Not verified: against the real backend (not on `dev.api` yet), browser QA suites
 User ruling 2026-11-25: v2 (the 2026-12-01 agreement) may be accepted before its effective date; the website
 sends v2 as soon as it is deployed. Still open (user's or client's call): when the backend stops accepting v1
 uploads.
+
+## SRS requirements owned by the website (2026-11-26)
+
+Source: `../docs/SRS.md` v0.1 (Kmphitech proposal to Josh, received 2026-11-26), brief
+`../docs/briefs/srs-task-update.md`. This section lists every **W** requirement by SRS ID with the state found
+in this repo's code on 2026-11-26. **No implementation in this pass.** Items marked *blocked* wait for the named
+open issue (SRS §9) and are not built. The rules "the website sells nothing and plays nothing" and "no how to
+play", and check F1, are unchanged until the user rules. *Backlog* = new, no order yet.
+
+Common state: on the Node build (A2) every route that reads the old D1 content answers 503 (`lib/server.ts`
+`database()`), so `/api/featured` fails and the homepage and `/plane-of-the-day` show the built-in sample photo
+(`components/Featured.tsx`). Real Plane of the Day data waits for A3 (backend `GET /v1/public/plane-of-the-day`,
+see the Server hosting job above).
+
+### 5.1 Homepage (WB-HOM)
+
+| ID | Task | State |
+|---|---|---|
+| WB-HOM-01 | Responsive landing page | Done (`app/page.tsx`; responsive round 2026-11-23) |
+| WB-HOM-02 | Featured Plane of the Day on the homepage | UI done (`<Featured compact />`); data waits for A3 |
+| WB-HOM-03 | Its aircraft information | UI done; data waits for A3 |
+| WB-HOM-04 | Its photographer information | Credit line done; data waits for A3 |
+| WB-HOM-05 | Photographer's social links | Backlog. Not shown anywhere public yet; needs the Instagram handle and display consent in the public PotD read (backend) |
+| WB-HOM-06 | App links for iOS and Android | Blocked by OI-20 (no store URLs). Today: the "Get the app" page (`/get-the-app`) |
+| WB-HOM-07 | Featured partner section | Blocked by OI-02 |
+| WB-HOM-08 | Aviation ad placements | Blocked by OI-02 |
+| WB-HOM-09 | Call to action to submit photos | Done (`/contribute` buttons, banner) |
+
+### 5.2 Plane of the Day gallery (WB-GAL)
+
+| ID | Task | State |
+|---|---|---|
+| WB-GAL-01 | Complete archive | Backlog; needs a backend public archive read with paging (not in API 0.30.0) |
+| WB-GAL-02 | Recent featured images | UI done (archive grid in `Featured`); data waits for A3 |
+| WB-GAL-03 | Image detail page | Backlog (only `GET /api/photos/:id`, the image bytes, exists) |
+| WB-GAL-04 | Aircraft information on the detail page | Backlog, with WB-GAL-03 |
+| WB-GAL-05 | Photographer information on the detail page | Backlog, with WB-GAL-03 |
+| WB-GAL-06 | Photographer social links on the detail page | Backlog, with WB-HOM-05 |
+| WB-GAL-07 | Search by aircraft | Backlog; needs backend search or a full public list |
+| WB-GAL-08 | Search by airport or location | Backlog; needs a location field on entries (backend, Admin) |
+| WB-GAL-09 | Search by photographer | Backlog; needs a public photographer key (credit text is not an identity) |
+| MG-POD-10 | Archive URL the app links to for older images | Backlog, with WB-GAL-01; agree the URL with Unity |
+
+### 5.3 Photographer submission portal (WB-SUB)
+
+| ID | Task | State |
+|---|---|---|
+| WB-SUB-01 | Photographer registration and login | Done (sign-in + photographer role request, `ROLES_SOURCE=backend`) |
+| WB-SUB-02 | Photo upload | Done in code (backend media, `MediaContribute`); not usable on dev until the backend is on `dev.api` |
+| WB-SUB-03 | Aircraft information | Done as title + description; no separate make / model / variant fields |
+| WB-SUB-04 | Photographer profile information | Done (full name, credit; submission v2) |
+| WB-SUB-05 | Social media links | Done (Instagram handle + display consent) |
+| WB-SUB-06 | Copyright and release acknowledgement | Done (v2 agreement, three confirmations) |
+| WB-SUB-07 | Submission confirmation | Done (upload status on `/contribute`) |
+
+### 5.4 User authentication (WB-AUT)
+
+| ID | Task | State |
+|---|---|---|
+| WB-AUT-01 | Registration (email/password, Google) | Done; live Google sign-in on the new project is a human check |
+| WB-AUT-02 | Login | Done |
+| WB-AUT-03 | Forgot password | Done (Firebase reset in `AuthForm`); real email delivery is a human check |
+| WB-AUT-04 | Shared authentication with the app | Partial: same Firebase project and principal; app-return handoff and Callsign linking open (job "Shared app/web principal") |
+| WB-AUT-05 | Verified email before comments or submissions | Done for photos (the photographer role needs a verified email); comments don't exist yet (WB-COM-01) |
+
+### 5.5 First Class Pass hub (WB-FCP)
+
+| ID | Task | State |
+|---|---|---|
+| WB-FCP-01 | Pass information page | Blocked by OI-01 |
+| WB-FCP-02 | Subscription purchase | Blocked by OI-01, OI-21 |
+| WB-FCP-03 | Member dashboard | Account page done (`/account`, progress); Pass section blocked by OI-01 |
+| WB-FCP-04 | Membership status on the account page | Backlog; reads `GET /v1/me/entitlements` (not vendored yet). Showing it to a signed-in player may still count as subscription copy: confirm under OI-01 |
+| WB-FCP-05 | Exclusive member content | Backlog; nothing defined |
+| WB-FCP-06 | Premium wallpaper downloads | Blocked by OI-17 (licence) |
+| WB-FCP-07 | Premium photo pack downloads | Blocked by OI-17 |
+| WB-FCP-08 | Partner discounts | Blocked by OI-18 |
+| WB-FCP-10 | More membership tiers later | Backlog; follows the backend's tier design |
+| MG-FCP-02 | A Pass bought on the website works in the app | Blocked by OI-01, OI-21 |
+
+### 5.6 Marketplace (WB-MKT) and 5.7 Partner directory (WB-PTR)
+
+| ID | Task | State |
+|---|---|---|
+| WB-MKT-01…08 | Marketplace home, categories, listings, detail, images, descriptions, affiliate links, featured | Blocked by OI-02; not to be built. If allowed: affiliate disclosure, sanitized rich text from the Admin, outbound links only |
+| WB-PTR-01…05 | Partner listing, profile, company info, website and affiliate links | Blocked by OI-02 (and OI-19: who maintains it) |
+
+### 5.8 Game information (WB-GAM)
+
+| ID | Task | State |
+|---|---|---|
+| WB-GAM-01 | About the game | Done (`/about`) |
+| WB-GAM-02 | Game overview | Done (`/games`) |
+| WB-GAM-03 | Game features | Done (homepage, `/games`, ranks page) |
+| WB-GAM-04 | A brief per module | Done (`/games/[slug]`, 8 modules) |
+| WB-GAM-05 | Download links | Blocked by OI-20; `/get-the-app` holds the "in development" copy |
+
+### 5.9 FAQ (WB-FAQ)
+
+| ID | Task | State |
+|---|---|---|
+| WB-FAQ-01 | FAQ page | Backlog; text from the client only; who maintains it is OI-19 (static file vs Admin + backend) |
+| WB-FAQ-02 | FAQ search | Backlog, with WB-FAQ-01 |
+| WB-FAQ-03 | Gameplay guides | Blocked by OI-03 |
+| WB-FAQ-04 | Account support | Partial: sign-in, reset and verification help in the auth screens; no support page or recovery workflow |
+| WB-FAQ-05 | Subscription information | Blocked by OI-01 |
+
+The client's marketplace and FAQ question (2026-11-26) waits for OI-01…OI-03; nothing is built for it.
+
+### 5.10 Contact us (WB-CON)
+
+| ID | Task | State |
+|---|---|---|
+| WB-CON-01 | Contact form | Backlog; needs the client's SMTP service and an inbox (OI-19), and a delivery path (website server or backend) |
+| WB-CON-02 | General inquiries | Backlog, with WB-CON-01 |
+| WB-CON-03 | Support requests | Backlog, with WB-CON-01 |
+| WB-CON-04 | Partnership inquiries | Backlog, with WB-CON-01 |
+| WB-CON-05 | Spam resistance (rate limits per IP and account, server validation) | Backlog, with WB-CON-01. Per-IP limits need the real client IP from nginx; no CAPTCHA chosen |
+
+### 5.11 Community (WB-COM)
+
+| ID | Task | State |
+|---|---|---|
+| WB-COM-01 | Community forum (approved 2026-10-26) | Planned, not built ([APPROVED_WEBSITE_DIRECTION.md](APPROVED_WEBSITE_DIRECTION.md)); missing from the proposal (OI-04); needs backend storage and Admin moderation |
+
+### 8. Non-functional (NFR-01…05)
+
+| ID | Task | State |
+|---|---|---|
+| NFR-01 | Responsive desktop, tablet, mobile | Done for current pages (checked 320–1440 px, 2026-11-23) |
+| NFR-02 | Current major browsers | Partial: checked in Chromium only; real iOS Safari / Android Chrome not checked; browser list is OI-22 |
+| NFR-03 | SEO structure | Partial: page titles, a site description, readable URLs. No `sitemap.xml`, `robots.txt`, per-page descriptions or Open Graph tags yet |
+| NFR-04 | Performance | Partial; no target (OI-22). Policy pages fixed 2026-11-25; nginx gzip and HTTP/2 open on the server; last Lighthouse (pre-Firebase) LCP 4.1 s |
+| NFR-05 | WCAG 2.1 AA | Ongoing practice (keyboard, focus, contrast per change); no full audit since the redesign |
