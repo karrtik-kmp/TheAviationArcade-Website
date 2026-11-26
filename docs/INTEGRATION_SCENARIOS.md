@@ -114,11 +114,11 @@ The table below is the question as it was asked on 11-13.
 | E3 | Cloudflare Worker, D1 database and secrets | Deleted **only** after E2 and the dev demo works, with an explicit user yes at that point | — |
 | E4 | Backend seed script on the dev backend | Desks hold Josh's client files (31 Military rows `mil-a1`…`mil-a31`, his photos under the staff photographer account). Real photographers hold the photographer role by UID after signing up on `dev.`. Nothing Claude-drafted | D |
 
-### F. Copy rules (unchanged)
+### F. Copy rules (F1 revised 2026-11-26)
 
 | # | Scenario | Expected | Proof |
 |---|---|---|---|
-| F1 | Every public page on `dev.` | No play, "how to play", Flight/Trip mechanics, purchases, prices or subscriptions; no invented forum links or release dates | L, D |
+| F1 | Every public page on `dev.` | No game is played in the browser. Pass information, subscription and marketplace pages, partners, ads, FAQ and gameplay guides are allowed (client proposal, user ruling 2026-11-26), but only with client-supplied text, products, partners and prices; no price, product, partner or guide text written by us; no checkout until the web-purchase design (SRS OI-21) is settled; no invented forum links or release dates | L, D |
 | F2 | Store desk | Staff-only; nothing offered to visitors | L |
 
 ## 4. Order

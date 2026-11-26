@@ -1,0 +1,16 @@
+# Client questions from the proposal (website), 2026-11-26
+
+The website now follows the accepted proposal (user ruling 2026-11-26): it may show the First Class Pass,
+sell the subscription, list marketplace products and partners, show ads and carry gameplay guides. We only
+publish what the client supplies, so each item below needs an answer from Josh before we build it.
+IDs refer to `../../../docs/SRS.md`.
+
+| # | Question for Josh | Why we ask | Blocks |
+|---|---|---|---|
+| CQ-1 | **Buying the First Class Pass on the website.** Which payment provider do you want (for example Stripe or Paddle)? What is the web price for monthly and yearly, and is it the same as in the app stores? Please also send the benefits text for the Pass page. | Apple and Google have rules about subscriptions sold outside the app (what the app may say or link to, and how a web purchase is honoured in the app). We need your provider and prices to design it, and we won't write the benefits or prices ourselves | WB-FCP-01/02, WB-FAQ-05, MG-FCP-02 (OI-21) |
+| CQ-2 | **Marketplace.** Is it affiliate-only (each product links out to the retailer, nothing is paid on our site)? Which categories, products and affiliate programmes (for example Amazon Associates) should we start with? | The proposal lists affiliate links but no checkout. We need the actual products and programmes, and the affiliate disclosure wording they require | WB-MKT, AD-MKT |
+| CQ-3 | **Partners.** Who are the first partners for the directory and the homepage "featured partners", and what may we show for each (logo, description, website, affiliate link)? | No partners have been supplied, and we can't invent them | WB-PTR, WB-HOM-07 |
+| CQ-4 | **Website ads.** Which ad network should the website use (for example Google AdSense), and are there categories you want blocked? | Ads load only after visitors accept cookies in the Usercentrics banner, so we need the network to set this up | WB-HOM-08 |
+| CQ-5 | **FAQ and gameplay guides.** Please send the FAQ questions and answers, and the gameplay guide text for each game, or the list of topics for you to approve. Should staff edit them in the Admin later, or is a fixed page fine for launch? | We don't write game rules or answers ourselves, and the second part decides whether the Admin needs an FAQ screen | WB-FAQ-01/03/05, OI-19 |
+| CQ-6 | **Wallpaper and photo pack downloads for members.** Does the photographer agreement allow members to download photos as wallpapers or packs, or do we need a separate licence from each photographer? | The Photo Submission Policy (effective 2026-12-01) lets Airplane Games distribute photos in connection with its products but doesn't mention downloads for members' personal use. Please confirm it covers them, or tell us what wording to add. Earlier photos were submitted under older terms | WB-FCP-06/07 (OI-17) |
+| CQ-7 | **Contact form.** Which email address should receive contact messages, and which mail service (for example SendGrid or Elastic Email) will you provide? | The form can't send without them | WB-CON (OI-19) |

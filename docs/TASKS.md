@@ -15,8 +15,10 @@ folder there. Read README.md and actual Git status when resuming.
 - Callsign is the existing community player name tag. Game-account linkage and an
   authoritative Callsign claim service remain future work; do not create another registry.
 - Luna handles scoped implementation; 6.1 Sol low/medium handles complex planning/review.
-- Demo content/credentials remain local and nonpublishable. Browser gameplay,
-  commerce and game-backend content delivery are outside this slice.
+- Demo content/credentials remain local and nonpublishable. Browser gameplay is out of scope.
+  Since 2026-11-26 (user ruling) the website scope is the client proposal: Pass pages, subscription
+  purchase, marketplace, partners, ads and gameplay guides are allowed with client-supplied content
+  (see "SRS requirements owned by the website" below).
 
 The client-approved direction from 2026-10-26 is recorded in
 [Approved website and military launch direction](APPROVED_WEBSITE_DIRECTION.md).
@@ -894,10 +896,11 @@ Common state: on the Node build (A2) every route that reads the old D1 content a
 see the Server hosting job above). SRS SH-14 now covers it: today's entry, archive paging and search, and the
 Instagram handle only under display consent.
 
-Expected, not yet a written ruling (root session, 2026-11-26): Josh accepted the proposal as the agreed scope, so
-OI-01…OI-03 will likely go the proposal's way (Pass page and purchase, subscription FAQ, ads, partners,
-marketplace, gameplay guides; own Pass status on `/account`). Until the written decision arrives, the rules and
-check F1 stand and the blocked rows below stay blocked.
+**User ruling 2026-11-26:** Josh accepted the proposal as the agreed scope, so the website follows it. OI-01…OI-03
+are decided the proposal's way: the "sells nothing" and "no how to play" rules are retired, and check F1 is revised
+(`docs/INTEGRATION_SCENARIOS.md`). Still binding: no play in the browser, only client-supplied content, no checkout
+before OI-21. The rows below that waited only on OI-01…OI-03 are now backlog waiting on client content; the
+questions that remain are in [feedback/client-questions-srs.md](feedback/client-questions-srs.md).
 
 ### 5.1 Homepage (WB-HOM)
 
@@ -909,8 +912,8 @@ check F1 stand and the blocked rows below stay blocked.
 | WB-HOM-04 | Its photographer information | Credit line done; data waits for A3 |
 | WB-HOM-05 | Photographer's social links | Backlog. Not shown anywhere public yet; needs the Instagram handle and display consent in the public PotD read (backend) |
 | WB-HOM-06 | App links for iOS and Android | Blocked by OI-20 (no store URLs). Today: the "Get the app" page (`/get-the-app`) |
-| WB-HOM-07 | Featured partner section | Blocked by OI-02 |
-| WB-HOM-08 | Aviation ad placements | Blocked by OI-02 |
+| WB-HOM-07 | Featured partner section | Backlog; waits for client partners (CQ-3) |
+| WB-HOM-08 | Aviation ad placements | Backlog; waits for the ad network choice (CQ-4); ads load only after cookie consent |
 | WB-HOM-09 | Call to action to submit photos | Done (`/contribute` buttons, banner) |
 
 ### 5.2 Plane of the Day gallery (WB-GAL)
@@ -954,23 +957,23 @@ check F1 stand and the blocked rows below stay blocked.
 
 | ID | Task | State |
 |---|---|---|
-| WB-FCP-01 | Pass information page | Blocked by OI-01 |
-| WB-FCP-02 | Subscription purchase | Blocked by OI-01, OI-21 |
-| WB-FCP-03 | Member dashboard | Account page done (`/account`, progress); Pass section blocked by OI-01 |
-| WB-FCP-04 | Membership status on the account page | Backlog; reads `GET /v1/me/entitlements` (not vendored yet). Showing it to a signed-in player may still count as subscription copy: confirm under OI-01 |
+| WB-FCP-01 | Pass information page | Backlog; benefits text and price from the client (CQ-1) |
+| WB-FCP-02 | Subscription purchase | Blocked by OI-21 (payment provider, store rules, price; CQ-1) |
+| WB-FCP-03 | Member dashboard | Account page done (`/account`, progress); Pass section backlog, with WB-FCP-04 |
+| WB-FCP-04 | Membership status on the account page | Backlog; reads `GET /v1/me/entitlements` (not vendored yet) |
 | WB-FCP-05 | Exclusive member content | Backlog; nothing defined |
 | WB-FCP-06 | Premium wallpaper downloads | Blocked by OI-17 (licence) |
 | WB-FCP-07 | Premium photo pack downloads | Blocked by OI-17 |
 | WB-FCP-08 | Partner discounts | Blocked by OI-18 |
 | WB-FCP-10 | More membership tiers later | Backlog; follows the backend's tier design |
-| MG-FCP-02 | A Pass bought on the website works in the app | Blocked by OI-01, OI-21 |
+| MG-FCP-02 | A Pass bought on the website works in the app | Blocked by OI-21 |
 
 ### 5.6 Marketplace (WB-MKT) and 5.7 Partner directory (WB-PTR)
 
 | ID | Task | State |
 |---|---|---|
-| WB-MKT-01…08 | Marketplace home, categories, listings, detail, images, descriptions, affiliate links, featured | Blocked by OI-02; not to be built. If allowed: affiliate disclosure, sanitized rich text from the Admin, outbound links only |
-| WB-PTR-01…05 | Partner listing, profile, company info, website and affiliate links | Blocked by OI-02 (and OI-19: who maintains it) |
+| WB-MKT-01…08 | Marketplace home, categories, listings, detail, images, descriptions, affiliate links, featured | Backlog; waits for client products and affiliate programmes (CQ-2) and the Admin/backend catalog (AD-MKT, SH-11). Affiliate disclosure, sanitized rich text, outbound links only, no checkout |
+| WB-PTR-01…05 | Partner listing, profile, company info, website and affiliate links | Backlog; waits for client partners (CQ-3) and OI-19 (who maintains it) |
 
 ### 5.8 Game information (WB-GAM)
 
@@ -988,11 +991,11 @@ check F1 stand and the blocked rows below stay blocked.
 |---|---|---|
 | WB-FAQ-01 | FAQ page | Backlog; text from the client only; OI-19 decides static file vs Admin + backend, and who sends contact mail |
 | WB-FAQ-02 | FAQ search | Backlog, with WB-FAQ-01 |
-| WB-FAQ-03 | Gameplay guides | Blocked by OI-03 |
+| WB-FAQ-03 | Gameplay guides | Backlog; guide text from the client (CQ-5) |
 | WB-FAQ-04 | Account support | Partial: sign-in, reset and verification help in the auth screens; no support page or recovery workflow |
-| WB-FAQ-05 | Subscription information | Blocked by OI-01 |
+| WB-FAQ-05 | Subscription information | Backlog; text from the client (CQ-1, CQ-5) |
 
-The client's marketplace and FAQ question (2026-11-26) waits for OI-01…OI-03; nothing is built for it.
+The client's marketplace and FAQ ask (2026-11-26) is in scope now; nothing is built yet, it waits for CQ-2 and CQ-5.
 
 ### 5.10 Contact us (WB-CON)
 

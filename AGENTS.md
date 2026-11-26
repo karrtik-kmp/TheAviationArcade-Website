@@ -35,6 +35,12 @@ Start with README.md and docs/TASKS.md, then inspect actual Git status. Unity is
   website name registry or silently amend the frozen game account contract.
 - Keep session request generations, account-change fences and captured draft base versions.
   Revalidation may retain unsaved drafts, but must not overwrite another editor's version.
+- Website scope follows the client proposal (`../docs/SRS.md` §5; user ruling 2026-11-26): the "sells nothing"
+  and "no how to play" rules are retired. Allowed: First Class Pass information and member pages, subscription
+  purchase, an affiliate marketplace, partner directory, ad placements, FAQ with gameplay guides. Still binding:
+  no game is played in the browser; every product, partner, price, FAQ answer and guide comes from the client;
+  no web checkout until the payment design (SRS OI-21) is decided; open client questions are in
+  `docs/feedback/client-questions-srs.md`.
 - Publishing is an Admin desk (its own repo). Demo content is nonpublishable; the demo account can't send
   photos here.
 - Preserve current Site identity and audience. Native Site source/version/deploy workflow applies
