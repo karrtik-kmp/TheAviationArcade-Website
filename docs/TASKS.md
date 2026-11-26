@@ -891,7 +891,13 @@ play", and check F1, are unchanged until the user rules. *Backlog* = new, no ord
 Common state: on the Node build (A2) every route that reads the old D1 content answers 503 (`lib/server.ts`
 `database()`), so `/api/featured` fails and the homepage and `/plane-of-the-day` show the built-in sample photo
 (`components/Featured.tsx`). Real Plane of the Day data waits for A3 (backend `GET /v1/public/plane-of-the-day`,
-see the Server hosting job above).
+see the Server hosting job above). SRS SH-14 now covers it: today's entry, archive paging and search, and the
+Instagram handle only under display consent.
+
+Expected, not yet a written ruling (root session, 2026-11-26): Josh accepted the proposal as the agreed scope, so
+OI-01…OI-03 will likely go the proposal's way (Pass page and purchase, subscription FAQ, ads, partners,
+marketplace, gameplay guides; own Pass status on `/account`). Until the written decision arrives, the rules and
+check F1 stand and the blocked rows below stay blocked.
 
 ### 5.1 Homepage (WB-HOM)
 
@@ -918,8 +924,8 @@ see the Server hosting job above).
 | WB-GAL-05 | Photographer information on the detail page | Backlog, with WB-GAL-03 |
 | WB-GAL-06 | Photographer social links on the detail page | Backlog, with WB-HOM-05 |
 | WB-GAL-07 | Search by aircraft | Backlog; needs backend search or a full public list |
-| WB-GAL-08 | Search by airport or location | Backlog; needs a location field on entries (backend, Admin) |
-| WB-GAL-09 | Search by photographer | Backlog; needs a public photographer key (credit text is not an identity) |
+| WB-GAL-08 | Search by airport or location | Backlog, blocked by OI-29 (meaning of "location"); needs a location field on entries (backend, Admin) |
+| WB-GAL-09 | Search by photographer | Backlog, blocked by OI-28 (public photographer key; credit text is not an identity) |
 | MG-POD-10 | Archive URL the app links to for older images | Backlog, with WB-GAL-01; agree the URL with Unity |
 
 ### 5.3 Photographer submission portal (WB-SUB)
@@ -980,7 +986,7 @@ see the Server hosting job above).
 
 | ID | Task | State |
 |---|---|---|
-| WB-FAQ-01 | FAQ page | Backlog; text from the client only; who maintains it is OI-19 (static file vs Admin + backend) |
+| WB-FAQ-01 | FAQ page | Backlog; text from the client only; OI-19 decides static file vs Admin + backend, and who sends contact mail |
 | WB-FAQ-02 | FAQ search | Backlog, with WB-FAQ-01 |
 | WB-FAQ-03 | Gameplay guides | Blocked by OI-03 |
 | WB-FAQ-04 | Account support | Partial: sign-in, reset and verification help in the auth screens; no support page or recovery workflow |
@@ -1002,7 +1008,7 @@ The client's marketplace and FAQ question (2026-11-26) waits for OI-01…OI-03; 
 
 | ID | Task | State |
 |---|---|---|
-| WB-COM-01 | Community forum (approved 2026-10-26) | Planned, not built ([APPROVED_WEBSITE_DIRECTION.md](APPROVED_WEBSITE_DIRECTION.md)); missing from the proposal (OI-04); needs backend storage and Admin moderation |
+| WB-COM-01 | Community forum (approved 2026-10-26) | Planned, not built ([APPROVED_WEBSITE_DIRECTION.md](APPROVED_WEBSITE_DIRECTION.md)); missing from the proposal (OI-04); needs backend storage (SH-13) and Admin moderation (AD-COM-01) |
 
 ### 8. Non-functional (NFR-01…05)
 
