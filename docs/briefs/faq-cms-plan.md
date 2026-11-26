@@ -1,7 +1,7 @@
 # Plan: FAQ managed in the CMS (Backend + Admin + website), 2026-11-26
 
 **Status:** passed the plan-review gate with changes (backend-expert, frontend-expert, senior-lead; changes folded in).
-Owner of this plan: website session. Two decisions wait for the user (end of file).
+Owner of this plan: website session. Decision 1 is made (full admin); decision 2 waits for the user (end of file).
 
 ## Why
 
@@ -107,8 +107,9 @@ immutable published rows with digest checks, discard, one `content_publish` audi
 
 ## Decisions for the user
 
-1. **Josh's access.** Admin routes need an active `admin` role, which also opens Store, Users and media
-   publishing. Give Josh full `admin`, or add a narrower content-editor role (Backend ADR-0002 change)?
+1. **Josh's access — decided 2026-11-26 (user): full `admin`.** Josh gets an active `admin` row (verified
+   email), which also opens Store, Users and media publishing. No new role; ADR-0002 unchanged. The grant itself
+   is done in the Admin Users desk by an existing admin, on each host Josh uses.
 2. **Where Josh edits.** Dev is his demo (ruling 11-16) and nothing copies dev content to prod. Edit on prod
    (`admin.`) directly, or on dev with a promote step?
 
