@@ -3,7 +3,7 @@
 The website now follows the accepted proposal (user ruling 2026-11-26): it may show the First Class Pass,
 sell the subscription, list marketplace products and partners, show ads and carry gameplay guides. We only
 publish what the client supplies, so each item below needs an answer from Josh before we build it.
-IDs refer to `../../../docs/SRS.md`.
+IDs refer to `../../../docs/SRS.md`, which writes these as "website CQ-n" (the Unity repo has its own CQ1–CQ7).
 
 | # | Question for Josh | Why we ask | Blocks |
 |---|---|---|---|
@@ -14,3 +14,6 @@ IDs refer to `../../../docs/SRS.md`.
 | CQ-5 | **FAQ and gameplay guides.** Please send the FAQ questions and answers, and the gameplay guide text for each game, or the list of topics for you to approve. Should staff edit them in the Admin later, or is a fixed page fine for launch? | We don't write game rules or answers ourselves, and the second part decides whether the Admin needs an FAQ screen | WB-FAQ-01/03/05, OI-19 |
 | CQ-6 | **Wallpaper and photo pack downloads for members.** Does the photographer agreement allow members to download photos as wallpapers or packs, or do we need a separate licence from each photographer? | The Photo Submission Policy (effective 2026-12-01) lets Airplane Games distribute photos in connection with its products but doesn't mention downloads for members' personal use. Please confirm it covers them, or tell us what wording to add. Earlier photos were submitted under older terms | WB-FCP-06/07 (OI-17) |
 | CQ-7 | **Contact form.** Which email address should receive contact messages, and which mail service (for example SendGrid or Elastic Email) will you provide? | The form can't send without them | WB-CON (OI-19) |
+| CQ-8 | **Marketplace starter list.** Please send 3–5 categories and about 10 example products (name, retailer, link), tell us which affiliate accounts you already hold or plan to apply for, and whether any products are for Pass members only. | Until this arrives the marketplace shows "coming soon", with no placeholder products | WB-MKT (with CQ-2) |
+| CQ-9 | **Pass "Exclusive Marketplace Discounts".** Will partners give discount codes? Is any partner already willing? | Until then the perk is shown as "coming soon" | WB-FCP-08 (OI-18) |
+| CQ-10 | **Livery payment.** Mainly a game question; the Unity session logs it in `CLIENT_CONTENT_IMPORT.md` | Listed here only to keep the numbering continuous | Game |

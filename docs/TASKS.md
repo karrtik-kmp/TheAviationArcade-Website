@@ -964,7 +964,7 @@ questions that remain are in [feedback/client-questions-srs.md](feedback/client-
 | WB-FCP-05 | Exclusive member content | Backlog; nothing defined |
 | WB-FCP-06 | Premium wallpaper downloads | Blocked by OI-17 (licence) |
 | WB-FCP-07 | Premium photo pack downloads | Blocked by OI-17 |
-| WB-FCP-08 | Partner discounts | Blocked by OI-18 |
+| WB-FCP-08 | Partner discounts | Blocked by OI-18 (CQ-9); the perk shows as "coming soon" until then |
 | WB-FCP-10 | More membership tiers later | Backlog; follows the backend's tier design |
 | MG-FCP-02 | A Pass bought on the website works in the app | Blocked by OI-21 |
 
@@ -972,7 +972,7 @@ questions that remain are in [feedback/client-questions-srs.md](feedback/client-
 
 | ID | Task | State |
 |---|---|---|
-| WB-MKT-01…08 | Marketplace home, categories, listings, detail, images, descriptions, affiliate links, featured | Backlog; waits for client products and affiliate programmes (CQ-2) and the Admin/backend catalog (AD-MKT, SH-11). Affiliate disclosure, sanitized rich text, outbound links only, no checkout |
+| WB-MKT-01…08 | Marketplace home, categories, listings, detail, images, descriptions, affiliate links, featured | Backlog; waits for client products and affiliate programmes (CQ-2, CQ-8) and the Admin/backend catalog (AD-MKT, SH-11). Until then the page may only say "coming soon", with no placeholder products. Affiliate disclosure, sanitized rich text, outbound links only, no checkout |
 | WB-PTR-01…05 | Partner listing, profile, company info, website and affiliate links | Backlog; waits for client partners (CQ-3) and OI-19 (who maintains it) |
 
 ### 5.8 Game information (WB-GAM)
