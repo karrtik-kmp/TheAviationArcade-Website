@@ -4,7 +4,9 @@
       "localhost",
       "127.0.0.1",
       "dev.playairplanegames.com",
-      "dev.admin.playairplanegames.com"
+      "dev.admin.playairplanegames.com",
+      "playairplanegames.com",
+      "admin.playairplanegames.com"
     ],
     "providers": {
       "emailPassword": true,
