@@ -280,15 +280,86 @@
 .auth-message.auth-error {
   border-color: var(--error);
 }
+/* Sign in with Google, per Google's branding guidelines (developers.google.com/identity/branding-guidelines):
+   the standard colour "G" unaltered, Roboto Medium 14/20, 40px tall, 12px side padding, 10px between mark and
+   label, 1px stroke; light #FFFFFF / #747775 / #1F1F1F, dark #131314 / #8E918F / #E3E3E3; hover is an 8% state
+   layer. Not restyled with the brand: Google's own colours stay. */
 .auth-google {
-  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  min-height: 48px;
+  gap: 10px;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  overflow: hidden;
+  border: 1px solid #747775;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #1f1f1f;
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: 0.25px;
+  white-space: nowrap;
+  transition: box-shadow 0.218s;
+}
+.auth-google::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #303030;
+  opacity: 0;
+  transition: opacity 0.218s;
+  pointer-events: none;
+}
+.auth-google:hover:not(:disabled)::before {
+  opacity: 0.08;
+}
+.auth-google:active:not(:disabled)::before,
+.auth-google:focus-visible::before {
+  opacity: 0.12;
+}
+.auth-google:hover:not(:disabled) {
+  box-shadow:
+    0 1px 2px 0 rgba(60, 64, 67, 0.3),
+    0 1px 3px 1px rgba(60, 64, 67, 0.15);
+}
+.auth-google:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+.auth-google:disabled {
+  border-color: rgba(31, 31, 31, 0.12);
+  background: rgba(255, 255, 255, 0.38);
+  opacity: 1;
+}
+.auth-google:disabled .auth-google-mark,
+.auth-google:disabled .auth-google-label {
+  opacity: 0.38;
 }
 .auth-google-mark {
-  color: #4285f4;
-  font-size: 18px;
-  font-weight: 700;
+  position: relative;
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+.auth-google-label {
+  position: relative;
+}
+[data-theme="dark"] .auth-google {
+  border-color: #8e918f;
+  background: #131314;
+  color: #e3e3e3;
+}
+[data-theme="dark"] .auth-google::before {
+  background: #ffffff;
+}
+[data-theme="dark"] .auth-google:disabled {
+  border-color: rgba(142, 145, 143, 0.12);
+  background: rgba(19, 19, 20, 0.38);
 }
 .auth-divider {
   display: flex;

@@ -1061,3 +1061,28 @@ Verification: typecheck, `npm test` 273/273, `npm run build`; eslint on changed 
 `PublicShell` set-state-in-effect errors and `<img>` warnings. In the browser pane (dev, 5173): home, games,
 Airport Spotter and Tail Identifier pages, ranks and Marketplace at 1440 in dark, a game page in light, home
 header at 390; no horizontal overflow. Browser QA suites not run.
+
+## Sign-in fixes: Google button, revealed password, local project (2026-11-26)
+
+Brought over from the Admin session's sign-in fixes (Admin `docs/TASKS.md`, 2026-11-26; copied modules
+`components/AuthForm.tsx`, `components/account.css`), plus one website bug.
+- **Google button** follows Google's Sign in with Google branding guidelines: the standard colour "G" (inline SVG),
+  40 px tall, Roboto/Arial 14 px medium, 12 px padding, 10 px gap, 4 px radius, light `#FFFFFF`/`#747775`/`#1F1F1F`,
+  dark `#131314`/`#8E918F`/`#E3E3E3`, 8% hover layer. Same accessible name and `.auth-google` class (QA scripts).
+  The website's 48 px override in `community-sign-in.css` no longer applies to it. Roboto is not self-hosted, so
+  Windows shows Arial (same as Admin).
+- **"Password seen":** the show/hide state was never reset. A password revealed on Sign in carried over, so "Create
+  your account" opened with the new-password field as `type="text"`: the password showed as it was typed, password
+  managers ignored the field and the browser could keep it in its ordinary form history. Every mode switch now
+  clears the password and hides it (`changeMode`), and submitting hides it before anything is sent.
+- **Wrong-password copy** on the emulator says it has only the seeded test accounts.
+- **"Sign-in not working" locally:** `.dev.vars` still pointed at the retired `airplane-games-auth-20261022`
+  (ruling 2026-11-16), so `airplane-games-9fe1e` accounts can't sign in on 5173 with it. Both hosted sites
+  (`playairplanegames.com`, `dev.`) serve `airplane-games-9fe1e`. Run locally with the emulator profile
+  (`DEV_VARS_PROFILE=demo-preview`, launch config `website-demo-5194`) or put the 9fe1e web config in `.dev.vars`.
+  The Usercentrics blocker was ruled out: Firebase's Google scripts and auth iframe load unblocked.
+
+Verification: typecheck, `npm test` 273/273, eslint clean on `AuthForm.tsx`. In the browser pane on the emulator
+profile: button computed values in dark and light; reveal → Create an account opens hidden and empty; a new
+emulator account signs up and lands on `/account?verify_email=1`; a wrong password shows the emulator copy; the
+seeded account signs in. **Not walked:** Google sign-in (the pane blocks popups), hosted sign-in, `test:auth`.

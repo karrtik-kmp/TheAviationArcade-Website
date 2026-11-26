@@ -77,7 +77,7 @@
   font-size: 14px;
   line-height: 1.7;
 }
-.community-auth-card .auth-google,
+/* The Google button keeps Google's own 40 px size (account.css); only the submit button grows. */
 .community-auth-card .auth-submit {
   min-height: 48px;
 }
