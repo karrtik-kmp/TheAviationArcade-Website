@@ -989,7 +989,7 @@ questions that remain are in [feedback/client-questions-srs.md](feedback/client-
 
 | ID | Task | State |
 |---|---|---|
-| WB-FAQ-01 | FAQ page | `/faq` "coming soon" page done 2026-11-26. Josh asked for a CMS (11-26): plan [briefs/faq-cms-plan.md](briefs/faq-cms-plan.md) passed review; Backend document `faq` + public read (API 0.33.0, after the pending dev deploy), Admin FAQ desk, then the website reader. Text from the client only |
+| WB-FAQ-01 | FAQ page | `/faq` "coming soon" page done 2026-11-26. Josh asked for a CMS (11-26): plan [briefs/faq-cms-plan.md](briefs/faq-cms-plan.md) passed review; Backend document `faq` + public read (API 0.33.0, after the pending dev deploy), Admin FAQ desk, then the website reader. Answer renderer done 2026-11-26 (`lib/faq-answer.ts`, `components/FaqAnswer.tsx`, `tests/faq-answer.test.mjs`; shared byte-identical with the Admin preview). Text from the client only |
 | WB-FAQ-02 | FAQ search | Backlog, with WB-FAQ-01 |
 | WB-FAQ-03 | Gameplay guides | Backlog; guide text from the client (CQ-5) |
 | WB-FAQ-04 | Account support | Partial: sign-in, reset and verification help in the auth screens; no support page or recovery workflow |
