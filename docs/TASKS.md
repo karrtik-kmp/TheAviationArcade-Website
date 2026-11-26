@@ -1022,3 +1022,23 @@ The client's marketplace and FAQ ask (2026-11-26) is in scope now; nothing is bu
 | NFR-03 | SEO structure | Partial: page titles, a site description, readable URLs. No `sitemap.xml`, `robots.txt`, per-page descriptions or Open Graph tags yet |
 | NFR-04 | Performance | Partial; no target (OI-22). Policy pages fixed 2026-11-25; nginx gzip and HTTP/2 open on the server; last Lighthouse (pre-Firebase) LCP 4.1 s |
 | NFR-05 | WCAG 2.1 AA | Ongoing practice (keyboard, focus, contrast per change); no full audit since the redesign |
+
+## Self-serve photographers and contract 0.33.0 (2026-11-26, Backend c0a2b62)
+
+Brief `../docs/briefs/self-serve-photographer.md` (user ruling 2026-11-26: any registered account with a verified email may
+send photos, no approval; staff still review every photo). `contracts/openapi.yaml` is the 0.33.0 byte copy (sha256
+fdc5efd8…; brings 0.31.0 Code Search, game only, 0.32.0 self-serve photographer, 0.33.0 FAQ).
+
+- `/contribute` (`PhotographerAccess`): a verified, unblocked account turns photo submission on by itself
+  (`POST /v1/me/roles/photographer`, once per page) and the page reloads into the photo form; a failure shows the
+  reason and "Try again". Unverified → verify first (account page link). Blocked → "This account can't send photos",
+  nothing else. No request, approval or "wasn't approved" states.
+- `SUBMISSION_LIMIT` (backend 429 `submission_limit`, 20 photos waiting for review): its own message, classed as an
+  error, not "the service is busy".
+- `roleActions` drops approve/reject (removed in 0.32.0). "Approved photographer" wording replaced on the account page,
+  server messages, README, AGENTS.md and scenario C1.
+
+Verification: typecheck, `npm test` 273/273 (contract test on 0.33.0; new SUBMISSION_LIMIT cases), eslint (no errors).
+Browser (auth emulator, `store-qa` profile, a local fake of the role routes): a verified account with no role opened
+`/contribute`, one POST was made and the photo form opened; a blocked account saw only the blocked message. Not checked
+in the browser: the unverified-email state and the limit message on a real upload. Not run against the real backend.

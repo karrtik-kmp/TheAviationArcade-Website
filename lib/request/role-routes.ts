@@ -1,5 +1,5 @@
 /**
- * Member role routes: read your own roles and ask for photographer access. The website stores no
+ * Member role routes: read your own roles and turn on photo submission (API 0.32.0: active at once). The website stores no
  * roles: each route forwards to the game backend (openapi 0.15.0, ADR-0002) with the signed-in
  * member's own Firebase ID token and checks the answer against the contract. Deciding roles is an
  * Admin desk and lives in the Admin repo. Relative imports only.
@@ -54,7 +54,7 @@ async function call<T>(schema: ZodType<T>, run: () => Promise<unknown>): Promise
 async function requestPhotographer(ctx: Ctx) {
   requireBackendRoles(ctx);
   if (!ctx.principal.emailVerified)
-    throw new HttpError(403, "Verify your email address before asking for photographer access.", "EMAIL_UNVERIFIED");
+    throw new HttpError(403, "Verify your email address before you send photos.", "EMAIL_UNVERIFIED");
   try {
     const result = await call(photographerRequestResultSchema, () =>
       ctx.backend(ctx.principal.bearer).send("POST", "/v1/me/roles/photographer", undefined),
@@ -63,7 +63,7 @@ async function requestPhotographer(ctx: Ctx) {
   } catch (error) {
     // The email is verified, so a 403 here means the account is blocked from the role.
     if (error instanceof HttpError && error.code === "FORBIDDEN")
-      throw new HttpError(403, "This account can't ask for photographer access.", "PHOTOGRAPHER_BLOCKED");
+      throw new HttpError(403, "This account can't send photos.", "PHOTOGRAPHER_BLOCKED");
     throw error;
   }
 }

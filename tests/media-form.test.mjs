@@ -149,6 +149,7 @@ test("outcome mapping", () => {
     [200, undefined, "ok"],
     [0, undefined, "retryable"],
     [429, "RATE_LIMITED", "retryable"],
+    [429, "SUBMISSION_LIMIT", "error"],
     [503, "STORAGE_UNAVAILABLE", "retryable"],
     [503, "BACKEND_UNAVAILABLE", "retryable"],
     [503, "BACKEND_NOT_CONNECTED", "retryable"],

@@ -50,7 +50,7 @@ function gate(ctx: Ctx, who: Who) {
   if (who === "staff") {
     if (!ctx.principal.staff) throw new HttpError(403, "This is available to admins only.", codes.FORBIDDEN);
   } else if (!ctx.principal.photographer && !ctx.principal.staff)
-    throw new HttpError(403, "Photo uploads need approved photographer access.", codes.PHOTOGRAPHER_REQUIRED);
+    throw new HttpError(403, "Photo uploads need a signed-in account with a verified email address.", codes.PHOTOGRAPHER_REQUIRED);
 }
 
 /** Maps a backend failure to what the website says. */
@@ -70,7 +70,7 @@ function backendFailure(error: unknown, who: Who, ownerOnly?: string): never {
     if (status === 403)
       throw who === "staff"
         ? new HttpError(403, "The game backend refused this. It needs an active admin role and a verified email.", codes.FORBIDDEN)
-        : new HttpError(403, "The game backend refused this. It needs approved photographer access and a verified email.", codes.PHOTOGRAPHER_REQUIRED);
+        : new HttpError(403, "The game backend refused this. Photos can be sent only from an account with a verified email address that isn't blocked.", codes.PHOTOGRAPHER_REQUIRED);
     if (status === 404) throw new HttpError(404, "That photo was not found.", codes.NOT_FOUND);
     if (status === 409) {
       if (code === "nothing_to_publish")
@@ -93,6 +93,12 @@ function backendFailure(error: unknown, who: Who, ownerOnly?: string): never {
         throw new HttpError(422, "This version can't be published yet. It needs a licence name, a credit where one is required, and a rights statement.", codes.LICENCE_INCOMPLETE);
       throw new HttpError(502, "The game backend answered off its contract.", codes.BACKEND_CONTRACT);
     }
+    if (status === 429 && code === "submission_limit")
+      throw new HttpError(
+        429,
+        "You've reached the limit of photos waiting for review. You can send more once the team has reviewed some of them.",
+        codes.SUBMISSION_LIMIT,
+      );
     if (status === 429)
       throw new HttpError(429, "Too many requests. Wait a moment and try again.", codes.RATE_LIMITED, undefined, error.retryAfter === undefined ? undefined : Math.ceil(error.retryAfter));
     if (status === 503 && code === "storage_unavailable")

@@ -227,8 +227,8 @@ export function AccountPage({
               <span className="eyebrow">Photography community</span>
               <h2>Photo area</h2>
               <p>
-                See your photographer access and, once approved, the photos
-                you&apos;ve sent to the Airplane Games photography collection.
+                Send your aviation photos and see the ones you&apos;ve sent to
+                the Airplane Games photography collection.
               </p>
               <SiteLink className="text-link" href="/contribute">
                 Open the photo area <ArrowRight size={16} />

@@ -83,7 +83,7 @@ The table below is the question as it was asked on 11-13.
 
 | # | Scenario | Expected | Proof |
 |---|---|---|---|
-| C1 | Player requests photographer access on `/contribute` | Request shows in Admin Users; approve → photographer on next request | L, D |
+| C1 | A verified player opens `/contribute` (API 0.32.0, no approval) | Photo submission turns on by itself and the photo form opens; an unverified account is asked to verify, a blocked one can't send photos; the 21st photo waiting for review is refused with the limit message | L, D |
 | C2 | Photographer uploads a photo (≤ 5 MB), states rights v1, sets licence | Stored in the backend/Bunny; draft only | L, D (real Bunny on D) |
 | C3 | Admin publishes it in the Media desk; later withdraws it | Published version live with credit; withdraw removes it from public reads | L, D |
 | C4 | Blocked photographer opens `/contribute` | `PHOTOGRAPHER_BLOCKED` copy, no upload | L |

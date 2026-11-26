@@ -536,6 +536,7 @@ test("backend failures map to website codes, and nothing is retried", async () =
     [422, "content_invalid", 422, "LICENCE_INCOMPLETE"],
     [422, "something_else", 502, "BACKEND_CONTRACT"],
     [429, "rate_limited", 429, "RATE_LIMITED"],
+    [429, "submission_limit", 429, "SUBMISSION_LIMIT"],
     [503, "storage_unavailable", 503, "STORAGE_UNAVAILABLE"],
     [503, "unavailable", 503, "BACKEND_UNAVAILABLE"],
     [500, "internal", 503, "BACKEND_UNAVAILABLE"],

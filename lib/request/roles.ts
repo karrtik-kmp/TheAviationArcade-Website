@@ -138,10 +138,12 @@ export function holdsRole(snapshot: RoleSnapshot, role: RoleName) {
   return roleRow(snapshot, role)?.state === "active";
 }
 
-/** The admin actions the website offers. Granting admin stays with the backend's operator command. */
+/**
+ * The admin role actions on the backend (shared with the Admin repo). Since API 0.32.0 a verified account
+ * turns photographer on itself, so there is no approve or reject. Granting admin stays with the backend's
+ * operator command.
+ */
 export const roleActions = {
-  approve: ["photographer"],
-  reject: ["photographer"],
   block: ["photographer"],
   unblock: ["photographer"],
   revoke: ["photographer", "admin"],

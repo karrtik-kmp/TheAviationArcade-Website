@@ -30,7 +30,10 @@ Start with README.md and docs/TASKS.md, then inspect actual Git status. Unity is
   never the demo account, read per request with the member's own token. Until the backend is
   hosted, `ROLES_SOURCE=mock` (default) reads `MOCK_ADMIN_EMAILS`/`MOCK_PHOTOGRAPHER_EMAILS` and
   hides role requests. `STAFF_EMAILS` is retired. Unreadable roles fail
-  closed. No client-selected role can grant privileges.
+  closed. No client-selected role can grant privileges (the sign-in role picker grants nothing). Since API
+  0.32.0 (user ruling 2026-11-26) `photographer` is issued by the server to a verified, unblocked account at
+  `POST /v1/me/roles/photographer` with no approval; `/contribute` calls it for the account. `admin` is never
+  self-issued. Every photo is still reviewed by staff before it is published.
 - Callsign is the community player name tag. It is not a credential. Do not build a competing
   website name registry or silently amend the frozen game account contract.
 - Keep session request generations, account-change fences and captured draft base versions.

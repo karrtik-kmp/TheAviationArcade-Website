@@ -32,7 +32,7 @@ const privatePhoto = (body: ReadableStream | null, mime: string) =>
 async function submissionsClosed(): Promise<Response> {
   throw new HttpError(
     404,
-    "Photo proposals on this website are closed. Approved photographers upload in the photo area.",
+    "Photo proposals on this website are closed. Signed-in photographers upload in the photo area.",
     "SUBMISSIONS_CLOSED",
   );
 }

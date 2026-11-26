@@ -47,10 +47,11 @@ There is no website allowlist. `ROLES_SOURCE` picks where roles come from:
   mock admin.
 - **`backend`.** Roles come from the game backend (`GET /v1/me/roles` with the member's own token at
   `GAME_API_BASE_URL`); the mock lists are ignored. Staff means an active `admin` row, a verified email
-  and not the demo account. Photo submissions need an active `photographer` row, which a member requests
-  on `/contribute` and an admin approves in the Users section (openapi 0.15.0, vendored in
-  `contracts/openapi.yaml`). There, "Remove" revokes a role and the account may ask again; "Block" bars
-  an account from asking to be a photographer until it is unblocked; an admin's email is typed by an
+  and not the demo account. Photo submissions need an active `photographer` row. Since openapi 0.32.0
+  (vendored in `contracts/openapi.yaml`) a verified account gets it with no approval: `/contribute` turns
+  it on for the account and opens the photo form. In the Admin's Users section "Remove" revokes the role
+  (the account can turn it on again); "Block" stops an account sending photos until it is unblocked; an
+  account may have at most 20 photos waiting for review. An admin's email is typed by an
   admin, shown as unverified and editable, and never grants anything. To run it locally: start
   the Backend with `FIREBASE_PROJECT_ID=demo-airplane-games` in its `.env`, set `ROLES_SOURCE=backend`
   and `GAME_API_BASE_URL` in `.dev.vars`, sign in once, then grant the first admin from the Backend

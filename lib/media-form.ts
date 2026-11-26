@@ -426,6 +426,8 @@ export function mediaOutcome(status: number, code?: string | null): MediaOutcome
     return "conflict";
   if (code === "TOO_LARGE" || code === "UNSUPPORTED_TYPE" || code === "MEDIA_INVALID") return "fileRejected";
   if (code === "BACKEND_CONTRACT") return "error";
+  // Too many photos waiting for review: not a busy service, so show the message and don't offer a quick retry.
+  if (code === "SUBMISSION_LIMIT") return "error";
   if (
     !Number.isInteger(status) ||
     status < 100 ||

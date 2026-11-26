@@ -9,108 +9,91 @@ import type { OwnRole, RoleSnapshot } from "@/lib/request/roles";
 import "./contribute.css";
 
 /**
- * Shown on /contribute to a signed-in account that is not an approved photographer. Asking
- * records a request on the game backend; an admin approves it in Users and roles. Nothing here
- * grants access: the server reads the role again before accepting any photo. While roles are
- * mocked from the deployment's env lists, there is nothing to request.
+ * Shown on /contribute to a signed-in account that can't send photos yet. Since API 0.32.0 (user ruling
+ * 2026-11-26) any registered account with a verified email may send photos with no approval: a verified,
+ * unblocked account turns photo submission on by itself here (the server issues the role at its one fixed
+ * route), then the page reloads into the photo form. The team still reviews every photo before anything
+ * is published. Nothing here grants access: the server reads the role again before accepting any photo.
+ * While roles are mocked from the deployment's env lists, there is nothing to turn on.
  */
 export function PhotographerAccess({
-  row: initialRow,
+  row,
   status,
   mock,
   emailVerified,
   sessionKey,
   hideEarlier = false,
 }: {
-  /** The account's photographer role row, or null when it never asked. */
+  /** The account's photographer role row, or null when it never had one. */
   row: OwnRole | null;
   status: RoleSnapshot["status"];
-  /** Roles are set by this deployment, not requested. */
+  /** Roles are set by this deployment, not turned on by the account. */
   mock: boolean;
   emailVerified: boolean;
   sessionKey: string;
   /** Backend media mode: the earlier website proposals are closed, so don't link to them. */
   hideEarlier?: boolean;
 }) {
-  const [row, setRow] = useState(initialRow);
-  const [busy, setBusy] = useState(false);
+  const canStart = !mock && status === "ok" && emailVerified && row?.state !== "blocked";
+  const [busy, setBusy] = useState(canStart);
   const [error, setError] = useState("");
-  const [requestedOn, setRequestedOn] = useState("");
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const announce = useRef(false);
+  const started = useRef(false);
 
-  // Formatted after mount, so the server's and the browser's locale can't disagree.
-  useEffect(() => {
-    const date = row ? new Date(row.requestedAt) : null;
-    setRequestedOn(
-      date && !Number.isNaN(date.valueOf())
-        ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(date)
-        : "",
-    );
-    if (announce.current) {
-      announce.current = false;
-      headingRef.current?.focus();
-    }
-  }, [row]);
-
-  async function ask() {
-    setBusy(true);
-    setError("");
+  async function turnOn() {
     try {
       const response = await fetch(sitePath("/api/me/roles/photographer"), {
         method: "POST",
         headers: accountHeaders(sessionKey),
       });
       const body = (await response.json().catch(() => ({}))) as { role?: OwnRole; error?: string };
-      if (response.ok && body.role) {
-        announce.current = true;
-        setRow(body.role);
-      } else setError(body.error ?? "Your request could not be sent. Please try again.");
+      if (response.ok && body.role?.state === "active") {
+        // The server renders the photo form once it reads the active role.
+        window.location.reload();
+        return;
+      }
+      setError(body.error ?? "Photo submission couldn't be turned on. Please try again.");
     } catch {
-      setError("Your request could not be sent. Check your connection and try again.");
-    } finally {
-      setBusy(false);
+      setError("Photo submission couldn't be turned on. Check your connection and try again.");
     }
+    setBusy(false);
+    headingRef.current?.focus();
   }
+
+  // Turn submission on once when the page opens (a repeat is harmless: the server answers "already on").
+  useEffect(() => {
+    if (!canStart || started.current) return;
+    started.current = true;
+    void turnOn();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per mount
+  }, []);
 
   let title: string;
   let text: string;
-  let canAsk = false;
   if (mock) {
     title = "Photographer access is set up by the team";
     text =
       "On this preview, photographer accounts are added by the Airplane Games team. If you have been invited, sign in with the email address you were invited with.";
   } else if (status === "not-connected") {
-    title = "Photographer access isn't open yet";
-    text = "Requests for photographer access aren't open on this website yet.";
+    title = "Photo submissions aren't open yet";
+    text = "Photo submissions open here once the Airplane Games photo service is connected.";
   } else if (status !== "ok") {
-    title = "Photographer access can't be checked";
-    text = "We couldn't reach the service that records photographer access. Please try again in a moment.";
+    title = "We can't check your account right now";
+    text = "We couldn't reach the Airplane Games photo service. Please try again in a moment.";
   } else if (row?.state === "blocked") {
-    title = "Photographer access isn't available";
-    text = "This account can't ask for photographer access.";
-  } else if (row?.state === "active") {
+    title = "Photo submission isn't available";
+    text = "This account can't send photos.";
+  } else if (!emailVerified) {
     title = "Verify your email address";
-    text = "Your photographer access is approved, but photos can only be sent from a verified email address.";
-  } else if (row?.state === "pending") {
-    title = "Your request is awaiting approval";
     text =
-      "Thanks for offering your photographs. The Airplane Games team will review your request, and the photo form opens here once it is approved.";
-  } else if (row?.state === "rejected") {
-    title = "Your request wasn't approved";
-    text = "Your earlier request for photographer access was turned down. You can ask again, and it will be reviewed.";
-    canAsk = true;
-  } else if (row?.state === "revoked") {
-    title = "Your photographer access was removed";
-    text = "This account can no longer send photos. You can ask for access again, and it will be reviewed.";
-    canAsk = true;
+      "Any registered account can send photos once its email address is verified. A verification link can be sent from your account page.";
+  } else if (error) {
+    title = "We couldn't open the photo form";
+    text = error;
   } else {
-    title = "Become an approved photographer";
-    text =
-      "Photos are accepted from approved photographers. Ask for access, and the Airplane Games team will review your request before the photo form opens.";
-    canAsk = true;
+    title = "Opening the photo form";
+    text = "Setting up photo submission for your account…";
   }
-  const needsVerification = !mock && status === "ok" && (canAsk || row?.state === "active") && !emailVerified;
 
   return (
     <main id="main" className="wrap contribute-root">
@@ -118,37 +101,34 @@ export function PhotographerAccess({
         <p className="eyebrow">Calling all aviation photographers</p>
         <h1>Your Best Shot Deserves Some Air Time.</h1>
       </section>
-      <section className="signin-panel photographer-access" aria-labelledby="photographer-access-title">
+      <section
+        className="signin-panel photographer-access"
+        aria-labelledby="photographer-access-title"
+        aria-busy={busy || undefined}
+      >
         <Camera size={28} weight="duotone" aria-hidden="true" />
         <h2 id="photographer-access-title" ref={headingRef} tabIndex={-1}>
           {title}
         </h2>
-        <p>{text}</p>
-        {!mock && row?.state === "pending" && requestedOn && (
-          <p className="photographer-access-meta">
-            Requested <time dateTime={row.requestedAt}>{requestedOn}</time>
-          </p>
-        )}
-        {error && (
-          <p className="photographer-access-error" role="alert">
-            {error}
-          </p>
-        )}
+        <p role={canStart ? (error ? "alert" : "status") : undefined}>{text}</p>
         <div className="actions">
-          {canAsk && emailVerified && !mock && status === "ok" && (
-            <button className="btn" type="button" disabled={busy} onClick={() => void ask()}>
-              {busy ? "Sending request…" : row ? "Ask again" : "Request photographer access"}
+          {canStart && error && !busy && (
+            <button
+              className="btn"
+              type="button"
+              onClick={() => {
+                setBusy(true);
+                setError("");
+                void turnOn();
+              }}
+            >
+              Try again
             </button>
           )}
-          {needsVerification && (
-            <>
-              <p className="photographer-access-meta">
-                Verify your email address first. A verification link can be sent from your account page.
-              </p>
-              <SiteLink className="btn" href="/account">
-                Go to your account page
-              </SiteLink>
-            </>
+          {!mock && status === "ok" && row?.state !== "blocked" && !emailVerified && (
+            <SiteLink className="btn" href="/account">
+              Go to your account page
+            </SiteLink>
           )}
           {status === "unavailable" && (
             <button className="btn secondary" type="button" onClick={() => window.location.reload()}>
@@ -218,7 +198,7 @@ export function SubmissionsClosed({ signedIn, signInRequired = false }: { signed
         <h2 id="submissions-closed-title">{signInRequired ? "Sign in to continue" : "Photo submissions aren't open yet"}</h2>
         <p>
           {signInRequired
-            ? "Sign in to send photos or ask for photographer access."
+            ? "Sign in to send your photos."
             : "Photo submissions open here once the Airplane Games photo service is connected."}
         </p>
         {guest && (
