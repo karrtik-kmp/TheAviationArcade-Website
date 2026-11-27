@@ -38,6 +38,9 @@ Start with README.md and docs/TASKS.md, then inspect actual Git status. Unity is
   website name registry or silently amend the frozen game account contract.
 - Keep session request generations, account-change fences and captured draft base versions.
   Revalidation may retain unsaved drafts, but must not overwrite another editor's version.
+  (User 2026-11-27, `docs/SESSION_COOKIES_PLAN.md`: with server session cookies, the client's background
+  cookie-mirroring tickets and locks may go; the `AccountSession` request serial, the `sessionKey` fence and draft
+  base versions stay.)
 - Website scope follows the client proposal (`../docs/SRS.md` §5; user ruling 2026-11-26): the "sells nothing"
   and "no how to play" rules are retired. Allowed: First Class Pass information and member pages, subscription
   purchase, an affiliate marketplace, partner directory, ad placements, FAQ with gameplay guides. Still binding:
