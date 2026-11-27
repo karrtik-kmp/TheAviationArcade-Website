@@ -11,8 +11,7 @@
  * website has no admin/ paths (they are in the Admin repo): those are a plain 404. Relative imports only, so the table runs under `node --test`.
  */
 import { HttpError, failure, sameOrigin } from "../errors.ts";
-import type { ContentStore } from "../editorial/content.ts";
-import type { PhotoStorage } from "../photo-storage.ts";
+import type { PotdResult } from "../plane-of-the-day.ts";
 import { AuthUnavailable, type Bearer, type MemberPrincipal, type RequestPrincipal } from "./principal.ts";
 import type { BackendClient } from "./backend.ts";
 
@@ -20,10 +19,8 @@ export type Audience = "public" | "member" | "owner" | "staff";
 
 export type RouteDeps = {
   principal: (request: Request) => Promise<RequestPrincipal>;
-  /** Lazy, so a missing binding only fails the routes that need it (503). */
-  db: () => D1Database;
-  photos: () => PhotoStorage;
-  content: () => ContentStore;
+  /** Today's Plane of the Day for a checked time zone and the viewer's day (the cached public read). */
+  planeOfTheDay: (timeZone: string, day: string) => Promise<PotdResult>;
   /** The game backend as the given member, with their own token. */
   backend: (bearer: Bearer) => BackendClient;
 };

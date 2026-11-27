@@ -1,5 +1,4 @@
-import { database, bucket } from "@/lib/server";
-import { d1ContentStore } from "@/lib/editorial/content-d1";
+import { getPlaneOfTheDay } from "@/lib/plane-of-the-day-server";
 import { dispatch } from "@/lib/request/router";
 import { routes } from "@/lib/request/routes";
 import { backendAs, requestPrincipal } from "@/lib/request/worker";
@@ -9,9 +8,7 @@ type Context = { params: Promise<{ path: string[] }> };
 
 const handler = dispatch(routes, {
   principal: (request) => requestPrincipal(request.headers),
-  db: database,
-  photos: bucket,
-  content: () => d1ContentStore(database()),
+  planeOfTheDay: getPlaneOfTheDay,
   backend: (bearer) => backendAs(bearer),
 });
 

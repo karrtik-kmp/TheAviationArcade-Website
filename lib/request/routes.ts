@@ -7,22 +7,13 @@
  */
 import { HttpError, respond } from "../errors.ts";
 import { localDay } from "../rules.ts";
-import type { EditorialData } from "../types.ts";
+import { TIME_ZONE } from "../plane-of-the-day.ts";
+import type { FeaturedPhoto, FeaturedResponse } from "../types.ts";
 import { route, type Route, type RouteContext } from "./router.ts";
 import { roleRoutes } from "./role-routes.ts";
 import { mediaRoutes } from "./media-routes.ts";
 
 type PublicCtx = RouteContext<"public">;
-
-const privatePhoto = (body: ReadableStream | null, mime: string) =>
-  new Response(body, {
-    headers: {
-      "Content-Type": mime,
-      "Cache-Control": "private, no-store",
-      "X-Content-Type-Options": "nosniff",
-      "Content-Security-Policy": "default-src 'none'",
-    },
-  });
 
 /**
  * Photographer submissions are stored in the backend and Bunny, not this website's database
@@ -37,43 +28,45 @@ async function submissionsClosed(): Promise<Response> {
   );
 }
 
-/** Today's Plane of the Day and its archive, or one published photograph. */
-async function featured(ctx: PublicCtx, photoId?: string) {
-  const zone = new URL(ctx.request.url).searchParams.get("timeZone") ?? "UTC";
+/**
+ * Today's Plane of the Day and the recent features, from the backend's public read (lib/plane-of-the-day.ts).
+ * Keeps the old `{ featured, archive }` shape and adds `day`. `archive` is every feature after the first.
+ * Images load from the CDN link directly; there is no image route on this website any more.
+ */
+async function featured(ctx: PublicCtx) {
+  const asked = new URL(ctx.request.url).searchParams.get("timeZone") ?? "UTC";
+  // A real IANA name the backend refuses (`Etc/GMT+5`, offsets) reads as UTC rather than failing the page.
+  const zone = TIME_ZONE.test(asked) ? asked : "UTC";
   let day;
   try {
     day = localDay(zone);
   } catch {
     throw new HttpError(422, "Choose a valid timezone.");
   }
-  const eligible = await ctx.content().featured(day);
-  if (photoId) {
-    const row = eligible.find((r) => r.record.id === photoId);
-    if (!row) throw new HttpError(404, "Photograph not published.");
-    const object = await ctx.photos().get(row.imageKey);
-    if (!object) throw new HttpError(404, "Photograph unavailable.");
-    return privatePhoto(object.body, row.imageMime);
-  }
-  const photos = eligible.map(({ record }) => {
-    const data: EditorialData = record.data;
-    return {
-      id: record.id,
-      title: data.title,
-      aircraft: data.aircraft,
-      photographer: data.photographer,
-      credit: data.credit,
-      description: data.description,
-      date: record.dateKey,
-      imageUrl: `/api/photos/${record.id}?timeZone=${encodeURIComponent(zone)}`,
-    };
-  });
-  return respond({ featured: photos[0] ?? null, archive: photos });
+  const result = await ctx.planeOfTheDay(zone, day);
+  if (result.state !== "ok") throw new HttpError(503, "Plane of the Day is unavailable right now. Please try again later.");
+  const photos: FeaturedPhoto[] = result.features.map(({ id, date, title, aircraft, description, image }) => ({
+    id,
+    date,
+    title,
+    aircraft,
+    description,
+    credit: image.licence.credit,
+    licenceName: image.licence.licenceName,
+    licenceUrl: image.licence.licenceUrl,
+    sourceUrl: image.licence.sourceUrl,
+    attribution: image.licence.attributionText,
+    imageUrl: image.url,
+    width: image.width,
+    height: image.height,
+  }));
+  const body: FeaturedResponse = { day: result.day, featured: photos[0] ?? null, archive: photos.slice(1) };
+  return respond(body);
 }
 
 /** Literal paths come before parameter paths that could match them. */
 export const routes: Route[] = [
   route({ method: "GET", path: "featured", audience: "public", run: (ctx) => featured(ctx) }),
-  route({ method: "GET", path: "photos/:id", audience: "public", run: (ctx) => featured(ctx, ctx.params.id) }),
   route({ method: "POST", path: "submissions", audience: "member", mutation: true, run: submissionsClosed }),
   route({ method: "GET", path: "submissions", audience: "member", run: submissionsClosed }),
   route({ method: "PUT", path: "submissions/:id", audience: "member", mutation: true, run: submissionsClosed }),

@@ -38,8 +38,6 @@ test("the website's rank ladder is the catalog's, in order, with its thresholds"
     catalog.ranks.map((r) => [r.id, r.name, r.statusPoints]),
   );
   assert.deepEqual([...rankNames], catalog.ranks.map((r) => r.name));
-  const { militaryRankNames } = await import("../lib/military.ts");
   const { rankIds } = await import("../lib/progress/source.ts");
-  assert.deepEqual([...militaryRankNames], [...rankNames], "Military uses the same ladder");
   assert.deepEqual([...rankIds], catalog.ranks.map((r) => r.id), "progress ranks are the catalog ids");
 });

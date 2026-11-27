@@ -1,24 +1,70 @@
 "use client";
 import { useEffect, useState } from "react";
 import { SiteLink as Link } from "@/components/SiteLink";
-import { ArrowUpRight } from "@phosphor-icons/react";
-import type { FeaturedPhoto } from "@/lib/types";
+import { Airplane, ArrowUpRight } from "@phosphor-icons/react";
+import type { FeaturedPhoto, FeaturedResponse } from "@/lib/types";
 import { sitePath } from "@/lib/paths";
-const sample: FeaturedPhoto = {
-  id: "preview",
-  title: "Threshold Geometry",
-  aircraft: "Boeing 757",
-  photographer: "Josh M",
-  credit: "Josh M (@iamjoshmark)",
-  description:
-    "A familiar aircraft, seen from a different perspective. Explore the photographs and people behind the collection.",
-  imageUrl: "/media/potd-6.webp",
-  date: "",
-};
+
+/**
+ * Plane of the Day from `/api/featured` (the backend's public read, cached on this server). Four states: loading,
+ * a feature, nothing published yet, unavailable. No sample photograph stands in for a feature (user, 2026-11-27).
+ * The only credit is the image licence credit; missing licence, source or attribution lines are left out.
+ */
+type State =
+  | { kind: "loading" }
+  | { kind: "ready"; data: FeaturedResponse }
+  | { kind: "unavailable" };
+
+/** An empty frame in the image's place, so the layout holds when there is no image link. */
+function Frame() {
+  return (
+    <div className="photo-frame" aria-hidden="true">
+      <Airplane size={40} weight="thin" />
+    </div>
+  );
+}
+
+function Photo({ photo, hero }: { photo: FeaturedPhoto; hero?: boolean }) {
+  const [broken, setBroken] = useState(false);
+  if (!photo.imageUrl || broken) return <Frame />;
+  return (
+    <img
+      src={sitePath(photo.imageUrl)}
+      alt={photo.aircraft || photo.title}
+      width={photo.width}
+      height={photo.height}
+      loading={hero ? undefined : "lazy"}
+      // A page left open past the signed link's expiry: show the frame, never a broken image.
+      onError={() => setBroken(true)}
+    />
+  );
+}
+
+/** The licence, source and attribution lines, each only when the backend has it. */
+function Licence({ photo }: { photo: FeaturedPhoto }) {
+  if (!photo.licenceName && !photo.sourceUrl && !photo.attribution) return null;
+  return (
+    <div className="photo-licence">
+      {photo.licenceName &&
+        (photo.licenceUrl ? (
+          <a href={photo.licenceUrl} rel="noopener noreferrer">
+            {photo.licenceName}
+          </a>
+        ) : (
+          <span>{photo.licenceName}</span>
+        ))}
+      {photo.sourceUrl && (
+        <a href={photo.sourceUrl} rel="noopener noreferrer">
+          Source
+        </a>
+      )}
+      {photo.attribution && <span>{photo.attribution}</span>}
+    </div>
+  );
+}
+
 export function Featured({ compact = false }: { compact?: boolean }) {
-  const [photo, setPhoto] = useState(sample),
-    [archive, setArchive] = useState<FeaturedPhoto[]>([]),
-    [error, setError] = useState(false);
+  const [state, setState] = useState<State>({ kind: "loading" });
   useEffect(() => {
     const abort = new AbortController();
     const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -27,51 +73,55 @@ export function Featured({ compact = false }: { compact?: boolean }) {
     })
       .then((r) => {
         if (!r.ok) throw Error();
-        return r.json() as Promise<{
-          featured: FeaturedPhoto | null;
-          archive: FeaturedPhoto[];
-        }>;
+        return r.json() as Promise<FeaturedResponse>;
       })
-      .then((d) => {
-        if (d.featured) setPhoto(d.featured);
-        setArchive(d.archive);
-      })
+      .then((data) => setState({ kind: "ready", data }))
       .catch((e) => {
-        if (e.name !== "AbortError") setError(true);
+        if (e.name !== "AbortError") setState({ kind: "unavailable" });
       });
     return () => abort.abort();
   }, []);
-  // Only a real scheduled feature carries a date; the preview photograph never says "Today's".
-  const scheduled = Boolean(photo.date);
+
+  const data = state.kind === "ready" ? state.data : null;
+  const photo = data?.featured ?? null;
+  const today = Boolean(photo && data && photo.date === data.day);
+  const archive = data?.archive ?? [];
+  const note =
+    state.kind === "unavailable"
+      ? "Plane of the Day is unavailable right now. Please check back soon."
+      : state.kind === "ready" && !photo
+        ? "No Plane of the Day has been published yet. The first one will appear here."
+        : "";
+
   return (
     <>
-      <div className="feature-grid">
+      <div className="feature-grid" aria-busy={state.kind === "loading"}>
         <figure>
-          <img
-            src={sitePath(photo.imageUrl)}
-            alt={`${photo.aircraft || "Aircraft"}, photographed by ${photo.photographer}`}
-            width="1280"
-            height="960"
-            loading="lazy"
-          />
-          <figcaption className="photo-credit">
-            <span>{photo.credit}</span>
-            <span>{photo.date || "Client collection preview"}</span>
-          </figcaption>
+          {photo ? <Photo key={photo.id} photo={photo} hero /> : <Frame />}
+          {photo && (
+            <figcaption className="photo-credit">
+              {photo.credit && <span>{photo.credit}</span>}
+              <span>{photo.date}</span>
+            </figcaption>
+          )}
         </figure>
         <div className="feature-copy">
-          <div className="photo-preview-label">
-            {scheduled ? "Plane of the Day" : "From the photo collection"}
-          </div>
-          <h2>
-            {scheduled ? "Today's Featured Aircraft" : "A reason to look up."}
-          </h2>
-          {scheduled && photo.aircraft && (
-            <div className="photo-aircraft">{photo.aircraft}</div>
+          <div className="photo-preview-label">Plane of the Day</div>
+          {photo ? (
+            <>
+              <h2>{today ? "Today's Featured Aircraft" : "Recently Featured Aircraft"}</h2>
+              {photo.aircraft && <div className="photo-aircraft">{photo.aircraft}</div>}
+              <div className="photo-title">{photo.title}</div>
+              <p>{photo.description}</p>
+              <Licence photo={photo} />
+            </>
+          ) : (
+            <h2>A reason to look up.</h2>
           )}
-          <div className="photo-title">{photo.title}</div>
-          {scheduled && <div className="photo-aircraft">{photo.credit}</div>}
-          <p>{photo.description}</p>
+          {/* Mounted from the start so screen readers announce the note when it is filled in. */}
+          <p role="status" className="feature-note">
+            {note}
+          </p>
           {compact ? (
             <Link className="text-link" href="/plane-of-the-day">
               Explore the collection <ArrowUpRight size={18} />
@@ -85,12 +135,6 @@ export function Featured({ compact = false }: { compact?: boolean }) {
                 Submit Your Photo
               </Link>
             </div>
-          )}
-          {error && (
-            <p role="status" style={{ fontSize: 13 }}>
-              The live collection is unavailable. Showing the client preview
-              photograph.
-            </p>
           )}
         </div>
       </div>
@@ -106,25 +150,20 @@ export function Featured({ compact = false }: { compact?: boolean }) {
               <div className="archive-grid">
                 {archive.map((p) => (
                   <article key={p.id}>
-                    <img
-                      src={sitePath(p.imageUrl)}
-                      alt={p.aircraft || p.title}
-                      width="640"
-                      height="480"
-                      loading="lazy"
-                    />
+                    <Photo photo={p} />
                     <h3>{p.title}</h3>
-                    <p>{p.credit}</p>
+                    {p.credit && <p>{p.credit}</p>}
                     <p>{p.date}</p>
+                    <Licence photo={p} />
                   </article>
                 ))}
               </div>
-            ) : (
+            ) : state.kind === "ready" ? (
               <div className="info-note">
                 The archive will grow as reviewed photographs are published.
                 Future scheduled entries stay private until their feature date.
               </div>
-            )}
+            ) : null}
           </section>
           <section className="closing-cta" style={{ marginTop: 64 }}>
             <h2>Your Photo Could Be Next!</h2>

@@ -63,7 +63,7 @@ These are implementation requirements, not a claim that those features have ship
 | Production staff capabilities/MFA                | Open                             | Roles are admin/photographer only; MFA and finer capabilities remain open                                       |
 | Public-launch media and privacy hardening        | Open                             | Full decode/re-encode, abuse controls, approved rights and retention/deletion workflow                          |
 | Mobile loading optimization                      | Follow-up                        | Historical pre-Firebase Lighthouse: performance 82, accessibility 100, best practices 100, LCP 4.1s             |
-| Server hosting (brief `../docs/briefs/website-admin-hosting.md`, revised 11-05) | A1 runtime seam, A2 Node build done; A3 next | Website and Admin move to the Hostinger server as Node processes (`SITE_SURFACE`), dev sites first (`dev.`, `dev.admin.`). Plan passed the review gate with changes (11-05). Backend content gaps briefed: [briefs/backend-content-gaps-for-server-hosting.md](briefs/backend-content-gaps-for-server-hosting.md), accepted by `backend-5e`. User 11-05: demo admin stays view-only, audit desk stays; Cloudflare Workers removed with A2 (D1 desks answer 503 until A3). Backend content endpoints all built (API 0.23.0–0.26.0). Integration scenarios and start conditions: [INTEGRATION_SCENARIOS.md](INTEGRATION_SCENARIOS.md) (2026-11-13; I-1…I-3 locked 11-13, I-4…I-7 locked 11-16 in [intent/hosting-dev-demo.md](intent/hosting-dev-demo.md): dev sites are Josh's demo with his real content loaded by a Backend script, D1 exported then deleted after the demo works, Firebase project now `airplane-games-9fe1e`). **Website trimmed 2026-11-13 (I-1):** `/admin`, every admin API route, the Store/Users/Media/Military desks, media publish/withdraw, the `admin` sign-in audience and `lib/surface.ts` removed; the Node server accepts only `SITE_SURFACE=public` (or unset); staff links go to the Admin host derived from this host (`lib/admin-site.ts`; none on local hosts); the demo account lands in the player area. The Admin port is in the Admin repo (`fad55cc`, `37be738`, `a129b27`). Admin steps trimmed from the browser suites 2026-11-17. Still to trim: unused `.admin-*` rules in `app/globals.css`; the Military `EditorialStore` code (`lib/editorial/store.ts`, `lib/military.ts`) goes with A3. Next: A3 here = the public Plane of the Day read on the backend (`GET /v1/public/plane-of-the-day`). Since Backend
+| Server hosting (brief `../docs/briefs/website-admin-hosting.md`, revised 11-05) | A1 runtime seam, A2 Node build done; A3 (public Plane of the Day) done locally 2026-11-27, see its section | Website and Admin move to the Hostinger server as Node processes (`SITE_SURFACE`), dev sites first (`dev.`, `dev.admin.`). Plan passed the review gate with changes (11-05). Backend content gaps briefed: [briefs/backend-content-gaps-for-server-hosting.md](briefs/backend-content-gaps-for-server-hosting.md), accepted by `backend-5e`. User 11-05: demo admin stays view-only, audit desk stays; Cloudflare Workers removed with A2 (D1 desks answer 503 until A3). Backend content endpoints all built (API 0.23.0–0.26.0). Integration scenarios and start conditions: [INTEGRATION_SCENARIOS.md](INTEGRATION_SCENARIOS.md) (2026-11-13; I-1…I-3 locked 11-13, I-4…I-7 locked 11-16 in [intent/hosting-dev-demo.md](intent/hosting-dev-demo.md): dev sites are Josh's demo with his real content loaded by a Backend script, D1 exported then deleted after the demo works, Firebase project now `airplane-games-9fe1e`). **Website trimmed 2026-11-13 (I-1):** `/admin`, every admin API route, the Store/Users/Media/Military desks, media publish/withdraw, the `admin` sign-in audience and `lib/surface.ts` removed; the Node server accepts only `SITE_SURFACE=public` (or unset); staff links go to the Admin host derived from this host (`lib/admin-site.ts`; none on local hosts); the demo account lands in the player area. The Admin port is in the Admin repo (`fad55cc`, `37be738`, `a129b27`). Admin steps trimmed from the browser suites 2026-11-17. Still to trim: unused `.admin-*` rules in `app/globals.css`; the Military `EditorialStore` code (`lib/editorial/store.ts`, `lib/military.ts`) goes with A3. Next: A3 here = the public Plane of the Day read on the backend (`GET /v1/public/plane-of-the-day`). Since Backend
 API 0.27.1 (dev demo waiver, 2026-11-16), its image may have `licenceName: null` and an empty `factualSource`: show no
 licence or source line then, never a placeholder; the desks' A3 is in the Admin repo |
 | Military readiness desk and batch release        | Implemented and locally verified | Client's 31-question sheet, stages, release checks, sample Trips; EditorialStore seam (W1); Trainee short       |
@@ -929,10 +929,8 @@ in this repo's code on 2026-11-26. **No implementation in this pass.** Items mar
 open issue (SRS §9) and are not built. The rules "the website sells nothing and plays nothing" and "no how to
 play", and check F1, are unchanged until the user rules. *Backlog* = new, no order yet.
 
-Common state: on the Node build (A2) every route that reads the old D1 content answers 503 (`lib/server.ts`
-`database()`), so `/api/featured` fails and the homepage and `/plane-of-the-day` show the built-in sample photo
-(`components/Featured.tsx`). Real Plane of the Day data waits for A3 (backend `GET /v1/public/plane-of-the-day`,
-see the Server hosting job above). SRS SH-14 now covers it: today's entry, archive paging and search, and the
+Common state: since A3 (2026-11-27) the homepage and `/plane-of-the-day` read the backend's public Plane of the Day
+(`GET /v1/public/plane-of-the-day`, see the Server hosting job above); the built-in sample photo is gone. SRS SH-14 now covers it: today's entry, archive paging and search, and the
 Instagram handle only under display consent.
 
 **User ruling 2026-11-26:** Josh accepted the proposal as the agreed scope, so the website follows it. OI-01…OI-03
@@ -946,10 +944,10 @@ questions that remain are in [feedback/client-questions-srs.md](feedback/client-
 | ID | Task | State |
 |---|---|---|
 | WB-HOM-01 | Responsive landing page | Done (`app/page.tsx`; responsive round 2026-11-23) |
-| WB-HOM-02 | Featured Plane of the Day on the homepage | UI done (`<Featured compact />`); data waits for A3 |
-| WB-HOM-03 | Its aircraft information | UI done; data waits for A3 |
-| WB-HOM-04 | Its photographer information | Credit line done; data waits for A3 |
-| WB-HOM-05 | Photographer's social links | Backlog. Not shown anywhere public yet; needs the Instagram handle and display consent in the public PotD read (backend) |
+| WB-HOM-02 | Featured Plane of the Day on the homepage | Done locally (A3, 2026-11-27): `<Featured compact />` reads `/api/featured`, which reads the backend's public read. Hosted check waits for published photos on dev |
+| WB-HOM-03 | Its aircraft information | Done locally (A3): aircraft, title and description from `PublicFeature` |
+| WB-HOM-04 | Its photographer information | Done locally (A3): the one public credit, `image.licence.credit`, plus the licence, source and attribution lines only when set. `photographer` (staff-typed) is never shown |
+| WB-HOM-05 | Photographer's social links | Backlog. The public read carries `instagram` but it isn't consent-gated, so `lib/plane-of-the-day.ts` drops it (asked of the Backend 2026-11-27) |
 | WB-HOM-06 | App links for iOS and Android | Blocked by OI-20 (no store URLs). Today: the "Get the app" page (`/get-the-app`) |
 | WB-HOM-07 | Featured partner section | Backlog; waits for client partners (CQ-3) |
 | WB-HOM-08 | Aviation ad placements | Backlog; waits for the ad network choice (CQ-4); ads load only after cookie consent |
@@ -960,8 +958,8 @@ questions that remain are in [feedback/client-questions-srs.md](feedback/client-
 | ID | Task | State |
 |---|---|---|
 | WB-GAL-01 | Complete archive | Backlog; needs a backend public archive read with paging (not in API 0.30.0) |
-| WB-GAL-02 | Recent featured images | UI done (archive grid in `Featured`); data waits for A3 |
-| WB-GAL-03 | Image detail page | Backlog (only `GET /api/photos/:id`, the image bytes, exists) |
+| WB-GAL-02 | Recent featured images | Done locally (A3): the archive grid shows every feature after today's (at most 99, the read's limit is 100) |
+| WB-GAL-03 | Image detail page | Backlog; the backend has no by-id read. `GET /api/photos/:id` was retired with A3 (images load from the signed CDN link) |
 | WB-GAL-04 | Aircraft information on the detail page | Backlog, with WB-GAL-03 |
 | WB-GAL-05 | Photographer information on the detail page | Backlog, with WB-GAL-03 |
 | WB-GAL-06 | Photographer social links on the detail page | Backlog, with WB-HOM-05 |
@@ -1125,3 +1123,61 @@ Verification: typecheck, `npm test` 273/273, eslint clean on `AuthForm.tsx`. In 
 profile: button computed values in dark and light; reveal → Create an account opens hidden and empty; a new
 emulator account signs up and lands on `/account?verify_email=1`; a wrong password shows the emulator copy; the
 seeded account signs in. **Not walked:** Google sign-in (the pane blocks popups), hosted sign-in, `test:auth`.
+
+## Plane of the Day from the backend (2026-11-27, server hosting A3)
+
+Brief `../docs/briefs/website-a3-plane-of-the-day.md`. The plan passed the review gate with changes (senior lead and
+frontend expert); the diff review's three findings (next-day copy, `Etc/GMT+5` zones, the archive note before an
+answer) are fixed. The homepage (`<Featured compact />`) and `/plane-of-the-day` read the backend's anonymous
+`GET /v1/public/plane-of-the-day` (contract 0.33.0) through this server. No login is needed anywhere.
+
+- `lib/plane-of-the-day.ts`: a strict parser for `PlaneOfTheDay` / `PublicFeature` / `ImageRef` / `MediaLicence` (a
+  body that doesn't match is a failure) and an in-process cache. **Key = the viewer's day** (the route computes it from
+  the browser's `timeZone`: a name `Intl` refuses is 422; a real name outside the contract pattern, such as
+  `Etc/GMT+5`, reads as UTC). The backend is asked with that zone. The answer is always labelled with the key day and
+  features dated after it are left out (the backend's clock may already be on the next day near midnight). Per day: one request in flight, fresh for 60 s; 429/5xx/timeout
+  (2.5 s)/malformed keep the last good copy for up to 24 h (Retry-After honoured, max 10 min). Signed links last
+  hours, so each 60 s refresh renews them long before `expiresAt`; in a stale copy a link past `expiresAt` is served
+  as no image. A new day with no answer yet falls back to the previous day's copy.
+- Only https image, licence and source links are shown (anything else is dropped, never a mixed-content request).
+  `photographer` (staff-typed) and `instagram` (not consent-gated, WB-HOM-05) are dropped in the reader and never
+  reach the browser. The one public credit is `image.licence.credit`.
+- `/api/featured` keeps `{ featured, archive }` and adds `day`; `archive` is every feature after the first. 503 when
+  the backend is not configured or there is no good copy. `GET /api/photos/:id` is retired: the browser loads
+  `image.url` from the CDN. `RouteDeps` lost `db`/`photos`/`content` (no website route used them; the Admin's copy
+  already has only `principal` and `backend`) and gained `planeOfTheDay`.
+- `components/Featured.tsx`: four states. Loading = an empty frame (no sample flash). Feature = image (the backend's
+  width/height; `onError` and a null link show the frame), "Today's Featured Aircraft" only when the feature's date
+  is the served day (otherwise "Recently Featured Aircraft"), credit and date, then licence (linked when set), Source
+  and attribution lines only when set. **No feature and unreachable show no photo and a short note (user,
+  2026-11-27)**; the client sample photo is no longer shown. The note is a live region mounted from the start.
+- Retired: `lib/editorial/{content,content-d1,store}.ts`, `lib/military.ts` (the withdrawn Claude-drafted roster),
+  `tests/content-store.test.mjs`, `tests/military.test.mjs`. Kept for `npm run media:export` (hosting I-4):
+  `lib/submissions/*`, `lib/d1/kernel.ts`. Now unused, left for a later trim: `lib/server.ts` `database()`/`audit()`/
+  `bucket()`, `EditorialData`/`EditorialRecord` (still used by `lib/demo-samples.ts` and `lib/rules.ts`).
+- Env: `GAME_API_BASE_URL` (already in `web.env.example`); no new key. `../server/` notes are outside this repo.
+
+**Assumptions, asked of the Backend 2026-11-27 (another session), not waited for:** (1) dev-waived photos
+(`licence_waiver='dev-demo'`, no licence) appear in this read on dev; the route text says only photos "with a licence
+credit" are returned, so if they don't, dev shows the empty note until licences exist, and the fix belongs to the
+backend. A null licence is handled either way (no credit, licence or source line). (2) `instagram` stays hidden until
+the backend gates it on display consent.
+
+Verification: typecheck clean, `npm test` 275/275 including the new `tests/plane-of-the-day.test.mjs`
+(20 tests: parse good and bad bodies, empty list, null image link, null licence, http links dropped, per-day key,
+one in flight, 429 with a stale copy and Retry-After, 5xx and malformed bodies, 24 h stale limit, timeout, expired
+link in a stale copy, the midnight fallback, a backend already on the next day, no backend configured, the route's mapping, 200/503/422 and the UTC fallback), `npm run
+build` passes, eslint has no errors on the changed files.
+In the browser pane on `npm run dev` (port 5195, `GAME_API_BASE_URL` pointing at a local fake of the 0.33.0
+contract; nothing hosted was touched): **unreachable** (fake answers 503, no copy) shows no photo and "Plane of the
+Day is unavailable right now"; **empty** (`features: []`) shows the frame and "No Plane of the Day has been
+published yet"; **feature** shows the image (not lazy, 1600 px natural width), "Today's Featured Aircraft", the
+licence credit and date, the licence and Source links (`rel="noopener noreferrer"`, same tab), and an archive item
+with a null link and null licence shows the frame and no credit, licence or source line. The staff-typed photographer
+and the instagram value from the fake never reach the page. A fake answer slower than 2.5 s timed out and the last
+good copy stayed. The first render (loading) carries the frame and `aria-busy` and no sample text. At 375 px all
+three states hold with no horizontal scroll; desktop checked for the feature. Console: no errors on the feature and
+empty loads; the unreachable state logs the browser's own line for the intended 503 from `/api/featured`.
+**Not verified:** the hosted dev site (deploy is the user's step, and dev has no published photo yet), real signed
+Bunny CDN links, light theme, the 24 h stale path and the midnight fallback outside unit tests.
+

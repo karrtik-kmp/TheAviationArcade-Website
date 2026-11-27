@@ -3,11 +3,9 @@
 // Admin is its own repo, decision I-1); the router's staff gate is still checked on a stand-in route.
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { d1ContentStore } from "../lib/editorial/content-d1.ts";
 import { AuthUnavailable, accountSessionKey, resolvePrincipal } from "../lib/request/principal.ts";
 import { dispatch } from "../lib/request/router.ts";
 import { routes } from "../lib/request/routes.ts";
-import { d1Sqlite } from "./support/d1-sqlite.mjs";
 
 const project = "demo-airplane-games";
 const origin = "http://site.test";
@@ -65,7 +63,6 @@ function harness({ backend = fakeBackend(), roles = backendRoles, table = routes
       return tokens[token] ?? null;
     },
   };
-  const db = d1Sqlite();
   const handle = dispatch(table, {
     principal: (request) =>
       resolvePrincipal(request.headers, {
@@ -80,11 +77,7 @@ function harness({ backend = fakeBackend(), roles = backendRoles, table = routes
         projectId: project,
         demoUid: "demo-uid",
       }),
-    db: () => db,
-    photos: () => {
-      throw new Error("photo storage is not used in these tests");
-    },
-    content: () => d1ContentStore(db),
+    planeOfTheDay: async () => ({ state: "ok", day: "2026-11-27", features: [] }),
     backend: (bearer) => backend.as(bearer),
   });
   async function call(method, path, { as, body, fence, from = origin } = {}) {

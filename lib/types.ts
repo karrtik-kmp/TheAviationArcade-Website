@@ -69,13 +69,25 @@ export type EditorialRecord = {
   version: number;
   updatedAt: string;
 };
+/**
+ * One Plane of the Day feature as `/api/featured` serves it (mapped from the backend's `PublicFeature`).
+ * `credit` is the one public credit (`image.licence.credit`). Every nullable field is shown only when set:
+ * no image when `imageUrl` is null, no licence, source or attribution line when they are missing.
+ */
 export type FeaturedPhoto = {
   id: string;
+  date: string;
   title: string;
   aircraft: string;
-  photographer: string;
-  credit: string;
   description: string;
-  imageUrl: string;
-  date: string;
+  credit: string | null;
+  licenceName: string | null;
+  licenceUrl: string | null;
+  sourceUrl: string | null;
+  attribution: string | null;
+  imageUrl: string | null;
+  width: number;
+  height: number;
 };
+/** `/api/featured`: the viewer's day, the newest feature and the rest of the recent features. */
+export type FeaturedResponse = { day: string; featured: FeaturedPhoto | null; archive: FeaturedPhoto[] };
